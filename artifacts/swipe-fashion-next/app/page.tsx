@@ -7,7 +7,7 @@ import { listProducts } from "@/lib/data";
 export const dynamic = "force-dynamic";
 
 export default async function FeedPage() {
-  const { products } = await listProducts({ limit: 10 });
+  const products = await listProducts({ limit: 10 });
 
   return (
     <AppLayout>

@@ -26,7 +26,7 @@ export default async function LookbookPage({
 }) {
   const { category } = await searchParams;
 
-  const [categories, feed] = await Promise.all([
+  const [categories, products] = await Promise.all([
     listCategories(),
     listProducts({ category, limit: 50 }),
   ]);
@@ -54,9 +54,9 @@ export default async function LookbookPage({
         </header>
 
         <div className="px-4 pb-8 pt-2">
-          {feed.products.length > 0 ? (
+          {products.length > 0 ? (
             <div className="grid grid-cols-2 gap-x-3 gap-y-6">
-              {feed.products.map((product) => (
+              {products.map((product) => (
                 <Link
                   key={product.id}
                   href={`/product/${product.id}`}

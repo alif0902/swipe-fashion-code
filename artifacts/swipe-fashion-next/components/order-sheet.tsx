@@ -22,7 +22,6 @@ interface OrderSheetProps {
   product: AppProduct | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
 }
 
 const colorMap: Record<string, string> = {
@@ -44,7 +43,6 @@ export function OrderSheet({
   product,
   isOpen,
   onOpenChange,
-  onSuccess,
 }: OrderSheetProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -92,7 +90,6 @@ export function OrderSheet({
         description: `${product.name} is waiting for you.`,
       });
       onOpenChange(false);
-      onSuccess?.();
       setTimeout(() => {
         setSelectedSize("");
         setSelectedColor("");

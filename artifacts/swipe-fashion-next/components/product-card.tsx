@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
 import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from 'framer-motion';
 import type { AppProduct } from '@/lib/format';
 import { Badge } from './ui/badge';

@@ -10,7 +10,15 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import type { AppOrder } from "@/lib/format";
 
-export function OrderActions({ order }: { order: AppOrder }) {
+// Hanya id dan status yang dibutuhkan. Mengoper seluruh AppOrder akan ikut
+// mengirim sessionId dan data pembeli ke bundel klien tanpa ada yang memakainya.
+export function OrderActions({
+  orderId,
+  status,
+}: {
+  orderId: number;
+  status: AppOrder["status"];
+}) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isConfirming, setIsConfirming] = useState(false);
@@ -21,11 +29,11 @@ export function OrderActions({ order }: { order: AppOrder }) {
     customerEmail: "",
   });
 
-  if (order.status === "cancelled") return null;
+  if (status === "cancelled") return null;
 
   const handleCancel = () => {
     startTransition(async () => {
-      const result = await cancelOrderAction(order.id);
+      const result = await cancelOrderAction(orderId);
       toast(
         result.ok
           ? { title: "Order cancelled" }
@@ -40,7 +48,7 @@ export function OrderActions({ order }: { order: AppOrder }) {
 
   const handleConfirm = () => {
     startTransition(async () => {
-      const result = await confirmOrderAction(order.id, form);
+      const result = await confirmOrderAction(orderId, form);
       if (!result.ok) {
         toast({
           title: "Could not confirm order",
@@ -54,7 +62,7 @@ export function OrderActions({ order }: { order: AppOrder }) {
     });
   };
 
-  if (order.status !== "pending") {
+  if (status !== "pending") {
     return (
       <Button
         variant="ghost"
@@ -95,26 +103,26 @@ export function OrderActions({ order }: { order: AppOrder }) {
   return (
     <div className="space-y-3">
       <div className="space-y-2">
-        <Label htmlFor={`name-${order.id}`}>Name</Label>
+        <Label htmlFor={`name-${orderId}`}>Name</Label>
         <Input
-          id={`name-${order.id}`}
+          id={`name-${orderId}`}
           value={form.customerName}
           onChange={(e) => setForm({ ...form, customerName: e.target.value })}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`email-${order.id}`}>Email</Label>
+        <Label htmlFor={`email-${orderId}`}>Email</Label>
         <Input
-          id={`email-${order.id}`}
+          id={`email-${orderId}`}
           type="email"
           value={form.customerEmail}
           onChange={(e) => setForm({ ...form, customerEmail: e.target.value })}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`address-${order.id}`}>Shipping address</Label>
+        <Label htmlFor={`address-${orderId}`}>Shipping address</Label>
         <Input
-          id={`address-${order.id}`}
+          id={`address-${orderId}`}
           value={form.shippingAddress}
           onChange={(e) =>
             setForm({ ...form, shippingAddress: e.target.value })

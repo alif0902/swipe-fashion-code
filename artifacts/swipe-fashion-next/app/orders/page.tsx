@@ -81,7 +81,7 @@ export default async function OrdersPage() {
                   </div>
                 </div>
 
-                <OrderActions order={order} />
+                <OrderActions orderId={order.id} status={order.status} />
               </div>
             ))}
           </div>
