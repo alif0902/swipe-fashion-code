@@ -13,7 +13,7 @@ aplikasi tidak berubah.
 
 1. **SEO / SSR** — halaman produk ter-render di server dan bisa di-index mesin pencari.
 2. **Backend menyatu** — Express API pindah ke Server Components dan Server Actions.
-3. **Deploy ke Vercel** — lepas dari static hosting Replit.
+3. **Deploy ke Vercel** — lepas dari static hosting lama.
 4. **Design tetap sama** — token warna, tipografi, spasi, dan animasi dipertahankan.
 
 ## Kondisi awal
@@ -29,7 +29,7 @@ aplikasi tidak berubah.
   (hanya dipakai `sidebar` yang tidak terpakai — tidak dibawa)
 - TanStack Query + klien hasil generate Orval (`@workspace/api-client-react`)
 - Tailwind 4 lewat plugin Vite; `src/index.css` 137 baris memegang seluruh design token
-- Deploy Replit sebagai static dengan SPA rewrite
+- Deploy static lama dengan SPA rewrite
 
 `artifacts/api-server` — Express 5, 543 baris, 4 file rute (products, orders, categories,
 health). Mengakses Postgres lewat Drizzle di `lib/db`.
@@ -179,8 +179,7 @@ Empat file sisanya bukan foto produk: tiga di `generated_images/` dipakai halama
 
 - Vercel dengan root directory `artifacts/swipe-fashion-next`, install command sadar pnpm workspace.
 - Environment variable: `DATABASE_URL` mengarah ke pooler Supabase.
-- `.replit-artifact/artifact.toml` aplikasi baru menjalankan `next dev`, agar pengembangan di
-  Replit tetap bisa dilakukan.
+- Pengembangan lokal dijalankan lewat `next dev`.
 
 ## Verifikasi
 
