@@ -1172,17 +1172,20 @@ export async function listOrders(sessionId: string): Promise<AppOrder[]> {
 }
 ```
 
-- [ ] **Step 2: Tambah dependency server-only**
+- [ ] **Step 2: Tambah dependency server-only dan drizzle-orm**
 
-Tambahkan ke `dependencies` di `artifacts/swipe-fashion-next/package.json`:
+Tambahkan keduanya ke `dependencies` di `artifacts/swipe-fashion-next/package.json`:
 
 ```json
+"drizzle-orm": "catalog:",
 "server-only": "^0.0.1"
 ```
 
 Lalu run: `pnpm install`
 
 `server-only` membuat build gagal bila modul ini tidak sengaja terimpor Client Component — itu jaring pengaman supaya kredensial database tidak pernah bocor ke bundel browser.
+
+`drizzle-orm` wajib didaftarkan langsung meskipun sudah menjadi dependency `@workspace/db`. pnpm memakai `node_modules` yang ketat, jadi paket tidak bisa dipinjam secara transitif; tanpa ini `tsc` gagal dengan `TS2307: Cannot find module 'drizzle-orm'`.
 
 - [ ] **Step 3: Verifikasi typecheck**
 

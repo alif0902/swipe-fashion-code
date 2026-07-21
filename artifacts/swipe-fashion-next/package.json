@@ -19,11 +19,13 @@
     "@workspace/db": "workspace:*",
     "class-variance-authority": "catalog:",
     "clsx": "catalog:",
+    "drizzle-orm": "catalog:",
     "framer-motion": "catalog:",
     "lucide-react": "catalog:",
     "next": "16.2.10",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "server-only": "^0.0.1",
     "tailwind-merge": "catalog:",
     "vaul": "^1.1.2",
     "zod": "catalog:"
