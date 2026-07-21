@@ -74,11 +74,36 @@ tetap utuh sampai aplikasi baru terbukti setara, baru dihapus.
 ### Paket yang dipakai ulang
 
 - `lib/db` — schema Drizzle, tanpa perubahan schema
-- `lib/api-zod` — dipakai memvalidasi input Server Actions
 
 ### Paket yang dihapus di akhir
 
-`artifacts/api-server`, `artifacts/swipe-fashion`, `lib/api-spec`, `lib/api-client-react`
+`artifacts/api-server`, `artifacts/swipe-fashion`, `lib/api-spec`, `lib/api-zod`,
+`lib/api-client-react`
+
+`lib/api-zod` seluruhnya hasil generate Orval dari `lib/api-spec/openapi.yaml` dan ditandai
+"Do not edit manually". Begitu `api-spec` dihapus, isinya tidak bisa di-regenerate lagi.
+Server Actions hanya perlu memvalidasi dua bentuk kecil, jadi validasinya ditulis tangan di
+`lib/validation.ts` milik aplikasi baru. Seluruh rantai kode hasil generate hilang.
+
+## Perbaikan bug yang ikut dikerjakan
+
+Dua bug ditemukan saat membaca backend lama. Keduanya ditulis benar di aplikasi baru, dalam
+commit terpisah agar terlihat jelas mana migrasi dan mana perbaikan.
+
+1. `artifacts/api-server/src/routes/orders.ts:222` memakai ``db.sql`...` `` yang bukan API
+   Drizzle yang valid. Pengembalian stok saat pembatalan order kemungkinan besar melempar
+   error. Versi baru memakai `sql` yang di-import dari `drizzle-orm`.
+2. `artifacts/api-server/src/routes/categories.ts:16` memanggil `db.$count(productsTable)`
+   di dalam `select` yang punya `where`. Subquery hitungnya tidak ikut ter-filter, sehingga
+   `productCount` setiap kategori berisi jumlah seluruh produk. Tidak terlihat karena lookbook
+   tidak menampilkan angka tersebut. Versi baru memakai `count()` yang benar-benar ter-filter.
+
+## Endpoint yang tidak ikut dipindah
+
+Frontend tidak pernah memanggilnya, jadi tidak ada gunanya dibawa:
+`GET /products/stats`, `GET /orders/:id`, `GET /healthz`.
+Yang dipindah hanya tujuh operasi: list products, get product, list categories,
+list orders per sesi, create order, confirm order, cancel order.
 
 ## Menjaga design
 
@@ -119,19 +144,22 @@ Server Component meng-query Drizzle langsung, tanpa perantara HTTP.
 - `/` (feed) — Server Component mengambil 10 produk pertama lalu mengoper ke client component.
   Interaksi drag tetap sepenuhnya di client.
 - `/orders` — Server Component membaca cookie sesi. Ditandai `noindex`.
+- `not-found` — halaman 404 lama memakai `bg-gray-50` dan `text-gray-900`, terang di
+  aplikasi yang bertema gelap, dengan teks "Did you forget to add the page to the router?"
+  yang ditujukan ke developer. Ini sisa scaffold. Versi baru memakai token tema yang sama
+  dengan halaman lain dan menyediakan tautan kembali ke feed.
 
 **Mutasi** menjadi Server Actions di `app/actions.ts`: `createOrder`, `confirmOrder`,
-`cancelOrder`. Input divalidasi dengan skema dari `@workspace/api-zod`, lalu
-`revalidatePath('/orders')`.
+`cancelOrder`. Input divalidasi skema zod di `lib/validation.ts`, lalu `revalidatePath('/orders')`.
 
 **Sesi:** `middleware.ts` menetapkan cookie httpOnly `swipefash_session` berisi UUID bila
 belum ada. Menggantikan `useSession`. Dari sisi pengguna perilakunya sama.
 
 ## Gambar
 
-`attached_assets/` (16 file, 2,9 MB) disalin ke `public/assets/`. Kolom `imageUrl` di database
-berisi path berawalan `/api/assets/`, jadi `next.config.ts` memasang rewrite dari
-`/api/assets/:path*` ke `/assets/:path*` — data tidak perlu diubah.
+`attached_assets/` (16 file, 2,9 MB) disalin ke `public/assets/`. Karena datanya di-seed ulang,
+script seed langsung menulis `imageUrl` berawalan `/assets/`. Tidak diperlukan rewrite apa pun
+di `next.config.ts`.
 
 `<img>` diganti `next/image` di grid lookbook dan halaman produk, memakai `fill` +
 `object-cover` agar ukuran dan crop-nya identik.
@@ -142,8 +170,10 @@ Supabase Postgres. `lib/db/src/index.ts` tetap memakai driver `node-postgres`, t
 ke connection string **pooler** Supabase (port 6543, transaction mode) dengan `max: 1` supaya
 aman di lingkungan serverless. Schema Drizzle tidak berubah.
 
-Data lama tidak dipindahkan — isinya data dummy. Dibuat script seed yang mengisi tabel
-`categories` dan `products` merujuk 16 gambar di `public/assets/`.
+Data lama tidak dipindahkan — isinya data dummy. Dibuat script seed yang mengisi 4 kategori
+(dresses, outerwear, tops, bottoms) dan 12 produk merujuk 12 foto pakaian di `public/assets/`.
+Empat file sisanya bukan foto produk: tiga di `generated_images/` dipakai halaman landing, dan
+`with-is-reference.png` tidak dirujuk kode mana pun.
 
 ## Deployment
 
