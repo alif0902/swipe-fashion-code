@@ -1,10 +1,17 @@
-export default function Page() {
+import { AppLayout } from "@/components/layout";
+import { SwipeFeed } from "@/components/swipe-feed";
+import { listProducts } from "@/lib/data";
+
+// Stok dan katalog berubah saat order dibuat, jadi feed tidak boleh
+// di-cache statis saat build.
+export const dynamic = "force-dynamic";
+
+export default async function FeedPage() {
+  const { products } = await listProducts({ limit: 10 });
+
   return (
-    <main className="min-h-dvh bg-background text-foreground p-10 space-y-4">
-      <h1 className="font-serif text-4xl">Playfair Display heading</h1>
-      <p className="font-sans text-muted-foreground">
-        DM Sans body text on the app background token.
-      </p>
-    </main>
+    <AppLayout>
+      <SwipeFeed products={products} />
+    </AppLayout>
   );
 }
