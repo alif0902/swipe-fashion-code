@@ -17,7 +17,7 @@
 - `pnpm-workspace.yaml` punya `minimumReleaseAge: 1440`. Paket yang rilis kurang dari 1 hari akan ditolak. Jangan menonaktifkan setelan ini.
 - Dependency baru pakai `catalog:` bila namanya sudah ada di catalog root.
 - Nama package: `@workspace/swipe-fashion-next`.
-- Semua pekerjaan di branch `migrate-to-nextjs`. Baseline sebelum migrasi ada di commit `fa01a3c` pada `master`.
+- Semua pekerjaan di branch `migrate-to-nextjs`. Baseline sebelum migrasi ada di commit `9b3b831` pada `main`.
 - **Jangan menghapus atau mengubah** `artifacts/swipe-fashion` dan `artifacts/api-server` sampai Task 15.
 - Nama variabel CSS `--app-font-sans`, `--app-font-serif`, `--app-font-mono` **tidak boleh berubah**. Seluruh JSX bergantung pada `font-serif` / `font-sans` yang di-map ke sana.
 - Design token di `globals.css` disalin verbatim. Jangan menyetel ulang nilai HSL, `--radius`, atau isi `@layer base`.
@@ -3013,7 +3013,7 @@ git commit -m "chore(next): add Vercel monorepo build config"
 **Interfaces:**
 - Produces: workspace yang hanya berisi aplikasi Next, `lib/db`, dan `scripts`.
 
-**Konteks:** Jalankan task ini **hanya setelah** Task 16 berhasil dan user mengonfirmasi aplikasi produksi berjalan benar. Semuanya bisa dipulihkan dari commit `fa01a3c` bila ternyata ada yang terlewat.
+**Konteks:** Jalankan task ini **hanya setelah** Task 16 berhasil dan user mengonfirmasi aplikasi produksi berjalan benar. Semuanya bisa dipulihkan dari commit `9b3b831` bila ternyata ada yang terlewat.
 
 - [ ] **Step 1: Minta konfirmasi user**
 
@@ -3060,7 +3060,7 @@ git add -A
 git commit -m "chore: remove Vite app, Express API, and generated API client
 
 Digantikan artifacts/swipe-fashion-next. Baseline sebelum migrasi
-tetap ada di commit fa01a3c bila sewaktu-waktu perlu dirujuk."
+tetap ada di commit 9b3b831 bila sewaktu-waktu perlu dirujuk."
 ```
 
 ---
