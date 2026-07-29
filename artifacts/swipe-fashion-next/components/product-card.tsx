@@ -217,8 +217,10 @@ export function ProductCard({
              aplikasi rujukan. Diisi material karena itu satu-satunya fakta
              produk yang cukup pendek untuk jadi caption. ---- */}
         {product.material && (
-          <div className="relative z-10 mx-10 mt-2 pointer-events-none">
-            <div className="relative bg-pink-50/95 rounded-full px-6 py-3 shadow-sm text-center">
+          // flex justify-center membuat lebar gelembung mengikuti teksnya,
+          // bukan membentang selebar layar untuk isi sependek「シルク100%」.
+          <div className="relative z-10 mt-2 flex justify-center pointer-events-none">
+            <div className="relative bg-pink-50/95 rounded-full px-7 py-2.5 shadow-sm">
               <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-pink-50/95 rotate-45" />
               <span className="text-sm text-foreground/80">{product.material}</span>
             </div>
@@ -227,8 +229,12 @@ export function ProductCard({
 
         {/* ---- Strip thumbnail besar di atas gradasi ---- */}
         {images.length > 1 && (
+          // gap-5 dan tanpa scale: ring digambar DI LUAR kotak tanpa
+          // memengaruhi tata letak, jadi ring + scale pada thumbnail aktif
+          // sebelumnya menimpa thumbnail di sebelahnya. Ring dikecilkan ke
+          // 3px dan jaraknya dilebarkan supaya tiap preview bernapas.
           <div
-            className="shrink-0 flex gap-3 px-6 py-3.5 overflow-x-auto"
+            className="shrink-0 flex gap-5 px-6 py-4 overflow-x-auto"
             onPointerDown={(e) => e.stopPropagation()}
           >
             {images.map((src, i) => (
@@ -238,10 +244,10 @@ export function ProductCard({
                 onClick={() => goTo(i)}
                 aria-label={`写真 ${i + 1}`}
                 className={cn(
-                  'relative shrink-0 w-20 h-20 rounded-2xl overflow-hidden transition-transform',
+                  'relative shrink-0 w-20 h-20 rounded-2xl overflow-hidden transition',
                   i === photoIndex
-                    ? 'ring-4 ring-white shadow-lg scale-105'
-                    : 'opacity-90',
+                    ? 'ring-[3px] ring-white shadow-lg'
+                    : 'opacity-85',
                 )}
               >
                 <img src={src} alt="" className="w-full h-full object-cover" draggable={false} />
