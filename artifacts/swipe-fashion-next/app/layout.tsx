@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { DM_Sans, Playfair_Display } from "next/font/google";
 
 import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
 
 import "./globals.css";
 
@@ -38,6 +37,9 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  // Wajib supaya env(safe-area-inset-*) bernilai > 0 di perangkat berponi
+  // (iPhone dsb). Tanpa ini util pb-safe/pt-safe di bawah tak berefek.
+  viewportFit: "cover" as const,
 };
 
 export default function RootLayout({
@@ -48,10 +50,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
       <body>
-        <TooltipProvider>
-          {children}
-          <Toaster />
-        </TooltipProvider>
+        {children}
+        <Toaster />
       </body>
     </html>
   );

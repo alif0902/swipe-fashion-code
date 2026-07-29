@@ -1,0 +1,137 @@
+"use client";
+
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { PackageSearch, RotateCcw } from "lucide-react";
+
+import { superLikeAction } from "@/app/actions";
+import { MatchOverlay, type MatchType } from "@/components/match-overlay";
+import { OrderSheet } from "@/components/order-sheet";
+import { ProductCard } from "@/components/product-card";
+import type { AppProduct } from "@/lib/format";
+
+export function SwipeFeed({ products }: { products: AppProduct[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedProduct, setSelectedProduct] = useState<AppProduct | null>(
+    null,
+  );
+  const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false);
+
+  // Produk yang sedang ditampilkan di overlay "It's a Match!".
+  const [matchedProduct, setMatchedProduct] = useState<AppProduct | null>(null);
+  const [matchType, setMatchType] = useState<MatchType>("match");
+
+  const advance = () =>
+    setTimeout(() => setCurrentIndex((prev) => prev + 1), 200);
+
+  const handleSwipeRight = (product: AppProduct) => {
+    setMatchedProduct(product);
+    setMatchType("match");
+    advance();
+  };
+
+  const handleSuperLike = (product: AppProduct) => {
+    setMatchedProduct(product);
+    setMatchType("super");
+    // Simpan ke koleksi Obsessed (dan boost feed). Fire-and-forget: kalau
+    // gagal, momen "Super Match" tetap jalan.
+    void superLikeAction({ productId: product.id }).catch(() => {});
+    advance();
+  };
+
+  const handleSwipeLeft = () => {
+    advance();
+  };
+
+  const handleUndo = () => {
+    setMatchedProduct(null);
+    setIsOrderSheetOpen(false);
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const handleAddToBag = () => {
+    if (matchedProduct) {
+      setSelectedProduct(matchedProduct);
+      setIsOrderSheetOpen(true);
+    }
+    setMatchedProduct(null);
+  };
+
+  const handleKeepSwiping = () => {
+    setMatchedProduct(null);
+  };
+
+  const hasMoreProducts = currentIndex < products.length;
+  const canUndo = currentIndex > 0;
+
+  return (
+    <div className="relative w-full h-[calc(100dvh-64px-env(safe-area-inset-bottom))] overflow-hidden bg-background">
+      <div className="absolute top-0 left-0 right-0 p-6 pt-[calc(1.5rem+env(safe-area-inset-top))] z-30 flex justify-between items-center pointer-events-none">
+        <h1 className="font-serif text-2xl font-bold tracking-tight">
+          SWIPE
+          <span className="text-muted-foreground font-normal italic">Fash</span>
+        </h1>
+
+        <button
+          type="button"
+          onClick={handleUndo}
+          disabled={!canUndo}
+          aria-label="Undo last swipe"
+          data-testid="button-undo"
+          className="pointer-events-auto w-11 h-11 rounded-full border border-border bg-card/80 backdrop-blur flex items-center justify-center text-muted-foreground shadow-sm transition hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <RotateCcw className="w-5 h-5" />
+        </button>
+      </div>
+
+      <div className="relative w-full h-full pt-16">
+        <AnimatePresence>
+          {hasMoreProducts ? (
+            products
+              .slice(currentIndex, currentIndex + 2)
+              .map((product, index) => (
+                <ProductCard
+                  key={`${product.id}-${currentIndex}`}
+                  product={product}
+                  isFront={index === 0}
+                  onSwipeRight={handleSwipeRight}
+                  onSwipeLeft={handleSwipeLeft}
+                  onSuperLike={handleSuperLike}
+                />
+              ))
+              .reverse()
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center pb-24"
+            >
+              <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center mb-6">
+                <PackageSearch className="w-10 h-10 text-muted-foreground" />
+              </div>
+              <h2 className="font-serif text-3xl mb-3">
+                You&apos;re all caught up.
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-[250px]">
+                Check back later for new arrivals or browse the lookbook.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <MatchOverlay
+        product={matchedProduct}
+        type={matchType}
+        onAddToBag={handleAddToBag}
+        onKeepSwiping={handleKeepSwiping}
+      />
+
+      <OrderSheet
+        product={selectedProduct}
+        isOpen={isOrderSheetOpen}
+        onOpenChange={setIsOrderSheetOpen}
+      />
+    </div>
+  );
+}

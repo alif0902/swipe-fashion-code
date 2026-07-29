@@ -5,10 +5,17 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "seed": "tsx ./src/seed.ts",
+    "set-images": "tsx ./src/set-product-images.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "verify-stock": "tsx ./src/verify-stock.ts"
+  },
+  "dependencies": {
+    "@workspace/db": "*",
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
-    "tsx": "catalog:"
+    "@types/node": "^25.3.3",
+    "tsx": "^4.21.0"
   }
 }

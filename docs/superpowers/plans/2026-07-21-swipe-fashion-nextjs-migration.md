@@ -2859,43 +2859,12 @@ git commit -m "feat(next): port orders page onto server components"
 
 ### Task 15: Verifikasi menyeluruh berdampingan
 
-**Files:**
-- Create: `artifacts/swipe-fashion-next/.replit-artifact/artifact.toml`
-
 **Interfaces:**
 - Tidak ada kode baru. Task ini adalah gerbang sebelum deploy.
 
 **Konteks:** Sampai titik ini setiap halaman sudah diverifikasi sendiri-sendiri. Task ini memeriksa keseluruhannya sekaligus, selagi aplikasi lama masih ada untuk dibandingkan. Ini kesempatan terakhir membandingkan sebelum Task 17 menghapusnya.
 
-- [ ] **Step 1: Tulis artifact.toml supaya app baru jalan di Replit**
-
-Buat `artifacts/swipe-fashion-next/.replit-artifact/artifact.toml`:
-
-```toml
-kind = "web"
-previewPath = "/"
-title = "SwipeFash - Fashion Swipe Store"
-version = "1.0.0"
-id = "artifacts/swipe-fashion-next"
-router = "path"
-
-[[services]]
-name = "web"
-paths = [ "/" ]
-localPort = 20100
-
-[services.development]
-run = "pnpm --filter @workspace/swipe-fashion-next run dev"
-
-[services.production]
-build = [ "pnpm", "--filter", "@workspace/swipe-fashion-next", "run", "build" ]
-run = "pnpm --filter @workspace/swipe-fashion-next run start"
-
-[services.env]
-PORT = "20100"
-```
-
-Berbeda dari aplikasi lama, `serve` bukan lagi `static`. Next butuh proses Node yang hidup.
+> Catatan: Next butuh proses Node yang hidup (bukan static). Konfigurasi runtime deploy diatur di platform hosting (Vercel), bukan file config di dalam repo.
 
 - [ ] **Step 2: Typecheck dan test seluruh workspace**
 
@@ -2938,8 +2907,8 @@ Expected: title berisi nama dan brand produk, ada `og:image`, dan halaman orders
 - [ ] **Step 5: Commit**
 
 ```bash
-git add artifacts/swipe-fashion-next/.replit-artifact
-git commit -m "chore(next): add Replit artifact config for the Next app"
+git add artifacts/swipe-fashion-next
+git commit -m "chore(next): verify full workspace before deploy"
 ```
 
 ---
@@ -3008,7 +2977,7 @@ git commit -m "chore(next): add Vercel monorepo build config"
 - Delete: `lib/api-spec/`
 - Delete: `lib/api-zod/`
 - Delete: `lib/api-client-react/`
-- Modify: `package.json` root, `replit.md`
+- Modify: `package.json` root, `PROJECT.md`
 
 **Interfaces:**
 - Produces: workspace yang hanya berisi aplikasi Next, `lib/db`, dan `scripts`.
@@ -3039,7 +3008,7 @@ Run: `cat tsconfig.json`
 
 Hapus entri `references` yang menunjuk `lib/api-spec`, `lib/api-zod`, atau `lib/api-client-react`.
 
-- [ ] **Step 5: Perbarui replit.md**
+- [ ] **Step 5: Perbarui PROJECT.md**
 
 File ini masih berisi template kosong dari scaffold. Isi bagian **Run & Operate**, **Stack**, dan **Where things live** supaya mencerminkan keadaan sebenarnya: satu aplikasi Next.js, Supabase, deploy di Vercel. Hapus baris `pnpm --filter @workspace/api-server run dev` yang sudah tidak berlaku.
 

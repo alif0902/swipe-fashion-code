@@ -11,7 +11,7 @@ export default function NotFound() {
         The page you were looking for has moved or never existed.
       </p>
       <Button asChild className="h-12 rounded-full px-8">
-        <Link href="/">Back to the feed</Link>
+        <Link href="/feed">Back to the feed</Link>
       </Button>
     </div>
   );

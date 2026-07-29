@@ -1,6 +1,5 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
-@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -45,41 +44,41 @@
 }
 
 :root {
-  /* Default to dark mode effectively since it's the requested vibe */
-  --background: 0 0% 5%;
-  --foreground: 0 0% 98%;
-  --border: 0 0% 15%;
-  
-  --card: 0 0% 7%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 0 0% 15%;
-  
-  --popover: 0 0% 7%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 0 0% 15%;
-  
-  --primary: 0 0% 98%;
-  --primary-foreground: 0 0% 5%;
-  
-  --secondary: 0 0% 15%;
-  --secondary-foreground: 0 0% 98%;
-  
-  --muted: 0 0% 12%;
-  --muted-foreground: 0 0% 65%;
-  
-  --accent: 0 0% 15%;
-  --accent-foreground: 0 0% 98%;
-  
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 98%;
-  
-  --input: 0 0% 15%;
-  --ring: 0 0% 98%;
-  
+  /* Tema ala with.is — putih bersih, aksen coral #fe6970, ramah & rounded. */
+  --background: 350 60% 99%;
+  --foreground: 350 10% 24%;
+  --border: 350 32% 92%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 350 10% 24%;
+  --card-border: 350 32% 92%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 350 10% 24%;
+  --popover-border: 350 32% 92%;
+
+  --primary: 357 98% 70%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 356 80% 96%;
+  --secondary-foreground: 350 14% 30%;
+
+  --muted: 350 34% 96%;
+  --muted-foreground: 350 8% 46%;
+
+  --accent: 356 90% 94%;
+  --accent-foreground: 357 58% 46%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  --input: 350 32% 92%;
+  --ring: 357 98% 70%;
+
   --app-font-sans: var(--font-dm-sans), sans-serif;
   --app-font-serif: var(--font-playfair), serif;
   --app-font-mono: Menlo, monospace;
-  --radius: 0.5rem;
+  --radius: 1rem;
 }
 
 .dark {
@@ -133,4 +132,14 @@
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+/* Safe-area insets untuk perangkat berponi/home-indicator (iPhone dsb).
+   Dipakai bottom-nav, action bar produk, dan header feed. Butuh
+   viewport-fit=cover (diset di app/layout.tsx) agar env() > 0. */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
 }
