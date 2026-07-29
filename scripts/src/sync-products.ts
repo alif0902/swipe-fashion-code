@@ -3,7 +3,9 @@ import "./load-env";
 import { eq } from "drizzle-orm";
 import { db, productsTable } from "@workspace/db";
 
-import { products } from "./seed";
+// Diimpor dari catalog, BUKAN dari seed: seed.ts memanggil seed() di level
+// teratas, jadi mengimpornya akan menjalankan seeding dan menggandakan katalog.
+import { products } from "./catalog";
 
 // Menyelaraskan produk yang SUDAH ada di database dengan daftar di seed.ts.
 //

@@ -20,7 +20,8 @@ npm run dev
 - `npm run db:push` — push perubahan schema DB (dev only)
 - `npm run seed` — isi tabel categories dan products
 - `npm run set-images` — pasang path gambar ke produk
-- `npm run sync-products` — selaraskan produk yang sudah ada (harga, deskripsi, foto, material, dimensi) dengan seed.ts
+- `npm run sync-products` — selaraskan produk yang sudah ada (harga, deskripsi, foto, material, dimensi, gender) dengan katalog
+- `npm run dedupe-products` — hapus produk duplikat bernama sama, hanya yang belum dirujuk pesanan/swipe
 - `npm run verify-stock` — cek regresi pemulihan stok
 - `npm run rebuild:native` — build ulang esbuild dan sharp
 
@@ -93,6 +94,7 @@ kalau project Supabase-mu di `ap-southeast-2`. Sengaja tidak dipin di
   install script. Tanpa itu `sharp` berisiko tidak ter-build dan optimisasi
   gambar `next/image` mati di produksi. Lihat "Keamanan install" di bawah.
 - **Harga di database tidak ikut berubah saat `seed.ts` diedit.** `seed()` memakai plain insert tanpa menghapus, jadi menjalankannya ulang menggandakan katalog, dan menghapus lebih dulu pun tidak bisa karena `orders` menyimpan foreign key ke `products`. Untuk memperbarui produk pada database yang sudah terisi, pakai `npm run sync-products`. Stok sengaja tidak ikut ditimpa karena nilainya berubah oleh pesanan sungguhan.
+- **Jangan pernah mengimpor dari `seed.ts`.** Berkas itu memanggil `seed()` di level teratas, jadi sekadar meng-import-nya menjalankan seeding. `sync-products` pernah begitu dan menyisipkan 12 produk duplikat lalu mati oleh `process.exit()` milik seed sebelum sempat bekerja. Data katalog kini tinggal di `scripts/src/catalog.ts` yang bebas efek samping — impor dari sana. Kalau terlanjur ada duplikat, jalankan `npm run dedupe-products`.
 - **Tabel `swipes` harus sudah ada di database produksi.** `npm run db:push`
   dijalankan dari lokal dengan `DIRECT_URL` menunjuk ke Supabase yang sama —
   tidak ada migrasi otomatis saat deploy.
@@ -139,7 +141,8 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 | `artifacts/swipe-fashion-next/app/globals.css` | **Sumber kebenaran design token** (warna HSL, radius, font) |
 | `artifacts/swipe-fashion-next/middleware.ts` | Set cookie sesi httpOnly bila belum ada |
 | `lib/db/src/schema/` | **Sumber kebenaran schema DB**: categories, products, orders, super-likes, swipes |
-| `scripts/src/` | Seed, set gambar produk, sinkron produk, verifikasi stok |
+| `scripts/src/catalog.ts` | **Sumber kebenaran katalog demo.** Data saja, tanpa efek samping |
+| `scripts/src/` | Seed, sinkron produk, dedupe, set gambar, verifikasi stok |
 | `scripts/generate-detail-images.py` | Membuat foto detail turunan dari tiap foto produk (`public/assets/details/`) |
 | `docs/design-reference/` | Screenshot referensi visual (with.is) yang jadi acuan tema coral |
 
