@@ -94,19 +94,26 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
       <div className="relative w-full h-full pt-[env(safe-area-inset-top)]">
         <AnimatePresence>
           {hasMoreProducts ? (
-            products
-              .slice(currentIndex, currentIndex + 2)
-              .map((product, index) => (
-                <ProductCard
-                  key={`${product.id}-${currentIndex}`}
-                  product={product}
-                  isFront={index === 0}
-                  onSwipeRight={handleSwipeRight}
-                  onSwipeLeft={handleSwipeLeft}
-                  onSuperLike={handleSuperLike}
-                />
-              ))
-              .reverse()
+            // HANYA satu kartu yang dirender.
+            //
+            // Dulu dua kartu ditumpuk supaya kartu berikutnya mengintip di
+            // belakang. Itu berhasil selama kartunya satu kotak putih penuh
+            // yang menutupi apa pun di bawahnya. Sejak kartu dipecah jadi tiga
+            // blok mengambang (foto, thumbnail, panel) dengan celah transparan
+            // di antaranya, kartu belakang justru terlihat menyembul lewat
+            // celah itu — persis yang terbaca sebagai "bayangan menimpa kartu
+            // di bawahnya".
+            //
+            // Efek tumpukan tidak bisa dipertahankan tanpa mengembalikan latar
+            // penuh pada kartu, jadi dilepas.
+            <ProductCard
+              key={`${products[currentIndex].id}-${currentIndex}`}
+              product={products[currentIndex]}
+              isFront
+              onSwipeRight={handleSwipeRight}
+              onSwipeLeft={handleSwipeLeft}
+              onSuperLike={handleSuperLike}
+            />
           ) : (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}

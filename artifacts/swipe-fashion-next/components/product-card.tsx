@@ -118,14 +118,7 @@ export function ProductCard({
       dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
       onDragEnd={handleDragEnd}
       animate={controls}
-      style={{
-        x,
-        y,
-        rotate,
-        opacity: isFront ? 1 : 0.8,
-        scale: isFront ? 1 : 0.95,
-        zIndex: isFront ? 10 : 0,
-      }}
+      style={{ x, y, rotate }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
       {/* Wadah kartu kini transparan. Foto, strip thumbnail, dan panel teks
@@ -265,7 +258,7 @@ export function ProductCard({
           // merambat ke luar, tapi masih mengizinkan efek pantul pada panel
           // ini sendiri. "none" mematikan keduanya — panel berhenti mati di
           // ujung konten.
-          className="flex-1 min-h-0 overflow-y-auto overscroll-none bg-card rounded-t-[2rem] shadow-lg px-6 pt-7 pb-40"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-none bg-card rounded-t-[2rem] px-6 pt-7 pb-40"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-3">
