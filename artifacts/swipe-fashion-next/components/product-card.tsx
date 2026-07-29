@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   motion,
   useMotionValue,
   useTransform,
   useAnimation,
   useDragControls,
+  useScroll,
   type PanInfo,
 } from 'framer-motion';
 import { categoryLabel, formatPrice, type AppProduct } from '@/lib/format';
@@ -47,16 +48,53 @@ export function ProductCard({
   const rotate = useTransform(x, [-200, 200], [-8, 8]);
   const likeOpacity = useTransform(x, [0, 50, 100], [0, 0, 1]);
   const nopeOpacity = useTransform(x, [0, -50, -100], [0, 0, 1]);
-  const superOpacity = useTransform(y, [0, -50, -100], [0, 0, 1]);
 
-  // Kartu kini punya badan yang bisa di-scroll, sementara drag framer-motion
-  // ikut menangkap gerakan vertikal. Kalau drag dipasang pada seluruh kartu,
-  // menggulir daftar spesifikasi malah menyeret kartunya.
-  //
-  // dragListener={false} mematikan penangkapan otomatis, lalu drag hanya
-  // dimulai manual dari area foto lewat dragControls. Hasilnya: foto untuk
-  // swipe, badan untuk scroll.
+  // Seluruh kartu kini satu wadah scroll: foto, gelembung, thumbnail, dan
+  // panel teks berada di dalamnya. Menggulir dari mana pun — termasuk dari
+  // atas foto — menaikkan panel putih sampai menutupi foto.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ container: scrollRef });
+
+  // Foto meredup dan sedikit mengecil saat panel naik, jadi peralihannya
+  // terasa berlapis, bukan sekadar konten yang bergeser.
+  const photoOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0.35]);
+  const photoScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.94]);
+
+  // dragListener={false} mematikan penangkapan otomatis framer-motion; drag
+  // hanya dimulai manual setelah kita memastikan gesturnya memang mendatar.
   const dragControls = useDragControls();
+
+  // Satu gestur di atas foto bisa berarti dua hal: geser mendatar untuk
+  // swipe, atau geser tegak untuk menggulir. Arahnya diputuskan sekali di
+  // awal gestur, lalu tidak diubah lagi — kalau tidak, scroll bisa berubah
+  // jadi swipe di tengah jalan.
+  const gesture = useRef<{ x: number; y: number; decided: boolean } | null>(
+    null,
+  );
+
+  const onPhotoPointerDown = (e: React.PointerEvent) => {
+    if (!isFront) return;
+    gesture.current = { x: e.clientX, y: e.clientY, decided: false };
+  };
+
+  const onPhotoPointerMove = (e: React.PointerEvent) => {
+    const g = gesture.current;
+    if (!g || g.decided) return;
+
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+    // Tunggu sampai gerakannya cukup jelas sebelum memutuskan arah.
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+
+    g.decided = true;
+    // Mendatar → serahkan ke drag. Tegak → dibiarkan, browser yang menggulir
+    // (dimungkinkan oleh touch-action: pan-y pada elemen fotonya).
+    if (Math.abs(dx) > Math.abs(dy)) dragControls.start(e);
+  };
+
+  const onPhotoPointerEnd = () => {
+    gesture.current = null;
+  };
 
   const images = product.images.length > 0 ? product.images : [product.imageUrl];
   const [photoIndex, setPhotoIndex] = useState(0);
@@ -67,14 +105,10 @@ export function ProductCard({
 
   const swipeThreshold = 100;
 
+  // Swipe ke ATAS untuk super like sengaja dihapus: sumbu tegak sekarang
+  // milik scroll. Tombol ★ tetap tersedia.
   const handleDragEnd = async (_e: unknown, info: PanInfo) => {
     const { offset, velocity } = info;
-
-    if (offset.y < -swipeThreshold && Math.abs(offset.y) > Math.abs(offset.x)) {
-      await controls.start({ y: -700, transition: { duration: 0.3 } });
-      onSuperLike(product);
-      return;
-    }
 
     if (offset.x > swipeThreshold || velocity.x > 500) {
       await controls.start({ x: 500, transition: { duration: 0.3 } });
@@ -138,21 +172,22 @@ export function ProductCard({
         >
           <span className="text-red-500 font-black text-3xl tracking-widest">パス</span>
         </motion.div>
-        <motion.div
-          className="absolute top-1/3 left-1/2 -translate-x-1/2 z-40 border-4 border-violet-500 rounded-lg px-5 py-1.5 pointer-events-none"
-          style={{ opacity: superOpacity }}
-        >
-          <span className="text-violet-500 font-black text-2xl tracking-widest flex items-center gap-2">
-            <Star className="w-6 h-6 fill-current" /> スーパー
-          </span>
-        </motion.div>
-
-        {/* ---- Foto: satu-satunya zona gestur swipe ---- */}
+        {/* ---- Wadah scroll tunggal: foto, gelembung, thumbnail, panel ---- */}
         <div
-          className="relative h-[42%] shrink-0 touch-none"
-          onPointerDown={(e) => {
-            if (isFront) dragControls.start(e);
-          }}
+          ref={scrollRef}
+          className="h-full overflow-y-auto overscroll-none scrollbar-none"
+        >
+        {/* ---- Foto: geser mendatar = swipe, geser tegak = scroll ----
+             touch-pan-y memberi tahu browser bahwa gestur tegak di sini boleh
+             menggulir; tanpa itu browser menahan scroll dan hanya drag yang
+             jalan. */}
+        <motion.div
+          className="relative h-[42vh] shrink-0 touch-pan-y"
+          style={{ opacity: photoOpacity, scale: photoScale }}
+          onPointerDown={onPhotoPointerDown}
+          onPointerMove={onPhotoPointerMove}
+          onPointerUp={onPhotoPointerEnd}
+          onPointerCancel={onPhotoPointerEnd}
         >
           <div className="relative h-full mx-6 rounded-[1.75rem] overflow-hidden bg-muted shadow-lg">
             <img
@@ -204,7 +239,7 @@ export function ProductCard({
               </button>
             </>
           )}
-        </div>
+        </motion.div>
 
         {/* ---- Gelembung ucapan dengan ekor segitiga, seperti caption foto di
              aplikasi rujukan. Diisi material karena itu satu-satunya fakta
@@ -249,16 +284,16 @@ export function ProductCard({
           </div>
         )}
 
-        {/* ---- Panel teks putih, bisa di-scroll, tidak memicu swipe ----
+        {/* ---- Panel teks putih ----
              Tata letak header meniru aplikasi rujukan: nama tebal sans (bukan
              serif — heading di globals.css otomatis serif, jadi di-override),
-             baris status dengan titik hijau, lalu harga besar berwarna aksen. */}
+             baris status dengan titik hijau, lalu harga besar berwarna aksen.
+
+             min-h-full menjamin panel selalu bisa naik sampai memenuhi layar,
+             meski isi 基本情報 pendek. Tanpa itu, produk dengan sedikit baris
+             ukuran tidak akan pernah bisa menutupi fotonya. */}
         <div
-          // overscroll-none (bukan -contain): "contain" hanya mencegah scroll
-          // merambat ke luar, tapi masih mengizinkan efek pantul pada panel
-          // ini sendiri. "none" mematikan keduanya — panel berhenti mati di
-          // ujung konten.
-          className="flex-1 min-h-0 overflow-y-auto overscroll-none bg-card rounded-t-[2rem] px-6 pt-7 pb-32"
+          className="relative min-h-full bg-card rounded-t-[2rem] px-6 pt-7 pb-32"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-3">
@@ -339,6 +374,7 @@ export function ProductCard({
               value={product.stock > 0 ? `残り${product.stock}点` : '在庫切れ'}
             />
           </div>
+        </div>
         </div>
 
         {/* ---- Tombol ala aplikasi rujukan: satu pil coral besar mengambang
