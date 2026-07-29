@@ -13,7 +13,7 @@ import { categoryLabel, formatPrice, type AppProduct } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { ChevronLeft, ChevronRight, Heart, Star, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, ThumbsUp, X } from 'lucide-react';
 
 interface ProductCardProps {
   product: AppProduct;
@@ -111,7 +111,7 @@ export function ProductCard({
 
   return (
     <motion.div
-      className="absolute inset-0 px-3 pt-2 pb-3"
+      className="absolute inset-0 pt-2"
       drag={isFront}
       dragListener={false}
       dragControls={dragControls}
@@ -154,28 +154,14 @@ export function ProductCard({
           </span>
         </motion.div>
 
-        {/* ---- Foto: kartu mengambang, satu-satunya zona gestur swipe ---- */}
+        {/* ---- Foto: satu-satunya zona gestur swipe ---- */}
         <div
-          className="relative h-[48%] shrink-0 mx-2 touch-none"
+          className="relative h-[42%] shrink-0 touch-none"
           onPointerDown={(e) => {
             if (isFront) dragControls.start(e);
           }}
         >
-          <div className="relative w-full h-full rounded-[2rem] overflow-hidden bg-muted shadow-xl">
-            {images.length > 1 && (
-              <div className="absolute top-2.5 left-3 right-3 z-30 flex gap-1.5 pointer-events-none">
-                {images.map((_, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      'h-1 flex-1 rounded-full transition-colors',
-                      i === photoIndex ? 'bg-white' : 'bg-white/40',
-                    )}
-                  />
-                ))}
-              </div>
-            )}
-
+          <div className="relative h-full mx-6 rounded-[1.75rem] overflow-hidden bg-muted shadow-lg">
             <img
               src={currentImage}
               alt={product.name}
@@ -195,9 +181,10 @@ export function ProductCard({
             </div>
           </div>
 
-          {/* Panah menggantung di tepi foto, separuh keluar seperti aplikasi
-              rujukan. Ditempatkan di luar wadah ber-overflow-hidden supaya
-              bagian yang menonjol tidak terpotong. */}
+          {/* Panah setengah lingkaran TERJEPIT DI TEPI LAYAR seperti aplikasi
+              rujukan — bukan lingkaran kecil di tepi foto. -translate-x-1/2
+              mendorong separuhnya keluar kartu; overflow-hidden pada wadah
+              feed yang memotongnya jadi setengah lingkaran. */}
           {images.length > 1 && (
             <>
               <button
@@ -208,9 +195,9 @@ export function ProductCard({
                 // memicu dragControls.start dan tap-nya terbaca sebagai swipe.
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => goTo(photoIndex - 1)}
-                className="absolute -left-1 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/75 backdrop-blur shadow-md flex items-center justify-center text-foreground/70"
+                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-30 w-16 h-16 rounded-full bg-white/45 backdrop-blur-sm flex items-center justify-center text-white"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-6 h-6 ml-6" />
               </button>
               <button
                 type="button"
@@ -218,18 +205,30 @@ export function ProductCard({
                 data-testid="button-photo-next"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => goTo(photoIndex + 1)}
-                className="absolute -right-1 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/75 backdrop-blur shadow-md flex items-center justify-center text-foreground/70"
+                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-30 w-16 h-16 rounded-full bg-white/45 backdrop-blur-sm flex items-center justify-center text-white"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-6 h-6 mr-6" />
               </button>
             </>
           )}
         </div>
 
-        {/* ---- Strip thumbnail, langsung di atas latar pink ---- */}
+        {/* ---- Gelembung ucapan dengan ekor segitiga, seperti caption foto di
+             aplikasi rujukan. Diisi material karena itu satu-satunya fakta
+             produk yang cukup pendek untuk jadi caption. ---- */}
+        {product.material && (
+          <div className="relative z-10 mx-10 mt-2 pointer-events-none">
+            <div className="relative bg-pink-50/95 rounded-full px-6 py-3 shadow-sm text-center">
+              <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-pink-50/95 rotate-45" />
+              <span className="text-sm text-foreground/80">{product.material}</span>
+            </div>
+          </div>
+        )}
+
+        {/* ---- Strip thumbnail besar di atas gradasi ---- */}
         {images.length > 1 && (
           <div
-            className="shrink-0 flex gap-2.5 px-2 py-3 overflow-x-auto"
+            className="shrink-0 flex gap-3 px-6 py-3.5 overflow-x-auto"
             onPointerDown={(e) => e.stopPropagation()}
           >
             {images.map((src, i) => (
@@ -239,10 +238,10 @@ export function ProductCard({
                 onClick={() => goTo(i)}
                 aria-label={`写真 ${i + 1}`}
                 className={cn(
-                  'relative shrink-0 w-16 h-16 rounded-2xl overflow-hidden transition',
+                  'relative shrink-0 w-20 h-20 rounded-2xl overflow-hidden transition-transform',
                   i === photoIndex
-                    ? 'ring-[3px] ring-white shadow-md'
-                    : 'opacity-70',
+                    ? 'ring-4 ring-white shadow-lg scale-105'
+                    : 'opacity-90',
                 )}
               >
                 <img src={src} alt="" className="w-full h-full object-cover" draggable={false} />
@@ -256,11 +255,11 @@ export function ProductCard({
              serif — heading di globals.css otomatis serif, jadi di-override),
              baris status dengan titik hijau, lalu harga besar berwarna aksen. */}
         <div
-          className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-card rounded-[2rem] shadow-lg px-6 pt-6 pb-32"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-card rounded-t-[2rem] shadow-lg px-6 pt-7 pb-40"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-3">
-            <h2 className="font-sans font-bold text-xl leading-snug tracking-normal">
+            <h2 className="font-sans font-bold text-2xl leading-snug tracking-normal">
               {product.name}
             </h2>
             {(product.isNew || product.isSale) && (
@@ -339,18 +338,20 @@ export function ProductCard({
           </div>
         </div>
 
-        {/* ---- Tombol aksi ala aplikasi rujukan: satu pil coral besar
-             「いいね！」 diapit lingkaran pass dan super. Hierarkinya
-             disengaja — like adalah aksi utama, dua lainnya sekunder. ---- */}
+        {/* ---- Tombol ala aplikasi rujukan: satu pil coral besar mengambang
+             di atas panel, dengan ikon jempol di ujung kiri. Pass dan super
+             jadi lingkaran kecil di sisinya — hierarkinya disengaja, like
+             adalah aksi utama. Tanpa gradasi latar: pil dibiarkan melayang
+             dengan bayangan, seperti di referensi. ---- */}
         {isFront && (
           <div
-            className="absolute bottom-0 left-0 right-0 z-30 flex items-center gap-3 px-5 pb-4 pt-10 rounded-b-[2rem] bg-gradient-to-t from-card via-card/95 to-transparent"
+            className="absolute bottom-4 left-4 right-4 z-30 flex items-center gap-3"
             onPointerDown={(e) => e.stopPropagation()}
           >
             <Button
               size="icon"
               variant="outline"
-              className="w-14 h-14 shrink-0 rounded-full border-border bg-card shadow-md hover:bg-red-50 hover:border-red-300 text-red-400"
+              className="w-14 h-14 shrink-0 rounded-full border-0 bg-card shadow-lg hover:bg-red-50 text-red-400"
               onClick={forceSwipeLeft}
               data-testid="button-skip"
               aria-label="パス"
@@ -358,17 +359,19 @@ export function ProductCard({
               <X className="w-6 h-6" />
             </Button>
             <Button
-              className="flex-1 h-14 rounded-full bg-primary text-primary-foreground text-lg font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 hover:scale-[1.01] transition"
+              className="relative flex-1 h-16 rounded-full bg-primary text-primary-foreground text-xl font-bold shadow-xl shadow-primary/40 hover:bg-primary/90 transition"
               onClick={forceSwipeRight}
               data-testid="button-buy"
             >
-              <Heart className="w-5 h-5 fill-current mr-2" />
+              <span className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                <ThumbsUp className="w-6 h-6 fill-current" />
+              </span>
               いいね！
             </Button>
             <Button
               size="icon"
               variant="outline"
-              className="w-14 h-14 shrink-0 rounded-full border-border bg-card shadow-md hover:bg-violet-50 hover:border-violet-300 text-violet-500"
+              className="w-14 h-14 shrink-0 rounded-full border-0 bg-card shadow-lg hover:bg-violet-50 text-violet-500"
               onClick={forceSuperLike}
               data-testid="button-super"
               aria-label="スーパーライク"
