@@ -128,7 +128,10 @@ export function ProductCard({
       }}
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
     >
-      <div className="relative w-full h-full rounded-3xl overflow-hidden bg-card border border-card-border shadow-2xl flex flex-col">
+      {/* Wadah kartu kini transparan. Foto, strip thumbnail, dan panel teks
+          jadi tiga blok terpisah yang mengambang di atas latar pink — bukan
+          satu kotak putih penuh seperti sebelumnya. */}
+      <div className="relative w-full h-full flex flex-col">
         {/* Stempel arah swipe */}
         <motion.div
           className="absolute top-8 left-8 z-40 border-4 border-green-500 rounded-lg px-4 py-1.5 rotate-[-15deg] pointer-events-none"
@@ -151,34 +154,50 @@ export function ProductCard({
           </span>
         </motion.div>
 
-        {/* ---- Area foto: satu-satunya tempat gestur swipe aktif ---- */}
+        {/* ---- Foto: kartu mengambang, satu-satunya zona gestur swipe ---- */}
         <div
-          className="relative h-[46%] shrink-0 bg-muted touch-none"
+          className="relative h-[44%] shrink-0 mx-2 touch-none"
           onPointerDown={(e) => {
             if (isFront) dragControls.start(e);
           }}
         >
-          {images.length > 1 && (
-            <div className="absolute top-2.5 left-3 right-3 z-30 flex gap-1.5 pointer-events-none">
-              {images.map((_, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    'h-1 flex-1 rounded-full transition-colors',
-                    i === photoIndex ? 'bg-white' : 'bg-white/40',
-                  )}
-                />
-              ))}
+          <div className="relative w-full h-full rounded-[1.75rem] overflow-hidden bg-muted shadow-xl">
+            {images.length > 1 && (
+              <div className="absolute top-2.5 left-3 right-3 z-30 flex gap-1.5 pointer-events-none">
+                {images.map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      'h-1 flex-1 rounded-full transition-colors',
+                      i === photoIndex ? 'bg-white' : 'bg-white/40',
+                    )}
+                  />
+                ))}
+              </div>
+            )}
+
+            <img
+              src={currentImage}
+              alt={product.name}
+              className="w-full h-full object-cover select-none"
+              draggable={false}
+            />
+
+            <div className="absolute top-4 right-4 flex gap-2 z-30">
+              {product.isNew && (
+                <Badge className="bg-white text-black hover:bg-white border-0 shadow">NEW</Badge>
+              )}
+              {product.isSale && (
+                <Badge variant="destructive" className="shadow">
+                  SALE
+                </Badge>
+              )}
             </div>
-          )}
+          </div>
 
-          <img
-            src={currentImage}
-            alt={product.name}
-            className="w-full h-full object-cover select-none"
-            draggable={false}
-          />
-
+          {/* Panah menggantung di tepi foto, separuh keluar seperti aplikasi
+              rujukan. Ditempatkan di luar wadah ber-overflow-hidden supaya
+              bagian yang menonjol tidak terpotong. */}
           {images.length > 1 && (
             <>
               <button
@@ -189,7 +208,7 @@ export function ProductCard({
                 // memicu dragControls.start dan tap-nya terbaca sebagai swipe.
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => goTo(photoIndex - 1)}
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-black/30 backdrop-blur flex items-center justify-center text-white"
+                className="absolute -left-1 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/75 backdrop-blur shadow-md flex items-center justify-center text-foreground/70"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -199,29 +218,18 @@ export function ProductCard({
                 data-testid="button-photo-next"
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => goTo(photoIndex + 1)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-black/30 backdrop-blur flex items-center justify-center text-white"
+                className="absolute -right-1 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/75 backdrop-blur shadow-md flex items-center justify-center text-foreground/70"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
             </>
           )}
-
-          <div className="absolute top-4 right-4 flex gap-2 z-30">
-            {product.isNew && (
-              <Badge className="bg-white text-black hover:bg-white border-0 shadow">NEW</Badge>
-            )}
-            {product.isSale && (
-              <Badge variant="destructive" className="shadow">
-                SALE
-              </Badge>
-            )}
-          </div>
         </div>
 
-        {/* ---- Strip thumbnail ---- */}
+        {/* ---- Strip thumbnail, langsung di atas latar pink ---- */}
         {images.length > 1 && (
           <div
-            className="shrink-0 flex gap-2 px-3 py-2.5 overflow-x-auto border-b border-border"
+            className="shrink-0 flex gap-2.5 px-2 py-3 overflow-x-auto"
             onPointerDown={(e) => e.stopPropagation()}
           >
             {images.map((src, i) => (
@@ -231,8 +239,10 @@ export function ProductCard({
                 onClick={() => goTo(i)}
                 aria-label={`写真 ${i + 1}`}
                 className={cn(
-                  'relative shrink-0 w-14 h-14 rounded-xl overflow-hidden border-2 transition',
-                  i === photoIndex ? 'border-primary' : 'border-transparent opacity-60',
+                  'relative shrink-0 w-16 h-16 rounded-2xl overflow-hidden transition',
+                  i === photoIndex
+                    ? 'ring-[3px] ring-white shadow-md'
+                    : 'opacity-70',
                 )}
               >
                 <img src={src} alt="" className="w-full h-full object-cover" draggable={false} />
@@ -241,9 +251,9 @@ export function ProductCard({
           </div>
         )}
 
-        {/* ---- Badan kartu: bisa di-scroll, tidak memicu swipe ---- */}
+        {/* ---- Panel teks putih, bisa di-scroll, tidak memicu swipe ---- */}
         <div
-          className="flex-1 overflow-y-auto overscroll-contain px-5 pt-4 pb-28"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-card rounded-[1.75rem] shadow-lg px-5 pt-5 pb-28"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <p className="text-[10px] text-muted-foreground tracking-[0.2em] mb-1">
@@ -301,7 +311,7 @@ export function ProductCard({
         {/* ---- Tombol aksi, menempel di dasar kartu ---- */}
         {isFront && (
           <div
-            className="absolute bottom-0 left-0 right-0 z-30 flex justify-center items-center gap-5 py-4 bg-gradient-to-t from-card via-card/95 to-transparent"
+            className="absolute bottom-0 left-0 right-0 z-30 flex justify-center items-center gap-5 pb-3 pt-8 rounded-b-[1.75rem] bg-gradient-to-t from-card via-card/95 to-transparent"
             onPointerDown={(e) => e.stopPropagation()}
           >
             <Button
