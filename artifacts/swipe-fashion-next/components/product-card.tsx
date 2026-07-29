@@ -262,7 +262,7 @@ export function ProductCard({
           // sebelumnya menimpa thumbnail di sebelahnya. Ring dikecilkan ke
           // 3px dan jaraknya dilebarkan supaya tiap preview bernapas.
           <div
-            className="shrink-0 flex gap-5 px-6 py-4 overflow-x-auto"
+            className="shrink-0 flex gap-4 px-6 py-3.5 overflow-x-auto"
             onPointerDown={(e) => e.stopPropagation()}
           >
             {images.map((src, i) => (
@@ -272,9 +272,9 @@ export function ProductCard({
                 onClick={() => goTo(i)}
                 aria-label={`写真 ${i + 1}`}
                 className={cn(
-                  'relative shrink-0 w-20 h-20 rounded-2xl overflow-hidden transition',
+                  'relative shrink-0 w-14 h-14 rounded-xl overflow-hidden transition',
                   i === photoIndex
-                    ? 'ring-[3px] ring-white shadow-lg'
+                    ? 'ring-2 ring-white shadow-md'
                     : 'opacity-85',
                 )}
               >
