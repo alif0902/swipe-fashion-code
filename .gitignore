@@ -12,6 +12,9 @@ out-tsc
 .next/
 out/
 
+# vercel
+.vercel
+
 # local env
 .env.local
 .env*.local

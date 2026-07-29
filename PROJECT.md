@@ -28,6 +28,56 @@ Env wajib (di `artifacts/swipe-fashion-next/.env.local`, contoh ada di `.env.loc
 - `DATABASE_URL` — Supabase **transaction pooler** (port 6543), dipakai saat runtime
 - `DIRECT_URL` — Supabase **direct/session** (port 5432), dipakai `drizzle-kit push` dan seed
 
+## Deploy ke Vercel
+
+Konfigurasi dipin di `vercel.json` di root repo, jadi tidak ada yang perlu
+ditebak lewat dashboard selain env var.
+
+**Root Directory di Vercel dibiarkan di root repo**, bukan diarahkan ke
+`artifacts/swipe-fashion-next`. Alasannya: semua perintah lalu berjalan di
+tempat npm workspaces memang bekerja. `npm ci` dari dalam subfolder workspace
+akan memperlakukannya sebagai proyek terpisah dan membuat `node_modules`
+bersarang. `outputDirectory` yang menunjuk ke `.next` di dalam subfolder itulah
+yang memberitahu Vercel di mana hasil build berada.
+
+Langkah sekali jalan:
+
+1. vercel.com → **Add New → Project** → import repo GitHub-nya.
+2. **Jangan ubah Root Directory.** Biarkan di root.
+3. Framework, install, dan build command sudah terbaca dari `vercel.json` —
+   biarkan apa adanya.
+4. **Environment Variables** — tambahkan sebelum deploy pertama:
+
+   | Nama | Nilai | Catatan |
+   |---|---|---|
+   | `DATABASE_URL` | Connection string **Transaction pooler** Supabase (port 6543) | Satu-satunya yang dibutuhkan Vercel |
+
+   `DIRECT_URL` **tidak perlu** diset di Vercel. Itu hanya dipakai
+   `drizzle-kit push` dan seed dari mesin lokal.
+
+5. Deploy.
+
+Sesudah deploy pertama, tiap push ke `main` auto-deploy dan tiap PR dapat
+preview URL.
+
+Opsional tapi berguna: Settings → Functions → set region ke **Sydney (syd1)**
+kalau project Supabase-mu di `ap-southeast-2`. Sengaja tidak dipin di
+`vercel.json` supaya tidak berisiko ditolak di plan Hobby.
+
+### Jebakan yang sudah diketahui
+
+- **Build gagal dengan "DATABASE_URL must be set"** — env var belum diset.
+  Next mengimpor modul rute saat build, dan `lib/db` melempar error saat
+  di-import. Koneksi sungguhan tidak dibutuhkan saat build, cukup string-nya ada.
+- **`npm ci` gagal** — `package-lock.json` tidak sinkron dengan `package.json`.
+  Jalankan `npm install` lokal, commit lockfile-nya.
+- **`installCommand` memanggil `rebuild:native`** karena `.npmrc` mematikan
+  install script. Tanpa itu `sharp` berisiko tidak ter-build dan optimisasi
+  gambar `next/image` mati di produksi. Lihat "Keamanan install" di bawah.
+- **Tabel `swipes` harus sudah ada di database produksi.** `npm run db:push`
+  dijalankan dari lokal dengan `DIRECT_URL` menunjuk ke Supabase yang sama —
+  tidak ada migrasi otomatis saat deploy.
+
 ## Keamanan install
 
 Repo ini pindah dari pnpm ke npm. pnpm punya beberapa pengaman yang **npm tidak
