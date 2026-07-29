@@ -75,8 +75,11 @@
   --input: 350 32% 92%;
   --ring: 357 98% 70%;
 
-  --app-font-sans: var(--font-dm-sans), sans-serif;
-  --app-font-serif: var(--font-playfair), serif;
+  /* Urutannya penting. Font Latin disebut lebih dulu supaya logo, angka harga,
+     dan nama brand tetap dirender Playfair / DM Sans; browser baru jatuh ke
+     Noto JP untuk karakter yang tidak ada glifnya, yaitu kana dan kanji. */
+  --app-font-sans: var(--font-dm-sans), var(--font-noto-sans-jp), sans-serif;
+  --app-font-serif: var(--font-playfair), var(--font-noto-serif-jp), serif;
   --app-font-mono: Menlo, monospace;
   --radius: 1rem;
 }

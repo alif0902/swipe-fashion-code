@@ -87,7 +87,7 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
           type="button"
           onClick={handleUndo}
           disabled={!canUndo}
-          aria-label="Undo last swipe"
+          aria-label="ひとつ前に戻る"
           data-testid="button-undo"
           className="pointer-events-auto w-11 h-11 rounded-full border border-border bg-card/80 backdrop-blur flex items-center justify-center text-muted-foreground shadow-sm transition hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
         >
@@ -121,10 +121,10 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
                 <PackageSearch className="w-10 h-10 text-muted-foreground" />
               </div>
               <h2 className="font-serif text-3xl mb-3">
-                You&apos;re all caught up.
+                今日はここまで。
               </h2>
               <p className="text-muted-foreground text-lg max-w-[250px]">
-                Check back later for new arrivals or browse the lookbook.
+                新着はまた入荷します。ルックブックも覗いてみてください。
               </p>
             </motion.div>
           )}

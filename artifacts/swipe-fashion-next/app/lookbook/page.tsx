@@ -5,10 +5,11 @@ import Link from "next/link";
 import { AppLayout } from "@/components/layout";
 import { listCategories, listProducts } from "@/lib/data";
 import { cn } from "@/lib/utils";
+import { categoryLabel, formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "Lookbook | SwipeFash",
-  description: "Browse the full collection by category.",
+  title: "ルックブック｜SwipeFash",
+  description: "カテゴリーごとに、コレクション全体を。",
 };
 
 const tabClass = (active: boolean) =>
@@ -35,7 +36,7 @@ export default async function LookbookPage({
     <AppLayout>
       <div className="min-h-[calc(100dvh-64px)] bg-background">
         <header className="px-6 pt-10 pb-6 sticky top-0 bg-background/90 backdrop-blur-xl z-20">
-          <h1 className="font-serif text-4xl mb-4">Lookbook</h1>
+          <h1 className="font-serif text-4xl mb-4">ルックブック</h1>
 
           <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-6 px-6">
             <Link href="/lookbook" className={tabClass(!category)}>
@@ -47,7 +48,7 @@ export default async function LookbookPage({
                 href={`/lookbook?category=${cat.slug}`}
                 className={tabClass(category === cat.slug)}
               >
-                {cat.name}
+                {categoryLabel(cat.slug)}
               </Link>
             ))}
           </div>
@@ -83,14 +84,14 @@ export default async function LookbookPage({
                     {product.name}
                   </h3>
                   <p className="font-serif text-sm">
-                    ${product.price.toFixed(2)}
+                    {formatPrice(product.price)}
                   </p>
                 </Link>
               ))}
             </div>
           ) : (
             <div className="text-center py-20 text-muted-foreground">
-              <p>No products found in this category.</p>
+              <p>このカテゴリーのアイテムはまだありません。</p>
             </div>
           )}
         </div>

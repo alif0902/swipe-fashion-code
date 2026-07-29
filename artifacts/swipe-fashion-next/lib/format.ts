@@ -35,9 +35,33 @@ export type AppOrder = {
 };
 
 // Kolom numeric Postgres kembali sebagai string lewat node-postgres.
-// UI memanggil .toFixed(2) pada harga, jadi konversinya wajib di sini.
+// UI memperlakukan harga sebagai angka, jadi konversinya wajib di sini.
 function toNumber(value: string | null): number | null {
   return value === null ? null : parseFloat(value);
+}
+
+// Harga dalam yen. Jepang tidak memakai pecahan sen, jadi desimal dibuang dan
+// pemisah ribuan dipakai — ¥51,000, bukan ¥51000.00.
+//
+// Sengaja tidak memakai Intl.NumberFormat dengan style "currency": formatnya
+// menghasilkan "￥" lebar penuh yang merusak perataan angka di kartu produk.
+// Simbol ditulis manual, pemisah ribuan tetap dari toLocaleString.
+export function formatPrice(value: number): string {
+  return `¥${Math.round(value).toLocaleString("ja-JP")}`;
+}
+
+// Nama kategori untuk ditampilkan. Kolom category di database berisi slug
+// bahasa Inggris yang juga dipakai sebagai filter URL, jadi tidak diterjemahkan
+// di sana — pemetaannya dilakukan di sisi tampilan seperti ini.
+const CATEGORY_LABELS: Record<string, string> = {
+  tops: "トップス",
+  bottoms: "ボトムス",
+  outerwear: "アウター",
+  dresses: "ワンピース",
+};
+
+export function categoryLabel(slug: string): string {
+  return CATEGORY_LABELS[slug] ?? slug;
 }
 
 export function formatProduct(row: Product): AppProduct {

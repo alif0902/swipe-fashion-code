@@ -20,8 +20,8 @@ export function BottomNav() {
           )}
         >
           <Layers className="w-6 h-6" strokeWidth={pathname === "/feed" ? 2.5 : 1.5} />
-          <span className="text-[10px] font-medium uppercase tracking-wider">
-            Feed
+          <span className="text-[10px] font-medium tracking-wider">
+            フィード
           </span>
         </Link>
         <Link
@@ -35,8 +35,8 @@ export function BottomNav() {
             className="w-6 h-6"
             strokeWidth={pathname === "/lookbook" ? 2.5 : 1.5}
           />
-          <span className="text-[10px] font-medium uppercase tracking-wider">
-            Lookbook
+          <span className="text-[10px] font-medium tracking-wider">
+            ルックブック
           </span>
         </Link>
         <Link
@@ -51,8 +51,8 @@ export function BottomNav() {
             strokeWidth={pathname === "/obsessed" ? 2.5 : 1.5}
             fill={pathname === "/obsessed" ? "currentColor" : "none"}
           />
-          <span className="text-[10px] font-medium uppercase tracking-wider">
-            Obsessed
+          <span className="text-[10px] font-medium tracking-wider">
+            一目惚れ
           </span>
         </Link>
         <Link
@@ -66,8 +66,8 @@ export function BottomNav() {
             className="w-6 h-6"
             strokeWidth={pathname === "/orders" ? 2.5 : 1.5}
           />
-          <span className="text-[10px] font-medium uppercase tracking-wider">
-            Bag
+          <span className="text-[10px] font-medium tracking-wider">
+            バッグ
           </span>
         </Link>
       </div>

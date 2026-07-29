@@ -36,9 +36,9 @@ export function OrderActions({
       const result = await cancelOrderAction(orderId);
       toast(
         result.ok
-          ? { title: "Order cancelled" }
+          ? { title: "注文をキャンセルしました" }
           : {
-              title: "Could not cancel order",
+              title: "注文をキャンセルできませんでした",
               description: result.error,
               variant: "destructive",
             },
@@ -51,13 +51,13 @@ export function OrderActions({
       const result = await confirmOrderAction(orderId, form);
       if (!result.ok) {
         toast({
-          title: "Could not confirm order",
+          title: "注文を確定できませんでした",
           description: result.error,
           variant: "destructive",
         });
         return;
       }
-      toast({ title: "Order confirmed" });
+      toast({ title: "注文が確定しました" });
       setIsConfirming(false);
     });
   };
@@ -73,7 +73,7 @@ export function OrderActions({
         {isPending ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
-          "Cancel order"
+          "注文をキャンセル"
         )}
       </Button>
     );
@@ -103,7 +103,7 @@ export function OrderActions({
   return (
     <div className="space-y-3">
       <div className="space-y-2">
-        <Label htmlFor={`name-${orderId}`}>Name</Label>
+        <Label htmlFor={`name-${orderId}`}>お名前</Label>
         <Input
           id={`name-${orderId}`}
           value={form.customerName}
@@ -111,7 +111,7 @@ export function OrderActions({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`email-${orderId}`}>Email</Label>
+        <Label htmlFor={`email-${orderId}`}>メールアドレス</Label>
         <Input
           id={`email-${orderId}`}
           type="email"
@@ -120,7 +120,7 @@ export function OrderActions({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor={`address-${orderId}`}>Shipping address</Label>
+        <Label htmlFor={`address-${orderId}`}>お届け先住所</Label>
         <Input
           id={`address-${orderId}`}
           value={form.shippingAddress}
@@ -137,7 +137,7 @@ export function OrderActions({
         {isPending ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
-          "Place order"
+          "注文を確定する"
         )}
       </Button>
     </div>

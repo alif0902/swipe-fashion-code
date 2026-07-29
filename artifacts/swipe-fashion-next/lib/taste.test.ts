@@ -171,11 +171,26 @@ describe("describeTaste", () => {
     ).toBeNull();
   });
 
-  it("merangkai kategori, warna, dan brand teratas", () => {
+  it("merangkai kategori, warna, dan brand teratas dalam tata bahasa Jepang", () => {
     const profile = buildTasteProfile([
       signal({ direction: "super", category: "dresses", colors: ["Emerald"], brand: "MAISON" }),
     ]);
 
-    expect(describeTaste(profile)).toBe("dresses in Emerald from MAISON");
+    expect(describeTaste(profile)).toBe("Emeraldのワンピース（MAISON）");
+  });
+
+  it("menghilangkan bagian yang tidak diketahui tanpa menyisakan partikel menggantung", () => {
+    const tanpaWarna = buildTasteProfile([
+      signal({ direction: "like", category: "tops", colors: [], brand: "CORSO" }),
+    ]);
+    expect(describeTaste(tanpaWarna)).toBe("トップス（CORSO）");
+  });
+
+  it("memakai label Jepang untuk kategori, bukan slug database", () => {
+    const profile = buildTasteProfile([
+      signal({ direction: "like", category: "outerwear", colors: [], brand: "" }),
+    ]);
+
+    expect(describeTaste(profile)).toBe("アウター");
   });
 });

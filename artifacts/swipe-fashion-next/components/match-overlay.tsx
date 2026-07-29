@@ -4,7 +4,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Heart, ShoppingBag, Sparkles, Star } from "lucide-react";
 
-import type { AppProduct } from "@/lib/format";
+import { formatPrice, type AppProduct } from "@/lib/format";
 
 export type MatchType = "match" | "super";
 
@@ -76,10 +76,10 @@ export function MatchOverlay({
               ) : (
                 <Sparkles className="w-3.5 h-3.5" />
               )}
-              {isSuper ? "Super Match" : "It's a match"}
+              {isSuper ? "スーパーマッチ" : "マッチ"}
             </span>
             <h2 className="font-serif text-5xl md:text-6xl mb-6 leading-none">
-              {isSuper ? "Super Match!" : "It's a Match!"}
+              {isSuper ? "スーパーマッチ！" : "マッチしました！"}
             </h2>
 
             <div className="w-48 h-60 rounded-3xl overflow-hidden border-4 border-white shadow-2xl mb-5 bg-white/10">
@@ -96,11 +96,11 @@ export function MatchOverlay({
             <p className="font-serif text-2xl leading-tight mb-1">
               {product.name}
             </p>
-            <p className="text-white/90 mb-2">${product.price.toFixed(2)}</p>
+            <p className="text-white/90 mb-2">{formatPrice(product.price)}</p>
 
             {isSuper ? (
               <p className="inline-flex items-center gap-1.5 text-white text-sm mb-8">
-                <Star className="w-4 h-4 fill-current" /> Added to your Obsessed
+                <Star className="w-4 h-4 fill-current" /> 一目惚れリストに追加しました
               </p>
             ) : (
               <div className="mb-6" />
@@ -115,7 +115,7 @@ export function MatchOverlay({
                     className="h-14 rounded-full bg-white text-primary font-sans font-semibold uppercase tracking-[0.15em] text-sm flex items-center justify-center hover:scale-[1.03] transition-transform"
                     data-testid="button-match-keep"
                   >
-                    Keep swiping
+                    スワイプを続ける
                   </button>
                   <Link
                     href="/obsessed"
@@ -123,7 +123,7 @@ export function MatchOverlay({
                     data-testid="link-view-obsessed"
                   >
                     <Star className="w-4 h-4" />
-                    View Obsessed
+                    一目惚れを見る
                   </Link>
                 </>
               ) : (
@@ -135,7 +135,7 @@ export function MatchOverlay({
                     data-testid="button-match-add"
                   >
                     <ShoppingBag className="w-5 h-5" />
-                    Add to bag
+                    バッグに入れる
                   </button>
                   <button
                     type="button"
@@ -143,7 +143,7 @@ export function MatchOverlay({
                     className="h-12 rounded-full border border-white/50 text-white font-sans text-sm uppercase tracking-[0.15em] hover:bg-white/10 transition-colors"
                     data-testid="button-match-keep"
                   >
-                    Keep swiping
+                    スワイプを続ける
                   </button>
                 </>
               )}

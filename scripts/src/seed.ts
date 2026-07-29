@@ -9,12 +9,12 @@ const categories = [
 
 // price dan originalPrice bertipe numeric di Postgres, jadi Drizzle
 // mengharapkan string. Angka JavaScript akan ditolak.
-const products = [
+export const products = [
   {
     name: "Burgundy Silk Slip Dress",
     brand: "MAISON NOIR",
-    price: "289.00",
-    originalPrice: "410.00",
+    price: "43400.00",
+    originalPrice: "61500.00",
     description:
       "A bias-cut slip in heavyweight silk charmeuse. Falls close to the body without clinging, with a cowl neck that holds its shape.",
     imageUrl: "/assets/dress-burgundy-silk.jpg",
@@ -30,7 +30,7 @@ const products = [
   {
     name: "Emerald Satin Midi Dress",
     brand: "MAISON NOIR",
-    price: "340.00",
+    price: "51000.00",
     originalPrice: null,
     description:
       "Fluid satin cut to a calf-skimming midi length. Deep emerald with a subtle sheen that shifts under light.",
@@ -47,7 +47,7 @@ const products = [
   {
     name: "Camel Wool Overcoat",
     brand: "ATELIER SUD",
-    price: "620.00",
+    price: "93000.00",
     originalPrice: null,
     description:
       "Double-faced wool in a relaxed drop shoulder. Unlined so it drapes rather than structures, with deep patch pockets.",
@@ -64,8 +64,8 @@ const products = [
   {
     name: "Black Leather Biker Jacket",
     brand: "ATELIER SUD",
-    price: "780.00",
-    originalPrice: "950.00",
+    price: "117000.00",
+    originalPrice: "142500.00",
     description:
       "Lamb leather with an asymmetric zip, softened at the seams so it moves from the first wear.",
     imageUrl: "/assets/jacket-black-leather.jpg",
@@ -81,7 +81,7 @@ const products = [
   {
     name: "White Linen Blazer",
     brand: "CORSO",
-    price: "395.00",
+    price: "59200.00",
     originalPrice: null,
     description:
       "Single-breasted linen blazer with a half lining. Creases readily, which is the point.",
@@ -98,7 +98,7 @@ const products = [
   {
     name: "White Poplin Shirt",
     brand: "CORSO",
-    price: "165.00",
+    price: "24800.00",
     originalPrice: null,
     description:
       "Crisp cotton poplin with a relaxed collar and a slightly dropped shoulder. Holds a press all day.",
@@ -115,7 +115,7 @@ const products = [
   {
     name: "Grey Wool Sweater",
     brand: "NORD",
-    price: "245.00",
+    price: "36800.00",
     originalPrice: null,
     description:
       "Merino knit in a heather grey, ribbed at the cuff and hem. Warm without bulk.",
@@ -132,8 +132,8 @@ const products = [
   {
     name: "Black Turtleneck",
     brand: "NORD",
-    price: "135.00",
-    originalPrice: "180.00",
+    price: "20200.00",
+    originalPrice: "27000.00",
     description:
       "Fine-gauge stretch knit that layers flat under a jacket. High neck that stays put.",
     imageUrl: "/assets/top-black-turtleneck.jpg",
@@ -149,7 +149,7 @@ const products = [
   {
     name: "Navy Tailored Trousers",
     brand: "CORSO",
-    price: "285.00",
+    price: "42800.00",
     originalPrice: null,
     description:
       "Mid-rise wool trouser with a pressed crease and a straight leg that breaks at the shoe.",
@@ -166,7 +166,7 @@ const products = [
   {
     name: "Cream Wide-Leg Trousers",
     brand: "MAISON NOIR",
-    price: "310.00",
+    price: "46500.00",
     originalPrice: null,
     description:
       "High-waisted with a generous wide leg in a heavy crepe. Sharp at the waist, fluid below.",
@@ -183,7 +183,7 @@ const products = [
   {
     name: "Distressed Straight Jeans",
     brand: "NORD",
-    price: "195.00",
+    price: "29200.00",
     originalPrice: null,
     description:
       "Rigid Japanese denim with hand-sanded wear at the knee and hem. Softens to the body over time.",
@@ -200,8 +200,8 @@ const products = [
   {
     name: "Floral Wrap Skirt",
     brand: "ATELIER SUD",
-    price: "220.00",
-    originalPrice: "295.00",
+    price: "33000.00",
+    originalPrice: "44200.00",
     description:
       "True wrap skirt in printed viscose, tied at the waist. Falls to mid-calf with a soft front opening.",
     imageUrl: "/assets/skirt-floral-wrap.jpg",

@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { DM_Sans, Playfair_Display } from "next/font/google";
+import {
+  DM_Sans,
+  Noto_Sans_JP,
+  Noto_Serif_JP,
+  Playfair_Display,
+} from "next/font/google";
 
 import { Toaster } from "@/components/ui/toaster";
 
@@ -20,15 +25,41 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
+// Playfair dan DM Sans tidak punya glif kana maupun kanji sama sekali. Tanpa
+// pasangan Jepang di bawah, setiap karakter Jepang jatuh ke font bawaan sistem
+// dan tampil berbeda-beda di tiap perangkat.
+//
+// Keduanya dipasang sebagai FALLBACK di globals.css, bukan pengganti: huruf
+// Latin (logo, angka harga, nama brand) tetap dirender Playfair/DM Sans, dan
+// hanya karakter Jepang yang jatuh ke Noto. Itu sebabnya karakter tipografi
+// aslinya tetap terjaga.
+//
+// preload: false wajib — subset Jepang berukuran sangat besar dan next/font
+// menolak mem-preload-nya. Font tetap dimuat, hanya tidak di-preload.
+const notoSerifJP = Noto_Serif_JP({
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-noto-serif-jp",
+  display: "swap",
+  preload: false,
+});
+
+const notoSansJP = Noto_Sans_JP({
+  weight: ["400", "500", "600"],
+  variable: "--font-noto-sans-jp",
+  display: "swap",
+  preload: false,
+});
+
 export const metadata: Metadata = {
-  title: "SwipeFash - Fashion Swipe Store",
+  title: "SwipeFash｜スワイプで出会う、次の一着",
   description:
-    "Swipe through curated fashion. Find the piece, order it in two taps.",
+    "選ぶのではなく、感じる。スワイプするだけで、あなたの好みに近づいていくファッションストア。",
   openGraph: {
-    title: "SwipeFash - Fashion Swipe Store",
+    title: "SwipeFash｜スワイプで出会う、次の一着",
     description:
-      "Swipe through curated fashion. Find the piece, order it in two taps.",
+      "選ぶのではなく、感じる。スワイプするだけで、あなたの好みに近づいていくファッションストア。",
     type: "website",
+    locale: "ja_JP",
   },
   icons: { icon: "/favicon.svg" },
 };
@@ -48,7 +79,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${dmSans.variable}`}>
+    <html
+      lang="ja"
+      className={`${playfair.variable} ${dmSans.variable} ${notoSerifJP.variable} ${notoSansJP.variable}`}
+    >
       <body>
         {children}
         <Toaster />

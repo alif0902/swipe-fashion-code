@@ -40,7 +40,7 @@ const Navbar = () => (
       className="group flex items-center gap-2 text-sm font-medium tracking-wide uppercase hover:opacity-70 transition-opacity"
       data-testid="link-nav-cta"
     >
-      Start Swiping
+      スワイプする
       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
     </Link>
   </nav>
@@ -61,7 +61,7 @@ const HeroSection = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background z-10" />
         <img
           src={heroImg}
-          alt="Soft linen editorial"
+          alt="リネンのエディトリアル写真"
           className="w-full h-full object-cover object-center scale-105 animate-in fade-in zoom-in duration-1000"
         />
       </motion.div>
@@ -74,17 +74,17 @@ const HeroSection = () => {
           className="max-w-4xl mx-auto flex flex-col items-center"
         >
           <motion.span variants={fadeUp} className="text-xs md:text-sm tracking-[0.3em] text-muted-foreground uppercase mb-6 block font-sans">
-            The New Editorial
+            新しいエディトリアル
           </motion.span>
           <motion.h1 
             variants={fadeUp}
             className="text-5xl md:text-8xl lg:text-9xl leading-[0.95] md:leading-[0.9] font-serif mb-8 text-primary"
           >
-            Don't <span className="italic text-muted-foreground">shop.</span><br />
-            Just <span className="italic">swipe.</span>
+            <span className="text-muted-foreground">探さない。</span><br />
+            ただ、<span className="italic">スワイプ。</span>
           </motion.h1>
           <motion.p variants={fadeUp} className="text-lg md:text-xl text-foreground/80 max-w-xl mx-auto mb-12 font-light leading-relaxed">
-            The world's most dangerous curation algorithm. High-fashion editorial meets the dopamine hit of a swipe game.
+            一着ずつ、直感で決める。選んだものと見送ったものから、フィードは静かに形を変えていきます。
           </motion.p>
           <motion.div variants={fadeUp}>
             <Link
@@ -92,14 +92,14 @@ const HeroSection = () => {
               className="inline-flex items-center justify-center h-16 px-10 rounded-full bg-primary text-primary-foreground font-sans text-sm tracking-[0.2em] uppercase shadow-lg shadow-primary/25 hover:scale-105 transition-transform duration-300 ease-out"
               data-testid="link-hero-cta"
             >
-              Enter the Experience
+              はじめる
             </Link>
           </motion.div>
         </motion.div>
       </div>
       
       <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-4 animate-pulse opacity-60 text-foreground">
-        <span className="text-[10px] uppercase tracking-[0.2em] font-sans">Scroll</span>
+        <span className="text-[10px] uppercase tracking-[0.2em] font-sans">スクロール</span>
         <div className="w-[1px] h-12 bg-primary/50" />
       </div>
     </section>
@@ -118,10 +118,10 @@ const MechanicsSection = () => {
           className="max-w-xl mb-24"
         >
           <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl font-serif mb-6">
-            Instinct over <span className="italic text-muted-foreground">search.</span>
+            検索より、<span className="italic text-muted-foreground">直感。</span>
           </motion.h2>
           <motion.p variants={fadeUp} className="text-lg text-muted-foreground font-light">
-            No endless scrolling through grids. No bloated categories. Just you, the piece, and a split-second decision.
+            延々と続くグリッドも、細かなカテゴリー分けもありません。あるのは、一着と、一瞬の判断だけ。
           </motion.p>
         </motion.div>
 
@@ -129,18 +129,18 @@ const MechanicsSection = () => {
           {[
             {
               icon: <X className="w-8 h-8 text-destructive" />,
-              title: "Swipe Left",
-              desc: "Pass. We learn what you hate and never show it again."
+              title: "左にスワイプ",
+              desc: "見送る。その選択も好みとして記録され、次のフィードに反映されます。"
             },
             {
               icon: <Heart className="w-8 h-8 text-green-500" />,
-              title: "Swipe Right",
-              desc: "Match. Instantly saved to your personal lookbook."
+              title: "右にスワイプ",
+              desc: "気になった一着を保存。あとで探し直す必要はありません。"
             },
             {
               icon: <Zap className="w-8 h-8 text-yellow-500" />,
-              title: "1-Tap Cop",
-              desc: "Secure it before it's gone. Frictionless checkout."
+              title: "そのまま注文",
+              desc: "サイズと色を選んで、その場で注文。迷っているうちに売り切れないように。"
             }
           ].map((item, i) => (
             <motion.div 
@@ -184,28 +184,28 @@ const ShowcaseSection = () => {
             <div className="aspect-[3/4] relative overflow-hidden bg-card border border-border">
               <img 
                 src={productImg} 
-                alt="Luxury fashion piece" 
+                alt="ホワイトポプリンシャツ" 
                 className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
               />
               <div className="absolute top-6 right-6 flex items-center gap-2">
                 <span className="px-3 py-1 bg-background/80 backdrop-blur-sm text-[10px] uppercase tracking-widest border border-border">
-                  Archival
+                  アーカイブ
                 </span>
               </div>
               <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between mix-blend-difference text-white">
-                <span className="font-serif italic text-2xl">01 / The Void Jacket</span>
-                <span className="font-sans font-medium tracking-widest text-sm">$850</span>
+                <span className="font-serif italic text-2xl">01 / ホワイトポプリンシャツ</span>
+                <span className="font-sans font-medium tracking-widest text-sm">¥24,800</span>
               </div>
             </div>
             
             {/* Decorative swipe hints */}
             <div className="absolute top-1/2 -left-12 -translate-y-1/2 opacity-20 flex flex-col items-center gap-2">
               <MoveLeft className="w-8 h-8" />
-              <span className="text-[10px] uppercase tracking-widest rotate-[-90deg] mt-6">Pass</span>
+              <span className="text-[10px] uppercase tracking-widest rotate-[-90deg] mt-6">見送る</span>
             </div>
             <div className="absolute top-1/2 -right-12 -translate-y-1/2 opacity-20 flex flex-col items-center gap-2">
               <MoveRight className="w-8 h-8" />
-              <span className="text-[10px] uppercase tracking-widest rotate-90 mt-6">Match</span>
+              <span className="text-[10px] uppercase tracking-widest rotate-90 mt-6">気になる</span>
             </div>
           </motion.div>
 
@@ -217,16 +217,16 @@ const ShowcaseSection = () => {
             className="w-full md:w-1/2 max-w-lg"
           >
             <motion.h2 variants={fadeUp} className="text-4xl md:text-5xl lg:text-6xl font-serif mb-8 leading-[1.1]">
-              Curated drop <span className="italic text-muted-foreground">culture.</span>
+              選びぬいた、<span className="italic text-muted-foreground">少しだけ。</span>
             </motion.h2>
             <motion.p variants={fadeUp} className="text-lg text-muted-foreground font-light mb-8 leading-relaxed">
-              We source directly from underground ateliers, avant-garde designers, and rare archives. No basics. No filler. If it's on SwipeFash, it's a statement.
+              点数は多くありません。トップス、ボトムス、アウター、ワンピース。長く着られるものだけを並べています。
             </motion.p>
             <motion.ul variants={staggerContainer} className="flex flex-col gap-4 mb-12">
               {[
-                "Algorithmically personalized feed",
-                "Exclusive pieces you won't find on SSENSE",
-                "Seamless Apple Pay checkout"
+                "スワイプから学ぶ、あなただけのフィード",
+                "保存した一着から組むコーディネート提案",
+                "サイズとカラーを選んで、数タップで注文"
               ].map((text, i) => (
                 <motion.li variants={fadeUp} key={i} className="flex items-center gap-4 text-sm font-sans tracking-wide text-primary/80">
                   <CheckCircle2 className="w-5 h-5 opacity-50" />
@@ -240,7 +240,7 @@ const ShowcaseSection = () => {
                 className="inline-flex items-center gap-4 border-b border-primary pb-2 text-sm uppercase tracking-[0.2em] hover:text-muted-foreground hover:border-muted-foreground transition-colors group"
                 data-testid="link-showcase-cta"
               >
-                Join the Drop
+                コレクションを見る
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </motion.div>
@@ -272,7 +272,7 @@ const TextureSection = () => {
           transition={{ duration: 1 }}
           className="text-3xl md:text-5xl font-serif italic leading-tight"
         >
-          "We don't do seasons.<br />We do obsessions."
+          「季節ではなく、<br />好みで選ぶ。」
         </motion.p>
       </div>
     </section>
@@ -285,10 +285,10 @@ const StatsSection = () => {
       <div className="container mx-auto px-6 md:px-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-12 text-center md:text-left divide-x-0 md:divide-x divide-border">
           {[
-            { label: "Pieces Curated", value: "12k+" },
-            { label: "Checkout Time", value: "2s" },
-            { label: "Exclusive Brands", value: "150+" },
-            { label: "Compromises", value: "0" }
+            { label: "アイテム", value: "12" },
+            { label: "カテゴリー", value: "4" },
+            { label: "ブランド", value: "4" },
+            { label: "会員登録", value: "不要" }
           ].map((stat, i) => (
             <motion.div 
               key={i}
@@ -329,10 +329,10 @@ const CTASection = () => {
             <Flame className="w-8 h-8 text-primary-foreground" />
           </motion.div>
           <motion.h2 variants={fadeUp} className="text-5xl md:text-7xl font-serif mb-6 leading-[0.9]">
-            Ready to <span className="italic">match?</span>
+            さっそく、<span className="italic">一着目を。</span>
           </motion.h2>
           <motion.p variants={fadeUp} className="text-lg text-muted-foreground font-light mb-12">
-            The grid is dead. Long live the swipe. Join the fashion revolution today.
+            グリッドを眺める時間は、もう終わり。あなたの一着は、数回のスワイプの先にあります。
           </motion.p>
           <motion.div variants={fadeUp}>
             <Link
@@ -340,7 +340,7 @@ const CTASection = () => {
               className="inline-flex items-center justify-center h-16 px-12 rounded-full bg-primary text-primary-foreground font-sans text-sm tracking-[0.2em] uppercase shadow-lg shadow-primary/25 hover:scale-105 transition-transform duration-300 ease-out"
               data-testid="link-final-cta"
             >
-              Start Swiping Now
+              スワイプをはじめる
             </Link>
           </motion.div>
         </motion.div>

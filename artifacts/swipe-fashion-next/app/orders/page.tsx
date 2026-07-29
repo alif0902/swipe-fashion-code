@@ -4,9 +4,10 @@ import { AppLayout } from "@/components/layout";
 import { OrderActions } from "@/components/order-actions";
 import { listOrders } from "@/lib/data";
 import { getSessionId } from "@/lib/session";
+import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "Your Bag | SwipeFash",
+  title: "バッグ｜SwipeFash",
   // Halaman personal — tidak ada gunanya di hasil pencarian.
   robots: { index: false, follow: false },
 };
@@ -29,16 +30,16 @@ export default async function OrdersPage() {
     <AppLayout>
       <div className="min-h-[calc(100dvh-64px)] bg-background">
         <header className="px-6 pt-10 pb-6">
-          <h1 className="font-serif text-4xl">Your Bag</h1>
+          <h1 className="font-serif text-4xl">バッグ</h1>
         </header>
 
         {orders.length === 0 ? (
           <div className="text-center py-20 px-8 text-muted-foreground">
             <p className="font-serif text-2xl mb-2 text-foreground">
-              Nothing here yet.
+              まだ何もありません。
             </p>
             <p className="text-sm">
-              Swipe right on something you like to add it to your bag.
+              気になる一着を右にスワイプすると、ここに入ります。
             </p>
           </div>
         ) : (
@@ -68,7 +69,7 @@ export default async function OrdersPage() {
                     </p>
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-serif text-lg">
-                        ${order.totalPrice.toFixed(2)}
+                        {formatPrice(order.totalPrice)}
                       </span>
                       <span
                         className={`text-[10px] uppercase font-bold tracking-widest px-2 py-1 rounded-full ${

@@ -15,7 +15,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { useToast } from "@/hooks/use-toast";
-import type { AppProduct } from "@/lib/format";
+import { formatPrice, type AppProduct } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 interface OrderSheetProps {
@@ -60,11 +60,11 @@ export function OrderSheet({
   const handleConfirm = () => {
     if (!product) return;
     if (!selectedSize && product.sizes.length > 0) {
-      toast({ title: "Please select a size", variant: "destructive" });
+      toast({ title: "サイズを選択してください", variant: "destructive" });
       return;
     }
     if (!selectedColor && product.colors.length > 0) {
-      toast({ title: "Please select a color", variant: "destructive" });
+      toast({ title: "カラーを選択してください", variant: "destructive" });
       return;
     }
 
@@ -78,15 +78,15 @@ export function OrderSheet({
 
       if (!result.ok) {
         toast({
-          title: "Error adding to bag",
-          description: "Please try again later.",
+          title: "バッグに追加できませんでした",
+          description: "時間をおいて、もう一度お試しください。",
           variant: "destructive",
         });
         return;
       }
 
       toast({
-        title: "Added to Bag",
+        title: "バッグに追加しました",
         description: `${product.name} is waiting for you.`,
       });
       onOpenChange(false);
@@ -115,7 +115,7 @@ export function OrderSheet({
                 {product.brand}
               </p>
               <DrawerTitle className="text-xl mb-1">{product.name}</DrawerTitle>
-              <p className="font-serif text-lg">${product.price.toFixed(2)}</p>
+              <p className="font-serif text-lg">{formatPrice(product.price)}</p>
             </div>
           </div>
           <DrawerDescription className="sr-only">
@@ -128,10 +128,10 @@ export function OrderSheet({
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Select Size
+                  サイズを選択
                 </h4>
                 <button className="text-xs underline text-muted-foreground hover:text-foreground">
-                  Size Guide
+                  サイズガイド
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -157,7 +157,7 @@ export function OrderSheet({
           {product.colors.length > 0 && (
             <div className="space-y-3">
               <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Select Color
+                カラーを選択
               </h4>
               <div className="flex flex-wrap gap-3">
                 {product.colors.map((color) => {

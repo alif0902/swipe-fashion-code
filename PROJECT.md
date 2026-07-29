@@ -20,6 +20,7 @@ npm run dev
 - `npm run db:push` — push perubahan schema DB (dev only)
 - `npm run seed` — isi tabel categories dan products
 - `npm run set-images` — pasang path gambar ke produk
+- `npm run sync-prices` — selaraskan harga produk yang sudah ada dengan seed.ts
 - `npm run verify-stock` — cek regresi pemulihan stok
 - `npm run rebuild:native` — build ulang esbuild dan sharp
 
@@ -91,6 +92,7 @@ kalau project Supabase-mu di `ap-southeast-2`. Sengaja tidak dipin di
 - **`installCommand` memanggil `rebuild:native`** karena `.npmrc` mematikan
   install script. Tanpa itu `sharp` berisiko tidak ter-build dan optimisasi
   gambar `next/image` mati di produksi. Lihat "Keamanan install" di bawah.
+- **Harga di database tidak ikut berubah saat `seed.ts` diedit.** `seed()` memakai plain insert tanpa menghapus, jadi menjalankannya ulang menggandakan katalog, dan menghapus lebih dulu pun tidak bisa karena `orders` menyimpan foreign key ke `products`. Untuk memperbarui harga pada database yang sudah terisi, pakai `npm run sync-prices`.
 - **Tabel `swipes` harus sudah ada di database produksi.** `npm run db:push`
   dijalankan dari lokal dengan `DIRECT_URL` menunjuk ke Supabase yang sama —
   tidak ada migrasi otomatis saat deploy.
@@ -126,7 +128,7 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 | Path | Isi |
 |---|---|
 | `artifacts/swipe-fashion-next/` | Satu-satunya aplikasi. Semua rute, komponen, dan data layer. |
-| `artifacts/swipe-fashion-next/app/` | Rute App Router: `/welcome`, `/landing`, `/feed`, `/lookbook`, `/obsessed`, `/orders`, `/product/[id]` |
+| `artifacts/swipe-fashion-next/app/` | Rute App Router: `/welcome`, `/feed`, `/lookbook`, `/obsessed`, `/orders`, `/style-dna`, `/product/[id]` |
 | `artifacts/swipe-fashion-next/app/actions.ts` | Server Actions: `createOrderAction`, `superLikeAction`, `confirmOrderAction`, `cancelOrderAction` |
 | `artifacts/swipe-fashion-next/lib/data.ts` | **Sumber kebenaran query baca** untuk Server Component |
 | `artifacts/swipe-fashion-next/lib/taste.ts` | **Mesin selera.** Bangun profil dari swipe, skor & urutkan produk. Murni, diuji unit |
@@ -136,7 +138,7 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 | `artifacts/swipe-fashion-next/app/globals.css` | **Sumber kebenaran design token** (warna HSL, radius, font) |
 | `artifacts/swipe-fashion-next/middleware.ts` | Set cookie sesi httpOnly bila belum ada |
 | `lib/db/src/schema/` | **Sumber kebenaran schema DB**: categories, products, orders, super-likes, swipes |
-| `scripts/src/` | Seed, set gambar produk, verifikasi stok |
+| `scripts/src/` | Seed, set gambar produk, sinkron harga, verifikasi stok |
 | `docs/design-reference/` | Screenshot referensi visual (with.is) yang jadi acuan tema coral |
 
 ## Architecture decisions
@@ -152,7 +154,7 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 
 ## Product
 
-- **Welcome / Landing** — halaman masuk bertema.
+- **Welcome** — halaman masuk. `/` mengarah ke sini. Halaman `/landing` yang dulu menganggur sudah dihapus.
 - **Feed** — tumpukan kartu produk yang bisa di-swipe; like memunculkan match overlay, super-like menyimpan ke koleksi Obsessed. Urutan feed ditentukan mesin selera.
 - **Style DNA** — visualisasi apa yang dipelajari aplikasi dari swipe-mu: kategori yang dicari dan dihindari, label, palet warna, rentang harga, dan tingkat keyakinan. Punya gambar OG untuk di-share.
 - **Complete the Look** — outfit yang dirakit otomatis dari koleksi Obsessed (atasan + bawahan, atau dress, ditumpuk luaran).
@@ -175,7 +177,8 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 - Versi dependency ditulis literal, tidak ada `catalog:` lagi. Paket yang dipakai lintas workspace (`drizzle-orm`, `zod`, `@types/node`) harus dinaikkan serempak.
 - `drizzle-kit push` akan gagal lewat pooler 6543 — pastikan `DIRECT_URL` terisi.
 - `.env.local` berisi kredensial asli dan di-gitignore. Jangan pernah di-commit.
-- Ada dua halaman masuk yang tumpang tindih (`/welcome` dan `/landing`); `/` redirect ke `/welcome`. Salah satu perlu dipilih.
+- **Bahasa antarmuka: Jepang.** Nama produk, deskripsi, warna, dan nama brand sengaja dibiarkan huruf Latin di database — itu justru wajar di situs fashion Jepang. Yang diterjemahkan hanya lapisan tampilan. Label kategori dipetakan di `lib/format.ts` (`categoryLabel`), bukan di database, karena slug-nya juga dipakai sebagai filter URL.
+- **Gambar OG Style DNA tetap berbahasa Inggris.** `ImageResponse` merender dengan font yang disediakan sendiri, dan font bawaannya tidak punya glif Jepang — teks Jepang akan keluar sebagai kotak kosong. Menyediakan font Jepang berarti mengunduh berkas font saat request. Kartu bermerek berhuruf Latin dinilai lebih aman.
 
 ## Pointers
 

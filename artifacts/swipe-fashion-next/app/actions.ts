@@ -29,12 +29,12 @@ export async function createOrderAction(
 ): Promise<ActionResult> {
   const parsed = createOrderSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: "Invalid order details." };
+    return { ok: false, error: "注文内容が正しくありません。" };
   }
 
   const sessionId = await getSessionId();
   if (!sessionId) {
-    return { ok: false, error: "No active session." };
+    return { ok: false, error: "セッションが見つかりません。" };
   }
 
   const { productId, selectedSize, selectedColor, quantity } = parsed.data;
@@ -45,11 +45,11 @@ export async function createOrderAction(
     .where(eq(productsTable.id, productId));
 
   if (!product) {
-    return { ok: false, error: "Product not found." };
+    return { ok: false, error: "商品が見つかりません。" };
   }
 
   if (product.stock < quantity) {
-    return { ok: false, error: "Insufficient stock." };
+    return { ok: false, error: "在庫が足りません。" };
   }
 
   const totalPrice = (parseFloat(product.price) * quantity).toFixed(2);
@@ -82,12 +82,12 @@ export async function recordSwipeAction(
 ): Promise<ActionResult> {
   const parsed = recordSwipeSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: "Invalid swipe." };
+    return { ok: false, error: "スワイプを記録できませんでした。" };
   }
 
   const sessionId = await getSessionId();
   if (!sessionId) {
-    return { ok: false, error: "No active session." };
+    return { ok: false, error: "セッションが見つかりません。" };
   }
 
   try {
@@ -112,7 +112,7 @@ export async function recordSwipeAction(
   } catch {
     // Tabel swipes mungkin belum di-push. Swipe tetap terasa mulus; yang
     // hilang hanya personalisasinya.
-    return { ok: false, error: "Could not record swipe." };
+    return { ok: false, error: "スワイプを記録できませんでした。" };
   }
 }
 
@@ -121,12 +121,12 @@ export async function superLikeAction(
 ): Promise<ActionResult> {
   const parsed = superLikeSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: "Invalid product." };
+    return { ok: false, error: "商品が正しくありません。" };
   }
 
   const sessionId = await getSessionId();
   if (!sessionId) {
-    return { ok: false, error: "No active session." };
+    return { ok: false, error: "セッションが見つかりません。" };
   }
 
   try {
@@ -136,7 +136,7 @@ export async function superLikeAction(
       .where(eq(productsTable.id, parsed.data.productId));
 
     if (!product) {
-      return { ok: false, error: "Product not found." };
+      return { ok: false, error: "商品が見つかりません。" };
     }
 
     // Sekali per sesi — super like berulang diabaikan diam-diam.
@@ -151,7 +151,7 @@ export async function superLikeAction(
     return { ok: true };
   } catch {
     // Tabel super_likes mungkin belum di-push — jangan bikin UX gagal total.
-    return { ok: false, error: "Could not save right now." };
+    return { ok: false, error: "いま保存できませんでした。" };
   }
 }
 
@@ -161,7 +161,7 @@ export async function confirmOrderAction(
 ): Promise<ActionResult> {
   const parsed = confirmOrderSchema.safeParse(input);
   if (!parsed.success) {
-    return { ok: false, error: "Invalid confirmation details." };
+    return { ok: false, error: "入力内容をご確認ください。" };
   }
 
   const sessionId = await getSessionId();
@@ -173,7 +173,7 @@ export async function confirmOrderAction(
 
   // Cek kepemilikan: sesi hanya boleh menyentuh order miliknya sendiri.
   if (!existing || existing.sessionId !== sessionId) {
-    return { ok: false, error: "Order not found." };
+    return { ok: false, error: "注文が見つかりません。" };
   }
 
   await db
@@ -204,7 +204,7 @@ export async function cancelOrderAction(
     .where(eq(ordersTable.id, orderId));
 
   if (!existing || existing.sessionId !== sessionId) {
-    return { ok: false, error: "Order not found." };
+    return { ok: false, error: "注文が見つかりません。" };
   }
 
   if (existing.status !== "cancelled") {

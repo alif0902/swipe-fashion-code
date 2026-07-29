@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, useMotionValue, useTransform, useAnimation, PanInfo } from 'framer-motion';
-import type { AppProduct } from '@/lib/format';
+import { formatPrice, type AppProduct } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -98,14 +98,14 @@ export function ProductCard({ product, onSwipeRight, onSwipeLeft, onSuperLike, i
           className="absolute top-10 left-10 z-20 border-4 border-green-500 rounded-lg px-4 py-2 rotate-[-15deg] pointer-events-none"
           style={{ opacity: likeOpacity }}
         >
-          <span className="text-green-500 font-black text-4xl tracking-widest uppercase">BUY</span>
+          <span className="text-green-500 font-black text-4xl tracking-widest uppercase">買う</span>
         </motion.div>
 
         <motion.div
           className="absolute top-10 right-10 z-20 border-4 border-red-500 rounded-lg px-4 py-2 rotate-[15deg] pointer-events-none"
           style={{ opacity: nopeOpacity }}
         >
-          <span className="text-red-500 font-black text-4xl tracking-widest uppercase">PASS</span>
+          <span className="text-red-500 font-black text-4xl tracking-widest uppercase">パス</span>
         </motion.div>
 
         <motion.div
@@ -113,7 +113,7 @@ export function ProductCard({ product, onSwipeRight, onSwipeLeft, onSuperLike, i
           style={{ opacity: superOpacity }}
         >
           <span className="text-violet-500 font-black text-3xl tracking-widest uppercase flex items-center gap-2">
-            <Star className="w-7 h-7 fill-current" /> SUPER
+            <Star className="w-7 h-7 fill-current" /> スーパー
           </span>
         </motion.div>
 
@@ -147,7 +147,7 @@ export function ProductCard({ product, onSwipeRight, onSwipeLeft, onSuperLike, i
             <>
               <button
                 type="button"
-                aria-label="Foto sebelumnya"
+                aria-label="前の写真"
                 onClick={(e) => {
                   e.stopPropagation();
                   prevPhoto();
@@ -157,7 +157,7 @@ export function ProductCard({ product, onSwipeRight, onSwipeLeft, onSuperLike, i
               />
               <button
                 type="button"
-                aria-label="Foto berikutnya"
+                aria-label="次の写真"
                 onClick={(e) => {
                   e.stopPropagation();
                   nextPhoto();
@@ -192,9 +192,9 @@ export function ProductCard({ product, onSwipeRight, onSwipeLeft, onSuperLike, i
             </Link>
           </div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-2xl font-light font-serif">${product.price.toFixed(2)}</span>
+            <span className="text-2xl font-light font-serif">{formatPrice(product.price)}</span>
             {product.originalPrice && (
-              <span className="text-sm text-white/50 line-through">${product.originalPrice.toFixed(2)}</span>
+              <span className="text-sm text-white/50 line-through">{formatPrice(product.originalPrice)}</span>
             )}
           </div>
         </div>

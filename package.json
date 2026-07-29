@@ -22,7 +22,8 @@
     "seed": "npm run seed -w @workspace/scripts",
     "set-images": "npm run set-images -w @workspace/scripts",
     "verify-stock": "npm run verify-stock -w @workspace/scripts",
-    "rebuild:native": "npm rebuild esbuild sharp"
+    "rebuild:native": "npm rebuild esbuild sharp",
+    "sync-prices": "npm run sync-prices -w @workspace/scripts"
   },
   "overrides": {
     "esbuild": "0.27.3"

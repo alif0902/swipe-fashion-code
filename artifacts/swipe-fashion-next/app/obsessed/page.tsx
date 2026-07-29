@@ -6,14 +6,15 @@ import { ChevronRight, Shirt, Sparkles, Star } from "lucide-react";
 import { AppLayout } from "@/components/layout";
 import { getTasteProfile, listObsessed } from "@/lib/data";
 import { getSessionId } from "@/lib/session";
+import { formatPrice } from "@/lib/format";
 import { buildLooks, describeLookGap } from "@/lib/outfit";
 import { describeTaste } from "@/lib/taste";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Obsessed | SwipeFash",
-  description: "The pieces you super liked, and the looks they make.",
+  title: "一目惚れ｜SwipeFash",
+  description: "スーパーライクした一着と、そこから組めるコーディネート。",
 };
 
 export default async function ObsessedPage() {
@@ -34,13 +35,12 @@ export default async function ObsessedPage() {
           <div className="flex items-center gap-2 mb-1">
             <Star className="w-4 h-4 fill-primary text-primary" />
             <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              Super liked
+              スーパーライク
             </span>
           </div>
-          <h1 className="font-serif text-4xl">Obsessed</h1>
+          <h1 className="font-serif text-4xl">一目惚れ</h1>
           <p className="text-muted-foreground mt-1 max-w-sm">
-            The pieces you couldn&apos;t scroll past. Your feed is tuned toward
-            these.
+            スクロールの手が止まった一着。フィードはこの好みに寄っていきます。
           </p>
         </header>
 
@@ -56,11 +56,11 @@ export default async function ObsessedPage() {
                 <Sparkles className="w-5 h-5 text-primary" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium mb-0.5">Your Style DNA</p>
+                <p className="text-sm font-medium mb-0.5">あなたのスタイルDNA</p>
                 <p className="text-xs text-muted-foreground truncate">
                   {summary
-                    ? `Leaning ${summary}`
-                    : `${profile.totalSwipes} swipes learned so far`}
+                    ? `${summary}に寄っています`
+                    : `これまで${profile.totalSwipes}回のスワイプを学習`}
                 </p>
               </div>
               <div className="shrink-0 flex items-center gap-2">
@@ -79,7 +79,7 @@ export default async function ObsessedPage() {
             <div className="px-6 mb-4 flex items-center gap-2">
               <Shirt className="w-4 h-4 text-muted-foreground" />
               <h2 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-                Complete the look
+                コーディネート
               </h2>
             </div>
 
@@ -112,10 +112,9 @@ export default async function ObsessedPage() {
                         {look.title}
                       </span>
                       <span className="font-serif text-sm">
-                        $
-                        {look.pieces
-                          .reduce((sum, p) => sum + p.price, 0)
-                          .toFixed(2)}
+                        {formatPrice(
+                          look.pieces.reduce((sum, p) => sum + p.price, 0),
+                        )}
                       </span>
                     </div>
                   </div>
@@ -133,7 +132,7 @@ export default async function ObsessedPage() {
           {products.length > 0 ? (
             <>
               <h2 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-4 px-2">
-                Saved pieces
+                保存したアイテム
               </h2>
               <div className="grid grid-cols-2 gap-x-3 gap-y-6">
                 {products.map((product) => (
@@ -161,7 +160,7 @@ export default async function ObsessedPage() {
                       {product.name}
                     </h3>
                     <p className="font-serif text-sm">
-                      ${product.price.toFixed(2)}
+                      {formatPrice(product.price)}
                     </p>
                   </Link>
                 ))}
@@ -173,17 +172,16 @@ export default async function ObsessedPage() {
                 <Star className="w-9 h-9 text-muted-foreground" />
               </div>
               <h2 className="font-serif text-2xl mb-2">
-                Nothing you&apos;re obsessed with yet.
+                まだ一目惚れはありません。
               </h2>
               <p className="text-muted-foreground max-w-[260px] mb-6">
-                Swipe up — or tap the star — on a piece you love to super like
-                it. It lands here and shapes your feed.
+                気になる一着を上にスワイプ、または星をタップ。ここに保存され、フィードの好みにも反映されます。
               </p>
               <Link
                 href="/feed"
                 className="h-12 px-8 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center uppercase text-sm tracking-widest font-medium hover:scale-[1.03] transition-transform"
               >
-                Start swiping
+                スワイプを始める
               </Link>
             </div>
           )}

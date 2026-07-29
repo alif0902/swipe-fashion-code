@@ -18,7 +18,7 @@ export function ProductDetailActions({ product }: { product: AppProduct }) {
             onClick={() => setIsOrderSheetOpen(true)}
             data-testid="button-open-order-sheet"
           >
-            Add to Bag
+            バッグに入れる
           </Button>
         </div>
       </div>

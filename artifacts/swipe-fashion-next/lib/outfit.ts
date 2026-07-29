@@ -70,7 +70,7 @@ export function buildLooks<T extends OutfitPiece>(pieces: T[]): Look<T>[] {
 
     return {
       id: all.map((p) => p.id).join("-"),
-      title: `Look ${String(index + 1).padStart(2, "0")}`,
+      title: `コーデ ${String(index + 1).padStart(2, "0")}`,
       pieces: all,
     };
   });
@@ -88,8 +88,8 @@ export function describeLookGap(pieces: OutfitPiece[]): string | null {
 
   if (hasDress || (hasTop && hasBottom)) return null;
 
-  if (hasTop) return "Save a pair of bottoms to complete your first look.";
-  if (hasBottom) return "Save a top to complete your first look.";
+  if (hasTop) return "ボトムスを保存すると、最初のコーディネートが組めます。";
+  if (hasBottom) return "トップスを保存すると、最初のコーディネートが組めます。";
 
-  return "Save a top and bottoms — or a dress — to build your first look.";
+  return "トップスとボトムス、またはワンピースを保存するとコーディネートが組めます。";
 }

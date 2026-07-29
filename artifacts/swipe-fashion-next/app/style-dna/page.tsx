@@ -5,13 +5,14 @@ import { Sparkles, ThumbsDown, ThumbsUp, Wallet } from "lucide-react";
 import { AppLayout } from "@/components/layout";
 import { getTasteProfile } from "@/lib/data";
 import { getSessionId } from "@/lib/session";
+import { categoryLabel, formatPrice } from "@/lib/format";
 import { describeTaste, type Affinity } from "@/lib/taste";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Style DNA | SwipeFash",
-  description: "What your swipes say about your taste.",
+  title: "スタイルDNA｜SwipeFash",
+  description: "スワイプが語る、あなたの好み。",
 };
 
 // Batang afinitas. Lebarnya proporsional dengan skor absolut, jadi selera yang
@@ -19,16 +20,20 @@ export const metadata: Metadata = {
 function AffinityBar({
   item,
   tone,
+  label,
 }: {
   item: Affinity;
   tone: "positive" | "negative";
+  // Kategori dilabeli bahasa Jepang, sedangkan nama brand dibiarkan huruf
+  // Latin apa adanya — itu justru yang wajar di situs fashion Jepang.
+  label?: string;
 }) {
   const width = `${Math.round(Math.abs(item.score) * 100)}%`;
 
   return (
     <li className="flex items-center gap-3">
-      <span className="w-24 shrink-0 text-sm capitalize truncate">
-        {item.key.toLowerCase()}
+      <span className="w-24 shrink-0 text-sm truncate">
+        {label ?? item.key}
       </span>
       <span className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
         <span
@@ -79,16 +84,15 @@ export default async function StyleDnaPage() {
           <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-5">
             <Sparkles className="w-9 h-9 text-muted-foreground" />
           </div>
-          <h1 className="font-serif text-3xl mb-2">No DNA yet.</h1>
+          <h1 className="font-serif text-3xl mb-2">まだデータがありません。</h1>
           <p className="text-muted-foreground max-w-[280px] mb-6">
-            Swipe through the feed and this page fills in. Every pass counts as
-            much as every like.
+            フィードをスワイプすると、このページが埋まっていきます。見送った一着も、選んだ一着と同じだけ手がかりになります。
           </p>
           <Link
             href="/feed"
             className="h-12 px-8 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center uppercase text-sm tracking-widest font-medium hover:scale-[1.03] transition-transform"
           >
-            Start swiping
+            スワイプを始める
           </Link>
         </div>
       </AppLayout>
@@ -102,20 +106,20 @@ export default async function StyleDnaPage() {
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              Learned from {profile.totalSwipes} swipes
+              {profile.totalSwipes}回のスワイプから
             </span>
           </div>
-          <h1 className="font-serif text-4xl">Style DNA</h1>
+          <h1 className="font-serif text-4xl">スタイルDNA</h1>
           {summary && (
             <p className="text-muted-foreground mt-1 max-w-sm">
-              You gravitate toward{" "}
-              <span className="text-foreground capitalize">{summary}</span>.
+              いま惹かれているのは{" "}
+              <span className="text-foreground">{summary}</span>。
             </p>
           )}
         </header>
 
         <div className="px-6 pb-10">
-          <Section title="Confidence">
+          <Section title="精度">
             <div className="rounded-2xl border border-border bg-card p-5">
               <div className="flex items-baseline justify-between mb-3">
                 <span className="font-serif text-3xl">
@@ -123,8 +127,8 @@ export default async function StyleDnaPage() {
                 </span>
                 <span className="text-xs text-muted-foreground">
                   {profile.confidence < 1
-                    ? "Keep swiping to sharpen it"
-                    : "Dialled in"}
+                    ? "スワイプするほど精度が上がります"
+                    : "十分に学習しました"}
                 </span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -139,14 +143,14 @@ export default async function StyleDnaPage() {
                   <ThumbsUp className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-sm">
                     <span className="tabular-nums">{profile.likedCount}</span>{" "}
-                    <span className="text-muted-foreground">kept</span>
+                    <span className="text-muted-foreground">選んだ</span>
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <ThumbsDown className="w-4 h-4 text-muted-foreground shrink-0" />
                   <span className="text-sm">
                     <span className="tabular-nums">{profile.passedCount}</span>{" "}
-                    <span className="text-muted-foreground">passed</span>
+                    <span className="text-muted-foreground">見送った</span>
                   </span>
                 </div>
               </div>
@@ -154,31 +158,40 @@ export default async function StyleDnaPage() {
           </Section>
 
           {lovedCategories.length > 0 && (
-            <Section title="What you reach for">
+            <Section title="よく選ぶもの">
               <ul className="space-y-3">
                 {lovedCategories.map((item) => (
-                  <AffinityBar key={item.key} item={item} tone="positive" />
+                  <AffinityBar
+                    key={item.key}
+                    item={item}
+                    tone="positive"
+                    label={categoryLabel(item.key)}
+                  />
                 ))}
               </ul>
             </Section>
           )}
 
           {avoidedCategories.length > 0 && (
-            <Section title="What you scroll past">
+            <Section title="見送るもの">
               <ul className="space-y-3">
                 {avoidedCategories.map((item) => (
-                  <AffinityBar key={item.key} item={item} tone="negative" />
+                  <AffinityBar
+                    key={item.key}
+                    item={item}
+                    tone="negative"
+                    label={categoryLabel(item.key)}
+                  />
                 ))}
               </ul>
               <p className="text-xs text-muted-foreground mt-3">
-                Learned from your left swipes — these sink to the bottom of your
-                feed.
+                左スワイプから学習しました。フィードでは後ろに回ります。
               </p>
             </Section>
           )}
 
           {lovedBrands.length > 0 && (
-            <Section title="Labels">
+            <Section title="ブランド">
               <ul className="space-y-3">
                 {lovedBrands.map((item) => (
                   <AffinityBar key={item.key} item={item} tone="positive" />
@@ -188,14 +201,14 @@ export default async function StyleDnaPage() {
           )}
 
           {lovedColors.length > 0 && (
-            <Section title="Palette">
+            <Section title="色の好み">
               <div className="flex flex-wrap gap-2">
                 {lovedColors.map((item) => (
                   <span
                     key={item.key}
-                    className="px-3 py-1.5 rounded-full border border-border bg-card text-sm capitalize"
+                    className="px-3 py-1.5 rounded-full border border-border bg-card text-sm"
                   >
-                    {item.key.toLowerCase()}
+                    {item.key}
                   </span>
                 ))}
               </div>
@@ -203,17 +216,16 @@ export default async function StyleDnaPage() {
           )}
 
           {profile.priceBand && (
-            <Section title="Your range">
+            <Section title="価格帯">
               <div className="rounded-2xl border border-border bg-card p-5 flex items-center gap-4">
                 <Wallet className="w-5 h-5 text-primary shrink-0" />
                 <div>
                   <p className="font-serif text-2xl">
-                    ${profile.priceBand.min.toFixed(0)} –{" "}
-                    ${profile.priceBand.max.toFixed(0)}
+                    {formatPrice(profile.priceBand.min)} 〜{" "}
+                    {formatPrice(profile.priceBand.max)}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Typically around ${profile.priceBand.mid.toFixed(0)}. Built
-                    only from pieces you kept.
+                    中心はおよそ{formatPrice(profile.priceBand.mid)}。選んだ一着だけから算出しています。
                   </p>
                 </div>
               </div>
@@ -224,7 +236,7 @@ export default async function StyleDnaPage() {
             href="/feed"
             className="h-12 w-full rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center uppercase text-sm tracking-widest font-medium hover:scale-[1.02] transition-transform"
           >
-            Keep swiping
+            スワイプに戻る
           </Link>
         </div>
       </div>

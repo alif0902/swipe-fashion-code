@@ -6,6 +6,7 @@ import { ChevronLeft, Info, Star } from "lucide-react";
 
 import { ProductDetailActions } from "@/components/product-detail-actions";
 import { getProduct } from "@/lib/data";
+import { formatPrice } from "@/lib/format";
 
 async function loadProduct(rawId: string) {
   const id = parseInt(rawId, 10);
@@ -22,7 +23,7 @@ export async function generateMetadata({
   const product = await loadProduct(id);
 
   if (!product) {
-    return { title: "Product not found | SwipeFash" };
+    return { title: "商品が見つかりません｜SwipeFash" };
   }
 
   const title = `${product.name} by ${product.brand} | SwipeFash`;
@@ -89,11 +90,11 @@ export default async function ProductPage({
               <div className="flex items-center justify-between">
                 <div className="flex items-baseline gap-3">
                   <span className="font-serif text-2xl">
-                    ${product.price.toFixed(2)}
+                    {formatPrice(product.price)}
                   </span>
                   {product.originalPrice && (
                     <span className="text-muted-foreground line-through text-sm">
-                      ${product.originalPrice.toFixed(2)}
+                      {formatPrice(product.originalPrice)}
                     </span>
                   )}
                 </div>

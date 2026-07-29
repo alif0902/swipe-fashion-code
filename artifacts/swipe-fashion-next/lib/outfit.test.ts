@@ -86,21 +86,21 @@ describe("buildLooks", () => {
     const looks = buildLooks([piece(1, TOPS), piece(2, BOTTOMS)]);
 
     expect(looks[0].id).toBe("1-2");
-    expect(looks[0].title).toBe("Look 01");
+    expect(looks[0].title).toBe("コーデ 01");
   });
 });
 
 describe("describeLookGap", () => {
   it("mengarahkan ke bawahan bila baru ada atasan", () => {
-    expect(describeLookGap([piece(1, TOPS)])).toMatch(/bottoms/);
+    expect(describeLookGap([piece(1, TOPS)])).toMatch(/ボトムス/);
   });
 
   it("mengarahkan ke atasan bila baru ada bawahan", () => {
-    expect(describeLookGap([piece(1, BOTTOMS)])).toMatch(/top/);
+    expect(describeLookGap([piece(1, BOTTOMS)])).toMatch(/トップス/);
   });
 
   it("memberi arahan umum saat koleksi kosong", () => {
-    expect(describeLookGap([])).toMatch(/top and bottoms/);
+    expect(describeLookGap([])).toMatch(/トップスとボトムス/);
   });
 
   it("diam saat look sudah bisa dirakit", () => {

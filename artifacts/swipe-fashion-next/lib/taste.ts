@@ -5,6 +5,8 @@
 // bisa diuji unit dengan mudah (lihat taste.test.ts), dan itu penting karena
 // logika inilah yang menentukan urutan feed.
 
+import { categoryLabel } from "./format";
+
 export type SwipeDirection = "pass" | "like" | "super";
 
 // Satu keputusan swipe, sudah digabung dengan atribut produknya.
@@ -191,8 +193,13 @@ export function rankProducts<T extends ScorableProduct>(
   );
 }
 
-// Ringkasan sependek mungkin untuk ditempel di UI, mis. "Loves outerwear in
-// black from Maison". Mengembalikan null kalau belum ada cukup sinyal.
+// Ringkasan sependek mungkin untuk ditempel di UI, mis.
+// 「Emeraldのワンピース（MAISON NOIR）」. Mengembalikan null kalau belum ada
+// cukup sinyal.
+//
+// Susunannya mengikuti tata bahasa Jepang, bukan menerjemahkan pola Inggris
+// kata per kata: pewatas mendahului kata benda, dan nama brand masuk kurung
+// karena ditulis huruf Latin di tengah kalimat Jepang.
 export function describeTaste(profile: TasteProfile): string | null {
   if (profile.likedCount === 0) return null;
 
@@ -202,10 +209,8 @@ export function describeTaste(profile: TasteProfile): string | null {
 
   if (!topCategory && !topColor && !topBrand) return null;
 
-  const parts: string[] = [];
-  if (topCategory) parts.push(topCategory);
-  if (topColor) parts.push(`in ${topColor}`);
-  if (topBrand) parts.push(`from ${topBrand}`);
+  const noun = topCategory ? categoryLabel(topCategory) : "アイテム";
+  const base = topColor ? `${topColor}の${noun}` : noun;
 
-  return parts.join(" ");
+  return topBrand ? `${base}（${topBrand}）` : base;
 }
