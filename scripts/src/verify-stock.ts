@@ -1,3 +1,5 @@
+import "./load-env";
+
 import { db, ordersTable, productsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 

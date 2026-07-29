@@ -1,3 +1,5 @@
+import "./load-env";
+
 import { db, categoriesTable, productsTable } from "@workspace/db";
 
 const categories = [
