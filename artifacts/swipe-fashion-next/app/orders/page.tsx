@@ -28,7 +28,7 @@ export default async function OrdersPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-[calc(100dvh-64px)] bg-background">
+      <div className="min-h-full bg-background">
         <header className="px-6 pt-10 pb-6">
           <h1 className="font-serif text-4xl">バッグ</h1>
         </header>

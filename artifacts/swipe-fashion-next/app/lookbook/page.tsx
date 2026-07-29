@@ -34,7 +34,7 @@ export default async function LookbookPage({
 
   return (
     <AppLayout>
-      <div className="min-h-[calc(100dvh-64px)] bg-background">
+      <div className="min-h-full bg-background">
         <header className="px-6 pt-10 pb-6 sticky top-0 bg-background/90 backdrop-blur-xl z-20">
           <h1 className="font-serif text-4xl mb-4">探す</h1>
 

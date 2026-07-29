@@ -88,7 +88,7 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
     // halaman lain tetap memakai --background polos supaya konten panjang
     // tenang. overflow-hidden di sini juga yang memotong panah navigasi foto
     // jadi setengah lingkaran di tepi layar.
-    <div className="relative w-full h-[calc(100dvh-64px-env(safe-area-inset-bottom))] overflow-hidden bg-gradient-to-b from-sky-200 via-purple-200 to-pink-400">
+    <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-sky-200 via-purple-200 to-pink-400">
       {/* Logo dan tombol undo dihapus atas permintaan: kartu kini memakai
           seluruh tinggi layar, jadi tidak ada lagi offset atas. */}
       <div className="relative w-full h-full pt-[env(safe-area-inset-top)]">

@@ -7,6 +7,7 @@ import { ChevronLeft, Info, Star } from "lucide-react";
 import { ProductDetailActions } from "@/components/product-detail-actions";
 import { getProduct } from "@/lib/data";
 import { formatPrice } from "@/lib/format";
+import { PhoneFrame } from "@/components/layout";
 
 async function loadProduct(rawId: string) {
   const id = parseInt(rawId, 10);
@@ -57,7 +58,8 @@ export default async function ProductPage({
   if (!product) notFound();
 
   return (
-    <div className="min-h-[100dvh] w-full bg-background text-foreground flex flex-col relative max-w-md mx-auto">
+    <PhoneFrame>
+      <div className="relative flex-1 min-h-0 flex flex-col">
       <Link
         href="/lookbook"
         className="absolute top-[calc(env(safe-area-inset-top)+1rem)] left-4 z-50 rounded-full w-10 h-10 bg-background/50 backdrop-blur-md border-0 text-foreground flex items-center justify-center hover:bg-background/70 transition-colors"
@@ -137,6 +139,7 @@ export default async function ProductPage({
       </div>
 
       <ProductDetailActions product={product} />
-    </div>
+      </div>
+    </PhoneFrame>
   );
 }

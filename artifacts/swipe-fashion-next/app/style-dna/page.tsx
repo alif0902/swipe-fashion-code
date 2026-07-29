@@ -80,7 +80,7 @@ export default async function StyleDnaPage() {
   if (profile.totalSwipes === 0) {
     return (
       <AppLayout>
-        <div className="min-h-[calc(100dvh-64px)] flex flex-col items-center justify-center text-center px-8">
+        <div className="min-h-full flex flex-col items-center justify-center text-center px-8">
           <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-5">
             <Sparkles className="w-9 h-9 text-muted-foreground" />
           </div>
@@ -101,7 +101,7 @@ export default async function StyleDnaPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-[calc(100dvh-64px)] bg-background">
+      <div className="min-h-full bg-background">
         <header className="px-6 pt-10 pb-6">
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-4 h-4 text-primary" />

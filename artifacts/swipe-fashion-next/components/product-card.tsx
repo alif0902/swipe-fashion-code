@@ -182,7 +182,7 @@ export function ProductCard({
              menggulir; tanpa itu browser menahan scroll dan hanya drag yang
              jalan. */}
         <motion.div
-          className="relative h-[42vh] shrink-0 touch-pan-y"
+          className="relative h-[42%] shrink-0 touch-pan-y"
           style={{ opacity: photoOpacity, scale: photoScale }}
           onPointerDown={onPhotoPointerDown}
           onPointerMove={onPhotoPointerMove}

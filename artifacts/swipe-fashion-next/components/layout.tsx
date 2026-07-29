@@ -10,7 +10,11 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-t border-border pb-safe">
+    // Dulu `fixed`, yang berarti menempel ke viewport. Di dalam bingkai
+    // perangkat pada layar besar itu salah — bilahnya akan melayang di dasar
+    // layar, lepas dari bingkainya. Sekarang jadi anak flex biasa di dalam
+    // bingkai, sehingga ikut ke mana pun bingkainya berada.
+    <div className="shrink-0 z-40 bg-background/80 backdrop-blur-lg border-t border-border pb-safe">
       <div className="flex justify-around items-center h-16 max-w-md mx-auto px-4">
         <Link
           href="/feed"
@@ -75,13 +79,38 @@ export function BottomNav() {
   );
 }
 
+// Bingkai perangkat.
+//
+// Aplikasi ini dirancang untuk satu kolom sempit. Di layar laptop, kolom itu
+// dulu terdampar di tengah halaman putih yang luas dan terlihat seperti
+// halaman yang gagal dimuat. Membuatnya melebar penuh juga bukan jawaban:
+// kartu swipe setinggi layar dengan lebar 1400px terlihat aneh, dan gestur
+// swipe memang bukan interaksi desktop.
+//
+// Jadi di md ke atas, kolomnya dibungkus jadi bingkai bersudut membulat dengan
+// bayangan di atas latar lembut — terbaca sebagai perangkat, bukan sebagai
+// tata letak yang rusak. Di bawah md tidak ada bingkai sama sekali: aplikasi
+// memenuhi layar seperti biasa.
+export function PhoneFrame({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-[100dvh] w-full flex items-center justify-center bg-background md:bg-gradient-to-br md:from-rose-100 md:via-purple-100 md:to-sky-100 md:p-6">
+      <div className="relative w-full max-w-md h-[100dvh] md:h-[min(900px,94vh)] bg-background text-foreground flex flex-col overflow-hidden md:rounded-[2.25rem] md:border md:border-black/5 md:shadow-2xl">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-[100dvh] w-full bg-background text-foreground flex flex-col relative overflow-hidden">
-      <main className="flex-1 w-full max-w-md mx-auto relative pb-[calc(4rem+env(safe-area-inset-bottom))]">
+    <PhoneFrame>
+      {/* min-h-0 wajib: tanpa itu flex item menolak menyusut di bawah tinggi
+          kontennya, dan halaman panjang akan mendorong bilah navigasi keluar
+          bingkai alih-alih menggulir di dalamnya. */}
+      <main className="flex-1 min-h-0 w-full relative overflow-y-auto overscroll-none">
         {children}
       </main>
       <BottomNav />
-    </div>
+    </PhoneFrame>
   );
 }
