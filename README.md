@@ -46,7 +46,15 @@ Satu keputusan yang perlu digarisbawahi: **rentang harga hanya dibangun dari bar
 
 Koleksi 一目惚れ dirakit otomatis jadi coordinate: atasan + bawahan, atau dress, ditumpuk luaran. Tiap potong dipakai maksimal sekali agar tidak terasa daur ulang.
 
-### 4. Pembayaran (demo)
+### 4. Terpasang seperti aplikasi (PWA)
+
+Buka dari ponsel, ketuk **ホーム画面に追加**, dan SwipeFash muncul sebagai ikon di layar utama — terbuka **layar penuh tanpa address bar**, dengan splash screen dan bilah status berwarna coral.
+
+Inilah bukti dari klaim *mobile-only* di atas: bukan sekadar pernyataan, tapi sesuatu yang bisa dirasakan juri di ponsel mereka sendiri dalam sepuluh detik.
+
+Ajakan pemasangan muncul otomatis di dalam aplikasi, karena Android menyembunyikan opsinya di menu tiga titik dan iOS lebih dalam lagi — fitur yang tidak terlihat sama saja dengan tidak ada.
+
+### 5. Pembayaran (demo)
 
 Alur checkout berlangkah dengan lima metode yang lazim di Jepang:
 
@@ -66,11 +74,12 @@ Formulir kartunya sungguhan secara logika, bukan tempelan:
 
 ## Panduan singkat untuk penguji
 
+0. **Buka dari ponsel** dan ketuk ajakan **ホーム画面に追加** — pengalamannya berbeda begitu berjalan layar penuh.
 1. **`/feed`** — swipe 5–6 barang dengan pola jelas. Misalnya: sukai semua アウター, tolak semua ボトムス.
 2. **`/style-dna`** — profil sudah terbentuk. Perhatikan bagian *「見送るもの」* — itu bukti aplikasi belajar dari penolakan, bukan hanya dari kesukaan.
 3. **Kembali ke `/feed`** — urutannya sudah berubah.
 4. **`/一目惚れ`** — lihat coordinate yang dirakit dari barang yang disimpan.
-5. **`/orders`** → **お支払いへ進む** — coba alur pembayaran. Ketuk salah satu nomor uji di formulir kartu, atau pilih PayPay untuk melihat layar QR.
+6. **`/orders`** → **お支払いへ進む** — coba alur pembayaran. Ketuk salah satu nomor uji di formulir kartu, atau pilih PayPay untuk melihat layar QR.
 
 ---
 

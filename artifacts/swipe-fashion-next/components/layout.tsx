@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
+import { InstallPrompt } from "@/components/install-prompt";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -110,6 +111,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 min-h-0 w-full relative overflow-y-auto overscroll-none">
         {children}
       </main>
+      {/* Di dalam bingkai, bukan di luar: ajakan harus menempel pada aplikasi,
+          bukan melayang di latar desktop. */}
+      <InstallPrompt />
       <BottomNav />
     </PhoneFrame>
   );

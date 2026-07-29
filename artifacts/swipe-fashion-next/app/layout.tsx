@@ -61,13 +61,29 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ja_JP",
   },
-  icons: { icon: "/favicon.svg" },
+  icons: {
+    icon: "/favicon.svg",
+    // iOS TIDAK membaca manifest untuk ikon home screen — ia hanya mencari
+    // tag ini. Tanpa apple-touch-icon, iPhone memakai screenshot halaman
+    // sebagai ikon, dan hasilnya selalu jelek.
+    apple: "/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    // Setara display:standalone untuk iOS, yang juga tidak membaca manifest
+    // untuk hal ini.
+    capable: true,
+    title: "SwipeFash",
+    // "default" menjaga teks bilah status tetap gelap di atas latar pink.
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  // Mewarnai bilah status ponsel dengan coral aplikasi saat dipasang.
+  themeColor: "#fe6970",
   // Wajib supaya env(safe-area-inset-*) bernilai > 0 di perangkat berponi
   // (iPhone dsb). Tanpa ini util pb-safe/pt-safe di bawah tak berefek.
   viewportFit: "cover" as const,
