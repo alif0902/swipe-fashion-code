@@ -255,7 +255,11 @@ export function ProductCard({
              serif — heading di globals.css otomatis serif, jadi di-override),
              baris status dengan titik hijau, lalu harga besar berwarna aksen. */}
         <div
-          className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-card rounded-t-[2rem] shadow-lg px-6 pt-7 pb-40"
+          // overscroll-none (bukan -contain): "contain" hanya mencegah scroll
+          // merambat ke luar, tapi masih mengizinkan efek pantul pada panel
+          // ini sendiri. "none" mematikan keduanya — panel berhenti mati di
+          // ujung konten.
+          className="flex-1 min-h-0 overflow-y-auto overscroll-none bg-card rounded-t-[2rem] shadow-lg px-6 pt-7 pb-40"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-3">

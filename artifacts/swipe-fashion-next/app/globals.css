@@ -123,6 +123,14 @@
   * {
     @apply border-border;
   }
+  html,
+  body {
+    /* Matikan rubber-band di tingkat halaman. Tanpa ini, scroll yang mentok
+       di panel kartu feed "dirantai" keluar dan memantulkan seluruh halaman —
+       kotak putihnya terlihat ikut bergerak. Aplikasi ini full-screen tanpa
+       scroll halaman, jadi tidak ada yang dikorbankan. */
+    overscroll-behavior: none;
+  }
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
