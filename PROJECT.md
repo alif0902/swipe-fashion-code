@@ -76,9 +76,16 @@ Langkah sekali jalan:
 Sesudah deploy pertama, tiap push ke `main` auto-deploy dan tiap PR dapat
 preview URL.
 
-Opsional tapi berguna: Settings → Functions → set region ke **Sydney (syd1)**
-kalau project Supabase-mu di `ap-southeast-2`. Sengaja tidak dipin di
-`vercel.json` supaya tidak berisiko ditolak di plan Hobby.
+**PENTING untuk kecepatan: Settings → Functions → set region ke Sydney (syd1).**
+
+Database Supabase ada di `ap-southeast-2` (Sydney). Region bawaan Vercel adalah
+`iad1` (Washington DC), jadi tanpa perubahan ini **setiap query menyeberang
+Pasifik** — sekitar 200–250 ms sekali jalan. Satu halaman yang melakukan dua
+query berarti hampir setengah detik hanya menunggu jaringan, sebelum satu piksel
+pun digambar. Menyamakan region memangkasnya ke satuan milidetik.
+
+Sengaja tidak dipin di `vercel.json` supaya tidak berisiko ditolak di plan
+Hobby; setel lewat dashboard.
 
 ### Jebakan yang sudah diketahui
 

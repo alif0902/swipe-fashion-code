@@ -19,11 +19,20 @@ import {
   type TasteSignal,
 } from "./taste";
 
-// Membaca seluruh keputusan swipe sesi ini dan menggabungkannya dengan atribut
-// produk, siap dilempar ke mesin selera yang murni.
-async function loadTasteSignals(sessionId: string): Promise<TasteSignal[]> {
+// Membaca seluruh keputusan swipe sesi ini beserta atribut produknya.
+//
+// Mengembalikan DUA hal dari SATU query: sinyal untuk mesin selera, dan
+// himpunan id yang sudah diputuskan. Sebelumnya keduanya diambil lewat dua
+// query terpisah, padahal datanya sama persis — dan dengan database di Sydney
+// sementara server bisa di benua lain, tiap query tambahan berarti satu kali
+// lagi menyeberang samudra.
+async function loadSwipeState(sessionId: string): Promise<{
+  signals: TasteSignal[];
+  decidedIds: Set<number>;
+}> {
   const rows = await db
     .select({
+      productId: swipesTable.productId,
       direction: swipesTable.direction,
       category: productsTable.category,
       brand: productsTable.brand,
@@ -34,14 +43,17 @@ async function loadTasteSignals(sessionId: string): Promise<TasteSignal[]> {
     .innerJoin(productsTable, eq(productsTable.id, swipesTable.productId))
     .where(eq(swipesTable.sessionId, sessionId));
 
-  return rows.map((row) => ({
-    direction: row.direction,
-    category: row.category,
-    brand: row.brand,
-    colors: row.colors ?? [],
-    // numeric Postgres kembali sebagai string lewat node-postgres.
-    price: parseFloat(row.price),
-  }));
+  return {
+    signals: rows.map((row) => ({
+      direction: row.direction,
+      category: row.category,
+      brand: row.brand,
+      colors: row.colors ?? [],
+      // numeric Postgres kembali sebagai string lewat node-postgres.
+      price: parseFloat(row.price),
+    })),
+    decidedIds: new Set(rows.map((r) => r.productId)),
+  };
 }
 
 // Profil selera sesi ini. Dipakai feed untuk mengurutkan dan halaman Style DNA
@@ -52,7 +64,8 @@ export async function getTasteProfile(
   if (!sessionId) return buildTasteProfile([]);
 
   try {
-    return buildTasteProfile(await loadTasteSignals(sessionId));
+    const { signals } = await loadSwipeState(sessionId);
+    return buildTasteProfile(signals);
   } catch {
     return buildTasteProfile([]);
   }
@@ -77,7 +90,7 @@ export async function listProducts({
 } = {}): Promise<AppProduct[]> {
   // and() mengabaikan undefined, jadi filter yang tidak dipakai tidak perlu
   // percabangan sendiri.
-  const rows = await db
+  const productsQuery = db
     .select()
     .from(productsTable)
     .where(
@@ -88,6 +101,16 @@ export async function listProducts({
       ),
     )
     .orderBy(asc(productsTable.id));
+
+  // Kedua query dijalankan BERSAMAAN. Sebelumnya berurutan, dan dengan
+  // database di Sydney tiap giliran menambah satu perjalanan penuh melintasi
+  // Pasifik — dua query berurutan berarti waktu tunggunya berlipat.
+  const [rows, swipeState] = await Promise.all([
+    productsQuery,
+    sessionId
+      ? loadSwipeState(sessionId).catch(() => null)
+      : Promise.resolve(null),
+  ]);
 
   // Pengurutan dilakukan di JS, bukan SQL: kolom price bertipe numeric dan
   // kembali sebagai STRING lewat node-postgres. ORDER BY di SQL memang benar,
@@ -107,23 +130,15 @@ export async function listProducts({
     return sortProducts(rows.map(formatProduct)).slice(0, limit);
   }
 
+  // Tabel swipes mungkin belum di-push — feed tetap jalan tanpa personalisasi.
+  if (!swipeState) {
+    return sortProducts(rows.map(formatProduct)).slice(0, limit);
+  }
+
   // Produk yang sudah diputuskan (suka, super, atau lewat) tidak diulang.
   // Sebelumnya hanya yang di-super-like yang disembunyikan, sehingga barang
   // yang baru saja ditolak bisa muncul lagi di sesi yang sama.
-  let signals: TasteSignal[] = [];
-  let decidedIds = new Set<number>();
-  try {
-    signals = await loadTasteSignals(sessionId);
-
-    const decided = await db
-      .select({ productId: swipesTable.productId })
-      .from(swipesTable)
-      .where(eq(swipesTable.sessionId, sessionId));
-    decidedIds = new Set(decided.map((d) => d.productId));
-  } catch {
-    // Tabel swipes mungkin belum di-push — feed tetap jalan tanpa personalisasi.
-    return rows.slice(0, limit).map(formatProduct);
-  }
+  const { signals, decidedIds } = swipeState;
 
   const undecided = rows
     .filter((r) => !decidedIds.has(r.id))

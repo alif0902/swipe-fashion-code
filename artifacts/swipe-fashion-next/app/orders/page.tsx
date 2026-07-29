@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import Image from "next/image";
 import { ShoppingBag } from "lucide-react";
 
 import { AppLayout } from "@/components/layout";
@@ -68,12 +69,15 @@ export default async function OrdersPage() {
                 className="bg-card border border-card-border rounded-2xl p-4 space-y-4"
               >
                 <div className="flex gap-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={order.product?.imageUrl ?? ""}
-                    alt={order.product?.name ?? "Product"}
-                    className="w-20 h-24 object-cover rounded-md bg-muted"
-                  />
+                  <div className="relative w-20 h-24 shrink-0 rounded-md overflow-hidden bg-muted">
+                    <Image
+                      src={order.product?.imageUrl ?? ""}
+                      alt={order.product?.name ?? "商品"}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
                       {order.product?.brand}

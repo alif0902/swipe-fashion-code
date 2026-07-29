@@ -14,6 +14,7 @@ import { categoryLabel, formatPrice, type AppProduct } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Star, ThumbsUp, X } from 'lucide-react';
 
 interface ProductCardProps {
@@ -190,10 +191,18 @@ export function ProductCard({
           onPointerCancel={onPhotoPointerEnd}
         >
           <div className="relative h-full mx-6 rounded-[1.75rem] overflow-hidden bg-muted shadow-lg">
-            <img
+            {/* next/image, bukan <img>: foto aslinya 1024x1024 dan bisa 276 KB,
+                padahal di ponsel hanya dirender selebar layar. Next mengecilkan
+                dan mengubahnya ke WebP/AVIF sesuai perangkat. priority dipakai
+                karena ini gambar terbesar yang pertama terlihat — menundanya
+                justru membuat kartu terasa lambat dimuat. */}
+            <Image
               src={currentImage}
               alt={product.name}
-              className="w-full h-full object-cover select-none"
+              fill
+              sizes="(max-width: 448px) 100vw, 448px"
+              priority
+              className="object-cover select-none"
               draggable={false}
             />
 
@@ -278,7 +287,14 @@ export function ProductCard({
                     : 'opacity-85',
                 )}
               >
-                <img src={src} alt="" className="w-full h-full object-cover" draggable={false} />
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  sizes="56px"
+                  className="object-cover"
+                  draggable={false}
+                />
               </button>
             ))}
           </div>
