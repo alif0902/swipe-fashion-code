@@ -74,11 +74,11 @@ Formulir kartunya sungguhan secara logika, bukan tempelan:
 
 ## Panduan singkat untuk penguji
 
-0. **Buka dari ponsel** dan ketuk ajakan **ホーム画面に追加** — pengalamannya berbeda begitu berjalan layar penuh.
-1. **`/feed`** — swipe 5–6 barang dengan pola jelas. Misalnya: sukai semua アウター, tolak semua ボトムス.
-2. **`/style-dna`** — profil sudah terbentuk. Perhatikan bagian *「見送るもの」* — itu bukti aplikasi belajar dari penolakan, bukan hanya dari kesukaan.
-3. **Kembali ke `/feed`** — urutannya sudah berubah.
-4. **`/一目惚れ`** — lihat coordinate yang dirakit dari barang yang disimpan.
+1. **Buka dari ponsel** dan ketuk ajakan **ホーム画面に追加** — pengalamannya berbeda begitu berjalan layar penuh.
+2. **`/feed`** — swipe 5–6 barang dengan pola jelas. Misalnya: sukai semua アウター, tolak semua ボトムス.
+3. **`/style-dna`** — profil sudah terbentuk. Perhatikan bagian *「見送るもの」* — itu bukti aplikasi belajar dari penolakan, bukan hanya dari kesukaan.
+4. **Kembali ke `/feed`** — urutannya sudah berubah.
+5. **`/一目惚れ`** — lihat coordinate yang dirakit dari barang yang disimpan.
 6. **`/orders`** → **お支払いへ進む** — coba alur pembayaran. Ketuk salah satu nomor uji di formulir kartu, atau pilih PayPay untuk melihat layar QR.
 
 ---
@@ -97,7 +97,7 @@ Formulir kartunya sungguhan secara logika, bukan tempelan:
 
 ## Stack
 
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · framer-motion · Drizzle ORM · PostgreSQL (Supabase) · Vitest · Vercel
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · framer-motion · Drizzle ORM · PostgreSQL (Supabase) · Vitest · PWA · Vercel
 
 ---
 
@@ -135,4 +135,5 @@ Disebutkan terbuka, bukan disembunyikan:
 - **Katalog berisi 12 produk.** Cukup untuk memperlihatkan mesin seleranya bekerja, tapi feed akan cepat habis.
 - **Foto kedua tiap produk adalah crop dari foto utamanya**, bukan pemotretan terpisah.
 - **Tanpa akun.** Identitas melekat pada cookie sesi, jadi berganti perangkat berarti mulai dari nol.
+- **Tidak ada mode offline.** PWA-nya bisa dipasang, tapi hampir semua halaman butuh database — service worker sengaja tidak dipasang daripada menyajikan konten basi.
 - **Swipe ke atas untuk super like dilepas** ketika area foto dibuat bisa di-scroll — dua gestur itu tidak bisa berbagi sumbu yang sama. Tombol ★ menggantikannya.
