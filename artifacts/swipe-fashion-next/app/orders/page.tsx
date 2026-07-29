@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 
+import { ShoppingBag } from "lucide-react";
+
 import { AppLayout } from "@/components/layout";
+import { PageHeader } from "@/components/page-header";
 import { OrderActions } from "@/components/order-actions";
 import { listOrders } from "@/lib/data";
 import { getSessionId } from "@/lib/session";
@@ -13,6 +16,15 @@ export const metadata: Metadata = {
 };
 
 export const dynamic = "force-dynamic";
+
+// Enum database berbahasa Inggris; yang dilihat pengguna tidak boleh begitu.
+const statusLabel: Record<string, string> = {
+  pending: "お支払い待ち",
+  confirmed: "お支払い済み",
+  shipped: "発送済み",
+  delivered: "お届け済み",
+  cancelled: "キャンセル済み",
+};
 
 const statusClass: Record<string, string> = {
   pending: "bg-yellow-500/10 text-yellow-500",
@@ -29,16 +41,22 @@ export default async function OrdersPage() {
   return (
     <AppLayout>
       <div className="min-h-full bg-background">
-        <header className="px-6 pt-10 pb-6">
-          <h1 className="font-serif text-4xl">バッグ</h1>
-        </header>
+        <PageHeader
+          icon={ShoppingBag}
+          eyebrow="YOUR BAG"
+          title="バッグ"
+          subtitle="注文の確認とお支払いはこちらから。"
+          count={orders.length}
+          countLabel="件"
+        />
 
         {orders.length === 0 ? (
-          <div className="text-center py-20 px-8 text-muted-foreground">
-            <p className="font-serif text-2xl mb-2 text-foreground">
-              まだ何もありません。
-            </p>
-            <p className="text-sm">
+          <div className="flex flex-col items-center text-center py-20 px-8">
+            <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-5">
+              <ShoppingBag className="w-9 h-9 text-muted-foreground" />
+            </div>
+            <h2 className="font-sans font-bold text-xl mb-2">まだ何もありません。</h2>
+            <p className="text-muted-foreground max-w-[260px]">
               気になる一着を右にスワイプすると、ここに入ります。
             </p>
           </div>
@@ -60,23 +78,23 @@ export default async function OrdersPage() {
                     <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
                       {order.product?.brand}
                     </p>
-                    <h3 className="font-serif text-lg leading-snug mb-1 truncate">
+                    <h3 className="font-sans font-bold text-base leading-snug mb-1 truncate">
                       {order.product?.name}
                     </h3>
                     <p className="text-xs text-muted-foreground mb-2">
-                      Size {order.selectedSize} · {order.selectedColor} ·{" "}
+                      サイズ {order.selectedSize} · {order.selectedColor} ·{" "}
                       {order.quantity}
                     </p>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-serif text-lg">
+                      <span className="font-sans font-bold text-lg text-primary">
                         {formatPrice(order.totalPrice)}
                       </span>
                       <span
-                        className={`text-[10px] uppercase font-bold tracking-widest px-2 py-1 rounded-full ${
+                        className={`text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap ${
                           statusClass[order.status] ?? statusClass.pending
                         }`}
                       >
-                        {order.status}
+                        {statusLabel[order.status] ?? order.status}
                       </span>
                     </div>
                   </div>

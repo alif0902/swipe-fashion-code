@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Search } from "lucide-react";
 
 import { AppLayout } from "@/components/layout";
+import { PageHeader } from "@/components/page-header";
 import { listCategories, listProducts } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { categoryLabel, formatPrice } from "@/lib/format";
@@ -14,10 +16,12 @@ export const metadata: Metadata = {
 
 const tabClass = (active: boolean) =>
   cn(
-    "px-5 py-2 rounded-full text-xs font-medium uppercase tracking-widest whitespace-nowrap transition-all border",
+    // uppercase & tracking-widest dilepas: keduanya tidak berpengaruh pada
+    // kana/kanji tapi membuat spasi antar karakter Jepang jadi renggang aneh.
+    "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
     active
-      ? "bg-foreground text-background border-foreground"
-      : "bg-transparent text-muted-foreground border-border hover:border-foreground/50",
+      ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+      : "bg-card text-muted-foreground border border-border hover:border-primary/40",
   );
 
 export default async function LookbookPage({
@@ -35,12 +39,19 @@ export default async function LookbookPage({
   return (
     <AppLayout>
       <div className="min-h-full bg-background">
-        <header className="px-6 pt-10 pb-6 sticky top-0 bg-background/90 backdrop-blur-xl z-20">
-          <h1 className="font-serif text-4xl mb-4">探す</h1>
-
-          <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-6 px-6">
+        <PageHeader
+          icon={Search}
+          eyebrow="COLLECTION"
+          title="探す"
+          subtitle="カテゴリーごとに、コレクション全体を。"
+          count={products.length}
+          countLabel="点"
+        >
+          {/* Tab kategori jadi anak header, bukan blok terpisah — supaya
+              filter terbaca sebagai bagian dari judul halaman. */}
+          <div className="flex overflow-x-auto no-scrollbar gap-2 mt-5 px-6">
             <Link href="/lookbook" className={tabClass(!category)}>
-              All
+              すべて
             </Link>
             {categories.map((cat) => (
               <Link
@@ -52,7 +63,7 @@ export default async function LookbookPage({
               </Link>
             ))}
           </div>
-        </header>
+        </PageHeader>
 
         <div className="px-4 pb-8 pt-2">
           {products.length > 0 ? (

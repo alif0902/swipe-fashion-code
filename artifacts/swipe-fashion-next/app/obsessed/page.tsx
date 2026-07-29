@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronRight, Shirt, Sparkles, Star } from "lucide-react";
 
 import { AppLayout } from "@/components/layout";
+import { PageHeader } from "@/components/page-header";
 import { getTasteProfile, listObsessed } from "@/lib/data";
 import { getSessionId } from "@/lib/session";
 import { formatPrice } from "@/lib/format";
@@ -31,18 +32,14 @@ export default async function ObsessedPage() {
   return (
     <AppLayout>
       <div className="min-h-full bg-background">
-        <header className="px-6 pt-10 pb-6">
-          <div className="flex items-center gap-2 mb-1">
-            <Star className="w-4 h-4 fill-primary text-primary" />
-            <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              スーパーライク
-            </span>
-          </div>
-          <h1 className="font-serif text-4xl">一目惚れ</h1>
-          <p className="text-muted-foreground mt-1 max-w-sm">
-            スクロールの手が止まった一着。フィードはこの好みに寄っていきます。
-          </p>
-        </header>
+        <PageHeader
+          icon={Star}
+          eyebrow="SUPER LIKE"
+          title="一目惚れ"
+          subtitle="スクロールの手が止まった一着。フィードはこの好みに寄っていきます。"
+          count={products.length}
+          countLabel="点"
+        />
 
         {/* Pintu masuk ke Style DNA. Muncul begitu ada satu swipe, bukan
             menunggu koleksi terisi — supaya personalisasi terasa lebih awal. */}
@@ -78,7 +75,7 @@ export default async function ObsessedPage() {
           <section className="mb-10">
             <div className="px-6 mb-4 flex items-center gap-2">
               <Shirt className="w-4 h-4 text-muted-foreground" />
-              <h2 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              <h2 className="text-sm font-bold text-foreground/70">
                 コーディネート
               </h2>
             </div>
@@ -108,7 +105,7 @@ export default async function ObsessedPage() {
                       ))}
                     </div>
                     <div className="flex items-baseline justify-between px-1">
-                      <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                      <span className="text-xs font-medium text-muted-foreground">
                         {look.title}
                       </span>
                       <span className="font-serif text-sm">
@@ -131,7 +128,7 @@ export default async function ObsessedPage() {
         <div className="px-4 pb-8 pt-2">
           {products.length > 0 ? (
             <>
-              <h2 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-4 px-2">
+              <h2 className="text-sm font-bold text-foreground/70 mb-4 px-2">
                 保存したアイテム
               </h2>
               <div className="grid grid-cols-2 gap-x-3 gap-y-6">
@@ -171,7 +168,7 @@ export default async function ObsessedPage() {
               <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-5">
                 <Star className="w-9 h-9 text-muted-foreground" />
               </div>
-              <h2 className="font-serif text-2xl mb-2">
+              <h2 className="font-sans font-bold text-xl mb-2">
                 まだ一目惚れはありません。
               </h2>
               <p className="text-muted-foreground max-w-[260px] mb-6">
