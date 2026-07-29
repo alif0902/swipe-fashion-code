@@ -82,6 +82,59 @@ export function InstallPrompt() {
 
   if (!isVisible) return null;
 
+  // iOS: tidak ada tombol yang bisa disediakan, jadi kartunya harus jelas
+  // TERBACA sebagai instruksi. Versi sebelumnya berbentuk kartu ringkas mirip
+  // tombol dan justru membuat orang mencoba menekannya.
+  if (isIos) {
+    return (
+      <div className="absolute bottom-3 left-3 right-3 z-50 rounded-2xl bg-foreground text-background shadow-2xl p-4">
+        <div className="flex items-start gap-3">
+          <span className="w-10 h-10 shrink-0 rounded-xl bg-primary flex items-center justify-center">
+            <Download className="w-5 h-5 text-primary-foreground" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold leading-tight">
+              アプリとして使えます
+            </p>
+            <p className="text-[11px] opacity-60 leading-snug mt-0.5">
+              下の手順でホーム画面に追加してください
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={dismiss}
+            aria-label="閉じる"
+            className="shrink-0 w-8 h-8 -mt-1 -mr-1 rounded-full flex items-center justify-center opacity-60"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Langkah bernomor, bukan satu kalimat: pengguna harus tahu ini
+            sesuatu yang DIA lakukan di Safari, bukan di dalam aplikasi. */}
+        <ol className="mt-3 space-y-2 border-t border-background/15 pt-3">
+          <li className="flex items-center gap-2.5 text-xs">
+            <span className="w-5 h-5 shrink-0 rounded-full bg-background/15 flex items-center justify-center text-[10px] font-bold">
+              1
+            </span>
+            <span className="flex items-center gap-1.5">
+              Safari 下部の
+              <Share className="w-4 h-4 inline shrink-0" />
+              を押す
+            </span>
+          </li>
+          <li className="flex items-center gap-2.5 text-xs">
+            <span className="w-5 h-5 shrink-0 rounded-full bg-background/15 flex items-center justify-center text-[10px] font-bold">
+              2
+            </span>
+            <span>「ホーム画面に追加」を選ぶ</span>
+          </li>
+        </ol>
+      </div>
+    );
+  }
+
+  // Android/Chrome: ada API-nya, jadi pemasangan bisa satu ketuk di sini.
   return (
     <div className="absolute bottom-3 left-3 right-3 z-50 rounded-2xl bg-foreground text-background shadow-2xl px-4 py-3 flex items-center gap-3">
       <span className="w-10 h-10 shrink-0 rounded-xl bg-primary flex items-center justify-center">
@@ -90,28 +143,19 @@ export function InstallPrompt() {
 
       <div className="min-w-0 flex-1">
         <p className="text-sm font-bold leading-tight">ホーム画面に追加</p>
-        {isIos ? (
-          <p className="text-xs opacity-70 leading-snug mt-0.5 flex items-center gap-1 flex-wrap">
-            <Share className="w-3 h-3 inline shrink-0" />
-            を押して「ホーム画面に追加」
-          </p>
-        ) : (
-          <p className="text-xs opacity-70 leading-snug mt-0.5">
-            アプリとして全画面で使えます
-          </p>
-        )}
+        <p className="text-xs opacity-70 leading-snug mt-0.5">
+          アプリとして全画面で使えます
+        </p>
       </div>
 
-      {!isIos && (
-        <button
-          type="button"
-          onClick={install}
-          data-testid="button-install"
-          className="shrink-0 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-bold"
-        >
-          追加
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={install}
+        data-testid="button-install"
+        className="shrink-0 h-9 px-4 rounded-full bg-primary text-primary-foreground text-sm font-bold"
+      >
+        追加
+      </button>
 
       <button
         type="button"
