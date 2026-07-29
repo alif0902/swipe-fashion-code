@@ -133,6 +133,7 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 | `artifacts/swipe-fashion-next/lib/data.ts` | **Sumber kebenaran query baca** untuk Server Component |
 | `artifacts/swipe-fashion-next/lib/taste.ts` | **Mesin selera.** Bangun profil dari swipe, skor & urutkan produk. Murni, diuji unit |
 | `artifacts/swipe-fashion-next/lib/outfit.ts` | **Perakit outfit** "Complete the Look". Murni, diuji unit |
+| `artifacts/swipe-fashion-next/lib/payment.ts` | **Logika pembayaran demo**: deteksi penerbit kartu, Luhn, format, validasi. Murni, diuji unit |
 | `artifacts/swipe-fashion-next/lib/format.ts` | Konversi row DB → tipe aplikasi. Murni, diuji unit |
 | `artifacts/swipe-fashion-next/lib/validation.ts` | Skema Zod input Server Action. Murni, diuji unit |
 | `artifacts/swipe-fashion-next/app/globals.css` | **Sumber kebenaran design token** (warna HSL, radius, font) |
@@ -147,6 +148,7 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 - **Tidak ada lapisan HTTP internal.** Server Component meng-query Drizzle langsung; mutasi lewat Server Actions. Express API server, OpenAPI spec, dan client hasil Orval sudah dihapus karena tak ada yang memakainya.
 - **Logika personalisasi hidup di modul murni, bukan di query.** `lib/taste.ts` dan `lib/outfit.ts` tidak menyentuh DB sama sekali — `lib/data.ts` yang mengambil baris, modul murni yang memutuskan urutan dan padanan. Itulah sebabnya keduanya bisa diuji unit tanpa harness database, dan mengapa `listProducts` tidak lagi menyimpan aturan skor sendiri.
 - **Swipe kiri direkam, bukan dibuang.** Tabel `swipes` menyimpan `pass` / `like` / `super` dengan unique per sesi-produk. Tanpa sinyal negatif, profil hanya tahu apa yang disukai dan tak pernah belajar apa yang dihindari. Ini juga yang membuat produk yang sudah ditolak tidak muncul lagi di feed.
+- **Nomor kartu tidak pernah menyeberang ke server.** Ia hidup di state komponen PaymentSheet saja dan hilang saat lembar ditutup. Yang dikirim ke Server Action hanyalah label hasil `paymentLabel()`, mis. `クレジットカード（Visa •••• 4242）`. Kolom `orders.paymentMethod` karena itu aman dibaca siapa pun.
 - **Perekaman swipe sengaja fire-and-forget.** Animasi kartu tidak boleh menunggu jaringan; kalau satu request gagal, yang hilang cuma satu sinyal.
 - **Sesi = cookie httpOnly, bukan localStorage.** Server harus bisa membaca identitas sesi untuk memfilter order dan super-like, jadi `middleware.ts` yang menerbitkannya, bukan kode klien.
 - **Dua connection string Supabase.** Runtime memakai transaction pooler (6543) dengan `max: 1` karena tiap instance Vercel punya pool sendiri; DDL memakai direct (5432) karena pooler tidak mendukung DDL.
@@ -164,7 +166,8 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 - **Lookbook** — grid katalog dengan filter kategori lewat query string URL.
 - **Product detail** — halaman produk dengan metadata SEO dan tag OpenGraph yang ter-render di server.
 - **Obsessed** — koleksi produk yang di-super-like pada sesi ini.
-- **Orders** — buat, konfirmasi, dan batalkan pesanan. Membatalkan mengembalikan stok.
+- **Orders** — buat, bayar, dan batalkan pesanan. Membatalkan mengembalikan stok.
+- **Pembayaran (demo)** — alur berlangkah dengan lima metode: クレジットカード, PayPay, コンビニ払い, Apple Pay, 代金引換. Formulir kartu memvalidasi checksum Luhn, mendeteksi penerbit dari awalan nomor, dan menyesuaikan panjang CVC. **Simulasi penuh** — tidak ada penyedia pembayaran yang dihubungi.
 
 ## User preferences
 

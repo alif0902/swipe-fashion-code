@@ -1,0 +1,129 @@
+# SwipeFash
+
+**スワイプで出会う、次の一着。** — aplikasi belanja fashion yang mengganti pencarian dengan insting.
+
+Alih-alih menelusuri grid dan filter, pengguna men-*swipe* satu per satu seperti aplikasi kencan: geser kanan untuk suka, kiri untuk lewat, atas untuk simpan. Setiap keputusan — **termasuk yang ditolak** — melatih profil selera yang menyusun ulang urutan feed.
+
+**Demo langsung:** https://swipe-fashion-code-swipe-fashion-ne-coral.vercel.app
+
+> Buka dari ponsel, atau dari laptop dengan jendela browser diperkecil.
+
+---
+
+## Ini *mobile-only web app*
+
+Bukan situs responsif yang kebetulan muat di ponsel — dirancang khusus untuk layar ponsel, dan itu keputusan produk, bukan keterbatasan.
+
+Alasannya: interaksi intinya adalah **swipe**, gestur sentuh yang tidak ada di desktop. Membuat versi desktop berarti menyisakan tombol klik saja, dan seluruh premis produk — *"jangan cari, cukup geser"* — kehilangan maknanya.
+
+Di layar besar, aplikasi tetap disajikan rapi di dalam bingkai perangkat, bukan direntangkan jadi tata letak yang tidak pernah dirancang.
+
+---
+
+## Fitur
+
+### 1. Feed swipe
+
+Kartu produk bergaya profil: carousel foto, deskripsi, dan tabel 基本情報 lengkap dengan ukuran per kategori (着丈・身幅・肩幅 untuk atasan, ウエスト・股上・股下 untuk bawahan). Geser mendatar untuk memutuskan, geser tegak untuk membaca detail.
+
+### 2. Style DNA — mesin selera
+
+Inti pembeda aplikasi ini. **Setiap swipe direkam, termasuk swipe kiri.**
+
+Kebanyakan aplikasi serupa hanya belajar dari apa yang disukai. SwipeFash memberi bobot pada penolakan juga:
+
+| Aksi | Bobot |
+|---|---|
+| スーパーライク | +3 |
+| いいね | +1 |
+| パス | **−1** |
+
+Dari sinyal itu dibangun profil berbobot atas **kategori, brand, warna, dan rentang harga**, lalu feed diurutkan ulang. Halaman `/style-dna` memperlihatkan apa yang dipelajari — termasuk bagian *「見送るもの」*, yang hanya mungkin ada karena penolakan ikut dicatat.
+
+Satu keputusan yang perlu digarisbawahi: **rentang harga hanya dibangun dari barang yang disukai.** Barang mahal yang ditolak tidak menggeser anggaran, karena penolakan bisa saja soal modelnya, bukan harganya.
+
+### 3. Complete the Look
+
+Koleksi 一目惚れ dirakit otomatis jadi coordinate: atasan + bawahan, atau dress, ditumpuk luaran. Tiap potong dipakai maksimal sekali agar tidak terasa daur ulang.
+
+### 4. Pembayaran (demo)
+
+Alur checkout berlangkah dengan lima metode yang lazim di Jepang:
+
+**クレジットカード** · **PayPay** · **コンビニ払い** · **Apple Pay** · **代金引換**
+
+Formulir kartunya sungguhan secara logika, bukan tempelan:
+
+- Deteksi penerbit dari awalan nomor — Visa, Mastercard, **JCB**, AMEX, Diners, Discover
+- Pengelompokan digit sesuai penerbit (AMEX 4-6-5, sisanya per 4)
+- Validasi checksum **Luhn** — menangkap salah ketik sebelum formulir dikirim
+- Panjang CVC menyesuaikan penerbit (AMEX 4 digit, lainnya 3)
+- Kedaluwarsa sah sampai akhir bulan yang tertera
+
+> **Ini simulasi.** Tidak ada uang berpindah dan tidak ada penyedia pembayaran yang dihubungi. **Nomor kartu tidak pernah dikirim ke server maupun disimpan** — yang tercatat hanya label seperti `クレジットカード（Visa •••• 4242）`. Nomor uji tersedia langsung di dalam formulir agar tidak ada yang tergoda memakai kartu asli.
+
+---
+
+## Panduan singkat untuk penguji
+
+1. **`/feed`** — swipe 5–6 barang dengan pola jelas. Misalnya: sukai semua アウター, tolak semua ボトムス.
+2. **`/style-dna`** — profil sudah terbentuk. Perhatikan bagian *「見送るもの」* — itu bukti aplikasi belajar dari penolakan, bukan hanya dari kesukaan.
+3. **Kembali ke `/feed`** — urutannya sudah berubah.
+4. **`/一目惚れ`** — lihat coordinate yang dirakit dari barang yang disimpan.
+5. **`/orders`** → **お支払いへ進む** — coba alur pembayaran. Ketuk salah satu nomor uji di formulir kartu, atau pilih PayPay untuk melihat layar QR.
+
+---
+
+## Keputusan teknis
+
+**Logika inti hidup di modul murni, bukan di query.** `lib/taste.ts`, `lib/outfit.ts`, dan `lib/payment.ts` tidak menyentuh database sama sekali — lapisan data mengambil baris, modul murni yang memutuskan urutan, padanan, dan keabsahan. Konsekuensinya semuanya bisa diuji unit tanpa harness database: **60+ unit test** menutupi bobot selera, aturan penyusunan outfit, dan validasi kartu.
+
+**Tidak ada lapisan HTTP internal.** Server Component meng-query Drizzle langsung; mutasi lewat Server Actions. API server Express beserta client hasil generate sudah dihapus karena tak ada yang memakainya.
+
+**Sesi memakai cookie httpOnly, bukan localStorage,** supaya server bisa memfilter pesanan dan profil selera per sesi. Tidak ada registrasi — buka tautan, langsung swipe.
+
+**Perekaman swipe sengaja *fire-and-forget*.** Animasi kartu tidak boleh menunggu jaringan; kalau satu request gagal, yang hilang cuma satu sinyal.
+
+---
+
+## Stack
+
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · framer-motion · Drizzle ORM · PostgreSQL (Supabase) · Vitest · Vercel
+
+---
+
+## Menjalankan secara lokal
+
+```bash
+npm install
+npm run rebuild:native
+```
+
+Salin `artifacts/swipe-fashion-next/.env.local.example` ke `.env.local`, isi connection string Supabase, lalu:
+
+```bash
+npm run db:push
+npm run seed
+npm run dev
+```
+
+Aplikasi berjalan di `http://localhost:20100`.
+
+```bash
+npm test        # unit test
+npm run build   # typecheck + production build
+```
+
+Detail arsitektur, jebakan yang sudah diketahui, dan panduan deploy ada di [`PROJECT.md`](./PROJECT.md).
+
+---
+
+## Batasan yang diketahui
+
+Disebutkan terbuka, bukan disembunyikan:
+
+- **Pembayaran adalah simulasi.** Tidak terhubung ke penyedia mana pun.
+- **Katalog berisi 12 produk.** Cukup untuk memperlihatkan mesin seleranya bekerja, tapi feed akan cepat habis.
+- **Foto kedua tiap produk adalah crop dari foto utamanya**, bukan pemotretan terpisah.
+- **Tanpa akun.** Identitas melekat pada cookie sesi, jadi berganti perangkat berarti mulai dari nol.
+- **Swipe ke atas untuk super like dilepas** ketika area foto dibuat bisa di-scroll — dua gestur itu tidak bisa berbagi sumbu yang sama. Tombol ★ menggantikannya.
