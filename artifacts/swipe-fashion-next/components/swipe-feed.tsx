@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { PackageSearch, RotateCcw } from "lucide-react";
 
@@ -11,7 +12,21 @@ import { ProductCard } from "@/components/product-card";
 import type { AppProduct } from "@/lib/format";
 
 export function SwipeFeed({ products }: { products: AppProduct[] }) {
+  const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Dua kasus berbeda di balik satu tombol:
+  // - Tumpukan yang dimuat sudah habis di-swipe → cukup reset lokal.
+  // - props products KOSONG (mis. database belum di-seed, atau halaman dimuat
+  //   sebelum fallback server ada) → reset lokal tidak berbuat apa-apa;
+  //   satu-satunya jalan adalah minta daftar baru ke server.
+  const handleRestart = () => {
+    if (products.length > 0) {
+      setCurrentIndex(0);
+    } else {
+      router.refresh();
+    }
+  };
   const [selectedProduct, setSelectedProduct] = useState<AppProduct | null>(
     null,
   );
@@ -107,14 +122,9 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
               <p className="text-muted-foreground text-lg max-w-[250px] mb-8">
                 新着はまた入荷します。「探す」から一覧も見られます。
               </p>
-              {/* Reset LOKAL yang disengaja, bukan router.refresh(): feed di
-                  server menyembunyikan produk yang sudah diputuskan, jadi
-                  refresh pada katalog yang sudah habis hanya mengembalikan
-                  layar kosong ini lagi. Memutar ulang tumpukan yang sama
-                  membuat tombolnya selalu berfungsi — penting untuk demo. */}
               <button
                 type="button"
-                onClick={() => setCurrentIndex(0)}
+                onClick={handleRestart}
                 data-testid="button-restart-feed"
                 className="inline-flex items-center gap-2.5 h-14 px-8 rounded-full bg-primary text-primary-foreground text-lg font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 hover:scale-[1.02] transition"
               >

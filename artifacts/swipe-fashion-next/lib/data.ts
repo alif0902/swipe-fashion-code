@@ -96,9 +96,17 @@ export async function listProducts({
     return rows.slice(0, limit).map(formatProduct);
   }
 
-  const candidates = rows
+  const undecided = rows
     .filter((r) => !decidedIds.has(r.id))
     .map(formatProduct);
+
+  // Kalau SEMUA produk sudah pernah diputuskan, jangan kirim daftar kosong.
+  // Katalog demo hanya 12 item — sekali dihabiskan, feed akan kosong permanen
+  // untuk sesi itu, dan tombol「もう一度見る」di klien tidak punya apa pun
+  // untuk diputar ulang (reset ke awal daftar kosong tetap kosong). Sebagai
+  // gantinya seluruh katalog ditawarkan lagi, tetap diurutkan profil selera;
+  // swipe berikutnya menimpa keputusan lama lewat onConflictDoUpdate.
+  const candidates = undecided.length > 0 ? undecided : rows.map(formatProduct);
 
   // Pengurutan sepenuhnya diserahkan ke mesin selera yang murni dan teruji.
   // Profil kosong (belum ada swipe) mengembalikan urutan asli apa adanya.
