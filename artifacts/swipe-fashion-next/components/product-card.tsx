@@ -250,7 +250,7 @@ export function ProductCard({
             {product.brand}
           </p>
           <h2 className="font-serif text-2xl leading-snug mb-1">{product.name}</h2>
-          <div className="flex items-baseline gap-2 mb-6">
+          <div className="flex items-baseline gap-2">
             <span className="font-serif text-2xl">{formatPrice(product.price)}</span>
             {product.originalPrice && (
               <span className="text-sm text-muted-foreground line-through">
@@ -259,10 +259,17 @@ export function ProductCard({
             )}
           </div>
 
+          {/* Pemisah tipis antar blok. Warnanya diambil dari --border dengan
+              opasitas rendah supaya terbaca sebagai jeda, bukan sebagai garis
+              tabel. */}
+          <div className="h-px bg-border/70 my-6" />
+
           <h3 className="text-base font-medium mb-2">商品説明</h3>
-          <p className="text-sm leading-relaxed text-foreground/80 mb-7">
+          <p className="text-sm leading-relaxed text-foreground/80">
             {product.description}
           </p>
+
+          <div className="h-px bg-border/70 my-6" />
 
           <h3 className="text-base font-medium mb-1">基本情報</h3>
           <div>

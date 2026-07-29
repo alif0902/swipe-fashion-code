@@ -44,8 +44,11 @@
 }
 
 :root {
-  /* Tema ala with.is — putih bersih, aksen coral #fe6970, ramah & rounded. */
-  --background: 350 60% 99%;
+  /* Tema ala with.is — latar pink lembut, aksen coral #fe6970, ramah & rounded.
+     Latar sengaja dibedakan jelas dari --card yang tetap putih: kartu produk
+     jadi terangkat di atas halaman, dan bilah navigasi bawah yang memakai
+     --background ikut berwarna pink, bukan putih. */
+  --background: 350 100% 96%;
   --foreground: 350 10% 24%;
   --border: 350 32% 92%;
 

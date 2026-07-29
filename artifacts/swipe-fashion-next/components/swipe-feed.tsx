@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { PackageSearch, RotateCcw } from "lucide-react";
+import { PackageSearch } from "lucide-react";
 
 import { recordSwipeAction, superLikeAction } from "@/app/actions";
 import { MatchOverlay, type MatchType } from "@/components/match-overlay";
@@ -54,12 +54,6 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
     advance();
   };
 
-  const handleUndo = () => {
-    setMatchedProduct(null);
-    setIsOrderSheetOpen(false);
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
-  };
-
   const handleAddToBag = () => {
     if (matchedProduct) {
       setSelectedProduct(matchedProduct);
@@ -73,29 +67,12 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
   };
 
   const hasMoreProducts = currentIndex < products.length;
-  const canUndo = currentIndex > 0;
 
   return (
     <div className="relative w-full h-[calc(100dvh-64px-env(safe-area-inset-bottom))] overflow-hidden bg-background">
-      <div className="absolute top-0 left-0 right-0 p-6 pt-[calc(1.5rem+env(safe-area-inset-top))] z-30 flex justify-between items-center pointer-events-none">
-        <h1 className="font-serif text-2xl font-bold tracking-tight">
-          SWIPE
-          <span className="text-muted-foreground font-normal italic">Fash</span>
-        </h1>
-
-        <button
-          type="button"
-          onClick={handleUndo}
-          disabled={!canUndo}
-          aria-label="ひとつ前に戻る"
-          data-testid="button-undo"
-          className="pointer-events-auto w-11 h-11 rounded-full border border-border bg-card/80 backdrop-blur flex items-center justify-center text-muted-foreground shadow-sm transition hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <RotateCcw className="w-5 h-5" />
-        </button>
-      </div>
-
-      <div className="relative w-full h-full pt-16">
+      {/* Logo dan tombol undo dihapus atas permintaan: kartu kini memakai
+          seluruh tinggi layar, jadi tidak ada lagi offset atas. */}
+      <div className="relative w-full h-full pt-[env(safe-area-inset-top)]">
         <AnimatePresence>
           {hasMoreProducts ? (
             products
