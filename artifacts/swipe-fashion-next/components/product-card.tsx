@@ -258,7 +258,7 @@ export function ProductCard({
           // merambat ke luar, tapi masih mengizinkan efek pantul pada panel
           // ini sendiri. "none" mematikan keduanya — panel berhenti mati di
           // ujung konten.
-          className="flex-1 min-h-0 overflow-y-auto overscroll-none bg-card rounded-t-[2rem] px-6 pt-7 pb-40"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-none bg-card rounded-t-[2rem] px-6 pt-7 pb-32"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-3">
@@ -354,32 +354,34 @@ export function ProductCard({
             <Button
               size="icon"
               variant="outline"
-              className="w-14 h-14 shrink-0 rounded-full border-0 bg-card shadow-lg hover:bg-red-50 text-red-400"
+              className="w-12 h-12 shrink-0 rounded-full border-0 bg-card shadow-lg hover:bg-red-50 text-red-400"
               onClick={forceSwipeLeft}
               data-testid="button-skip"
               aria-label="パス"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </Button>
+            {/* Pil dibatasi max-w agar tidak membentang penuh di layar lebar;
+                mx-auto menjaganya tetap di tengah setelah dibatasi. */}
             <Button
-              className="relative flex-1 h-16 rounded-full bg-primary text-primary-foreground text-xl font-bold shadow-xl shadow-primary/40 hover:bg-primary/90 transition"
+              className="relative flex-1 max-w-[220px] mx-auto h-12 rounded-full bg-primary text-primary-foreground text-base font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 transition"
               onClick={forceSwipeRight}
               data-testid="button-buy"
             >
-              <span className="absolute left-5 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                <ThumbsUp className="w-6 h-6 fill-current" />
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
+                <ThumbsUp className="w-5 h-5 fill-current" />
               </span>
               いいね！
             </Button>
             <Button
               size="icon"
               variant="outline"
-              className="w-14 h-14 shrink-0 rounded-full border-0 bg-card shadow-lg hover:bg-violet-50 text-violet-500"
+              className="w-12 h-12 shrink-0 rounded-full border-0 bg-card shadow-lg hover:bg-violet-50 text-violet-500"
               onClick={forceSuperLike}
               data-testid="button-super"
               aria-label="スーパーライク"
             >
-              <Star className="w-6 h-6 fill-current" />
+              <Star className="w-5 h-5 fill-current" />
             </Button>
           </div>
         )}
