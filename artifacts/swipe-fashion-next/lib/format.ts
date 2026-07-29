@@ -13,10 +13,15 @@ export type AppProduct = {
   images: string[];
   // Dipakai perakit outfit (lib/outfit.ts) dan mesin selera (lib/taste.ts).
   category: string;
+  // Komposisi bahan dan ukuran detail, dirender di blok 基本情報 kartu feed.
+  material: string | null;
+  dimensions: Record<string, string>;
   sizes: string[];
   colors: string[];
   rating: number | null;
   reviewCount: number;
+  // Ditampilkan sebagai 「残り○点」 di blok 基本情報.
+  stock: number;
   isNew: boolean;
   isSale: boolean;
 };
@@ -78,10 +83,13 @@ export function formatProduct(row: Product): AppProduct {
     images:
       row.images && row.images.length > 0 ? row.images : [row.imageUrl],
     category: row.category,
+    material: row.material,
+    dimensions: row.dimensions ?? {},
     sizes: row.sizes ?? [],
     colors: row.colors ?? [],
     rating: toNumber(row.rating),
     reviewCount: row.reviewCount,
+    stock: row.stock,
     isNew: row.isNew,
     isSale: row.isSale,
   };

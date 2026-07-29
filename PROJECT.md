@@ -20,7 +20,7 @@ npm run dev
 - `npm run db:push` — push perubahan schema DB (dev only)
 - `npm run seed` — isi tabel categories dan products
 - `npm run set-images` — pasang path gambar ke produk
-- `npm run sync-prices` — selaraskan harga produk yang sudah ada dengan seed.ts
+- `npm run sync-products` — selaraskan produk yang sudah ada (harga, deskripsi, foto, material, dimensi) dengan seed.ts
 - `npm run verify-stock` — cek regresi pemulihan stok
 - `npm run rebuild:native` — build ulang esbuild dan sharp
 
@@ -92,7 +92,7 @@ kalau project Supabase-mu di `ap-southeast-2`. Sengaja tidak dipin di
 - **`installCommand` memanggil `rebuild:native`** karena `.npmrc` mematikan
   install script. Tanpa itu `sharp` berisiko tidak ter-build dan optimisasi
   gambar `next/image` mati di produksi. Lihat "Keamanan install" di bawah.
-- **Harga di database tidak ikut berubah saat `seed.ts` diedit.** `seed()` memakai plain insert tanpa menghapus, jadi menjalankannya ulang menggandakan katalog, dan menghapus lebih dulu pun tidak bisa karena `orders` menyimpan foreign key ke `products`. Untuk memperbarui harga pada database yang sudah terisi, pakai `npm run sync-prices`.
+- **Harga di database tidak ikut berubah saat `seed.ts` diedit.** `seed()` memakai plain insert tanpa menghapus, jadi menjalankannya ulang menggandakan katalog, dan menghapus lebih dulu pun tidak bisa karena `orders` menyimpan foreign key ke `products`. Untuk memperbarui produk pada database yang sudah terisi, pakai `npm run sync-products`. Stok sengaja tidak ikut ditimpa karena nilainya berubah oleh pesanan sungguhan.
 - **Tabel `swipes` harus sudah ada di database produksi.** `npm run db:push`
   dijalankan dari lokal dengan `DIRECT_URL` menunjuk ke Supabase yang sama —
   tidak ada migrasi otomatis saat deploy.
@@ -138,7 +138,7 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 | `artifacts/swipe-fashion-next/app/globals.css` | **Sumber kebenaran design token** (warna HSL, radius, font) |
 | `artifacts/swipe-fashion-next/middleware.ts` | Set cookie sesi httpOnly bila belum ada |
 | `lib/db/src/schema/` | **Sumber kebenaran schema DB**: categories, products, orders, super-likes, swipes |
-| `scripts/src/` | Seed, set gambar produk, sinkron harga, verifikasi stok |
+| `scripts/src/` | Seed, set gambar produk, sinkron produk, verifikasi stok |
 | `docs/design-reference/` | Screenshot referensi visual (with.is) yang jadi acuan tema coral |
 
 ## Architecture decisions
@@ -150,12 +150,14 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 - **Sesi = cookie httpOnly, bukan localStorage.** Server harus bisa membaca identitas sesi untuk memfilter order dan super-like, jadi `middleware.ts` yang menerbitkannya, bukan kode klien.
 - **Dua connection string Supabase.** Runtime memakai transaction pooler (6543) dengan `max: 1` karena tiap instance Vercel punya pool sendiri; DDL memakai direct (5432) karena pooler tidak mendukung DDL.
 - **Vitest hanya untuk modul murni.** Tidak ada harness test DB. Halaman dan Server Action diverifikasi lewat `next build`, `tsc --noEmit`, dan pemeriksaan manual.
+- **Gestur swipe hanya aktif di area foto kartu feed.** Badan kartu bisa di-scroll, dan drag framer-motion ikut menangkap gerakan vertikal — kalau drag dipasang pada seluruh kartu, menggulir tabel 基本情報 malah menyeret kartunya. Karena itu `dragListener={false}` dan drag dimulai manual lewat `useDragControls` dari area foto saja.
+- **Ukuran produk disimpan sebagai `jsonb`, bukan kolom terpisah.** Tiap kategori punya set ukuran berbeda: atasan diukur 着丈/身幅/肩幅/袖丈, bawahan diukur ウエスト/股上/股下/わたり幅. Sebagai kolom, separuhnya akan selalu NULL dan "肩幅 celana" tampil janggal. Urutan kunci di objek dipertahankan saat dirender.
 - **Nama variabel CSS `--app-font-sans` / `--app-font-serif` / `--app-font-mono` tidak boleh berubah** — seluruh JSX bergantung pada kelas `font-serif` / `font-sans` yang di-map ke sana.
 
 ## Product
 
 - **Welcome** — halaman masuk. `/` mengarah ke sini. Halaman `/landing` yang dulu menganggur sudah dihapus.
-- **Feed** — tumpukan kartu produk yang bisa di-swipe; like memunculkan match overlay, super-like menyimpan ke koleksi Obsessed. Urutan feed ditentukan mesin selera.
+- **Feed** — kartu produk bergaya profil: carousel foto dengan strip thumbnail di atas, lalu 商品説明 dan tabel 基本情報 (kategori, brand, 素材, カラー, サイズ展開, ukuran detail, 評価, 在庫) yang bisa di-scroll. Like memunculkan match overlay, super-like menyimpan ke koleksi 一目惚れ. Urutan feed ditentukan mesin selera.
 - **Style DNA** — visualisasi apa yang dipelajari aplikasi dari swipe-mu: kategori yang dicari dan dihindari, label, palet warna, rentang harga, dan tingkat keyakinan. Punya gambar OG untuk di-share.
 - **Complete the Look** — outfit yang dirakit otomatis dari koleksi Obsessed (atasan + bawahan, atau dress, ditumpuk luaran).
 - **Lookbook** — grid katalog dengan filter kategori lewat query string URL.

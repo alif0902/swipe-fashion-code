@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer, numeric, boolean, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, numeric, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -14,6 +14,21 @@ export const productsTable = pgTable("products", {
   category: text("category").notNull(),
   sizes: text("sizes").array().notNull().default([]),
   colors: text("colors").array().notNull().default([]),
+  // Komposisi bahan, mis. "ウール80% / カシミヤ20%".
+  material: text("material"),
+  // Ukuran detail, ditampilkan di blok 基本情報.
+  //
+  // Sengaja jsonb dan bukan kolom terpisah: tiap kategori punya set ukuran yang
+  // berbeda. Atasan diukur 着丈/身幅/肩幅/袖丈, sedangkan bawahan diukur
+  // ウエスト/股上/股下/わたり幅. Kalau dijadikan kolom, separuhnya akan selalu
+  // NULL dan "肩幅 celana" akan tampil janggal.
+  //
+  // Urutan kunci di objek dipertahankan saat dirender, jadi urutan penulisan di
+  // seed itulah urutan tampilnya.
+  dimensions: jsonb("dimensions")
+    .$type<Record<string, string>>()
+    .notNull()
+    .default({}),
   stock: integer("stock").notNull().default(0),
   rating: numeric("rating", { precision: 3, scale: 2 }),
   reviewCount: integer("review_count").notNull().default(0),

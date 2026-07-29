@@ -9,7 +9,7 @@
     "set-images": "tsx ./src/set-product-images.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify-stock": "tsx ./src/verify-stock.ts",
-    "sync-prices": "tsx ./src/sync-prices.ts"
+    "sync-products": "tsx ./src/sync-products.ts"
   },
   "dependencies": {
     "@workspace/db": "*",

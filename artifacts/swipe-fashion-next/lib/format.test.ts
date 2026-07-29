@@ -14,6 +14,8 @@ const row = {
   category: "outerwear",
   sizes: ["S", "M"],
   colors: ["Beige"],
+  material: "ウール100%",
+  dimensions: { "着丈": "110cm" },
   stock: 5,
   rating: "4.90",
   reviewCount: 87,
