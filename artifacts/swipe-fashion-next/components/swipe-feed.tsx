@@ -69,7 +69,9 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
   const hasMoreProducts = currentIndex < products.length;
 
   return (
-    <div className="relative w-full h-[calc(100dvh-64px-env(safe-area-inset-bottom))] overflow-hidden bg-background">
+    // Gradasi pink hidup ala aplikasi rujukan, hanya di feed — halaman lain
+    // tetap memakai --background polos supaya konten panjang tetap tenang.
+    <div className="relative w-full h-[calc(100dvh-64px-env(safe-area-inset-bottom))] overflow-hidden bg-gradient-to-b from-pink-100 via-pink-200 to-rose-300">
       {/* Logo dan tombol undo dihapus atas permintaan: kartu kini memakai
           seluruh tinggi layar, jadi tidak ada lagi offset atas. */}
       <div className="relative w-full h-full pt-[env(safe-area-inset-top)]">

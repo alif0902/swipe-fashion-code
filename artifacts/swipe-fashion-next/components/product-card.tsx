@@ -156,12 +156,12 @@ export function ProductCard({
 
         {/* ---- Foto: kartu mengambang, satu-satunya zona gestur swipe ---- */}
         <div
-          className="relative h-[44%] shrink-0 mx-2 touch-none"
+          className="relative h-[48%] shrink-0 mx-2 touch-none"
           onPointerDown={(e) => {
             if (isFront) dragControls.start(e);
           }}
         >
-          <div className="relative w-full h-full rounded-[1.75rem] overflow-hidden bg-muted shadow-xl">
+          <div className="relative w-full h-full rounded-[2rem] overflow-hidden bg-muted shadow-xl">
             {images.length > 1 && (
               <div className="absolute top-2.5 left-3 right-3 z-30 flex gap-1.5 pointer-events-none">
                 {images.map((_, i) => (
@@ -251,17 +251,44 @@ export function ProductCard({
           </div>
         )}
 
-        {/* ---- Panel teks putih, bisa di-scroll, tidak memicu swipe ---- */}
+        {/* ---- Panel teks putih, bisa di-scroll, tidak memicu swipe ----
+             Tata letak header meniru aplikasi rujukan: nama tebal sans (bukan
+             serif — heading di globals.css otomatis serif, jadi di-override),
+             baris status dengan titik hijau, lalu harga besar berwarna aksen. */}
         <div
-          className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-card rounded-[1.75rem] shadow-lg px-5 pt-5 pb-28"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-card rounded-[2rem] shadow-lg px-6 pt-6 pb-32"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <p className="text-[10px] text-muted-foreground tracking-[0.2em] mb-1">
+          <div className="flex items-start justify-between gap-3">
+            <h2 className="font-sans font-bold text-xl leading-snug tracking-normal">
+              {product.name}
+            </h2>
+            {(product.isNew || product.isSale) && (
+              <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold px-3 py-1.5">
+                ✦ {product.isSale ? 'セール中' : '新着'}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground tracking-[0.15em] mt-0.5 mb-2">
             {product.brand}
           </p>
-          <h2 className="font-serif text-2xl leading-snug mb-1">{product.name}</h2>
+
+          <div className="flex items-center gap-1.5 mb-3">
+            <span
+              className={cn(
+                'w-2.5 h-2.5 rounded-full',
+                product.stock > 0 ? 'bg-green-500' : 'bg-muted-foreground/40',
+              )}
+            />
+            <span className="text-sm text-muted-foreground">
+              {product.stock > 0 ? `在庫あり・残り${product.stock}点` : '在庫切れ'}
+            </span>
+          </div>
+
           <div className="flex items-baseline gap-2">
-            <span className="font-serif text-2xl">{formatPrice(product.price)}</span>
+            <span className="font-sans font-bold text-3xl text-primary tabular-nums">
+              {formatPrice(product.price)}
+            </span>
             {product.originalPrice && (
               <span className="text-sm text-muted-foreground line-through">
                 {formatPrice(product.originalPrice)}
@@ -274,14 +301,18 @@ export function ProductCard({
               tabel. */}
           <div className="h-px bg-border/70 my-6" />
 
-          <h3 className="text-base font-medium mb-2">商品説明</h3>
-          <p className="text-sm leading-relaxed text-foreground/80">
+          <h3 className="font-sans font-bold text-lg tracking-normal mb-2">
+            商品説明
+          </h3>
+          <p className="text-[15px] leading-relaxed text-foreground/80">
             {product.description}
           </p>
 
           <div className="h-px bg-border/70 my-6" />
 
-          <h3 className="text-base font-medium mb-1">基本情報</h3>
+          <h3 className="font-sans font-bold text-lg tracking-normal mb-1">
+            基本情報
+          </h3>
           <div>
             <InfoRow label="カテゴリー" value={categoryLabel(product.category)} />
             <InfoRow label="ブランド" value={product.brand} />
@@ -308,41 +339,41 @@ export function ProductCard({
           </div>
         </div>
 
-        {/* ---- Tombol aksi, menempel di dasar kartu ---- */}
+        {/* ---- Tombol aksi ala aplikasi rujukan: satu pil coral besar
+             「いいね！」 diapit lingkaran pass dan super. Hierarkinya
+             disengaja — like adalah aksi utama, dua lainnya sekunder. ---- */}
         {isFront && (
           <div
-            className="absolute bottom-0 left-0 right-0 z-30 flex justify-center items-center gap-5 pb-3 pt-8 rounded-b-[1.75rem] bg-gradient-to-t from-card via-card/95 to-transparent"
+            className="absolute bottom-0 left-0 right-0 z-30 flex items-center gap-3 px-5 pb-4 pt-10 rounded-b-[2rem] bg-gradient-to-t from-card via-card/95 to-transparent"
             onPointerDown={(e) => e.stopPropagation()}
           >
             <Button
               size="icon"
               variant="outline"
-              className="w-14 h-14 rounded-full border-red-500/50 bg-background/80 backdrop-blur hover:bg-red-500/20 hover:border-red-500 text-red-500"
+              className="w-14 h-14 shrink-0 rounded-full border-border bg-card shadow-md hover:bg-red-50 hover:border-red-300 text-red-400"
               onClick={forceSwipeLeft}
               data-testid="button-skip"
               aria-label="パス"
             >
-              <X className="w-7 h-7" />
+              <X className="w-6 h-6" />
             </Button>
             <Button
-              size="icon"
-              variant="outline"
-              className="w-12 h-12 rounded-full border-violet-500/50 bg-background/80 backdrop-blur hover:bg-violet-500/20 hover:border-violet-500 text-violet-500"
-              onClick={forceSuperLike}
-              data-testid="button-super"
-              aria-label="スーパー"
-            >
-              <Star className="w-5 h-5 fill-current" />
-            </Button>
-            <Button
-              size="icon"
-              variant="outline"
-              className="w-14 h-14 rounded-full border-green-500/50 bg-background/80 backdrop-blur hover:bg-green-500/20 hover:border-green-500 text-green-500"
+              className="flex-1 h-14 rounded-full bg-primary text-primary-foreground text-lg font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 hover:scale-[1.01] transition"
               onClick={forceSwipeRight}
               data-testid="button-buy"
-              aria-label="買う"
             >
-              <Heart className="w-7 h-7 fill-current" />
+              <Heart className="w-5 h-5 fill-current mr-2" />
+              いいね！
+            </Button>
+            <Button
+              size="icon"
+              variant="outline"
+              className="w-14 h-14 shrink-0 rounded-full border-border bg-card shadow-md hover:bg-violet-50 hover:border-violet-300 text-violet-500"
+              onClick={forceSuperLike}
+              data-testid="button-super"
+              aria-label="スーパーライク"
+            >
+              <Star className="w-6 h-6 fill-current" />
             </Button>
           </div>
         )}
