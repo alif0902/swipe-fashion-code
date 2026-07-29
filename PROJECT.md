@@ -4,24 +4,49 @@ Aplikasi belanja fashion mobile-first: pengguna men-*swipe* katalog produk seper
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/swipe-fashion-next run dev` — jalankan aplikasi (port 20100, atau `PORT`)
-- `pnpm --filter @workspace/swipe-fashion-next run build` — production build Next.js
-- `pnpm --filter @workspace/swipe-fashion-next run test` — unit test Vitest (`lib/format.ts`, `lib/validation.ts`)
-- `pnpm run typecheck` — typecheck seluruh workspace
-- `pnpm run build` — typecheck + build semua paket
-- `pnpm --filter @workspace/db run push` — push perubahan schema DB (dev only)
-- `pnpm --filter @workspace/scripts run seed` — isi tabel categories dan products
-- `pnpm --filter @workspace/scripts run set-images` — pasang path gambar ke produk
-- `pnpm --filter @workspace/scripts run verify-stock` — cek regresi pemulihan stok
+Semua perintah dijalankan dari root repo.
+
+```bash
+npm install
+npm run rebuild:native   # WAJIB setelah install — lihat "Keamanan install" di bawah
+npm run dev
+```
+
+- `npm run dev` — jalankan aplikasi (port 20100, atau `PORT`)
+- `npm run build` — typecheck + production build Next.js
+- `npm start` — jalankan hasil build
+- `npm test` — unit test Vitest (`lib/format.ts`, `lib/validation.ts`)
+- `npm run typecheck` — typecheck seluruh workspace
+- `npm run db:push` — push perubahan schema DB (dev only)
+- `npm run seed` — isi tabel categories dan products
+- `npm run set-images` — pasang path gambar ke produk
+- `npm run verify-stock` — cek regresi pemulihan stok
+- `npm run rebuild:native` — build ulang esbuild dan sharp
 
 Env wajib (di `artifacts/swipe-fashion-next/.env.local`, contoh ada di `.env.local.example`):
 
 - `DATABASE_URL` — Supabase **transaction pooler** (port 6543), dipakai saat runtime
 - `DIRECT_URL` — Supabase **direct/session** (port 5432), dipakai `drizzle-kit push` dan seed
 
+## Keamanan install
+
+Repo ini pindah dari pnpm ke npm. pnpm punya beberapa pengaman yang **npm tidak
+punya padanannya**, jadi ada yang hilang dan ada yang diganti manual. Ini dicatat
+supaya tidak diam-diam terlupakan.
+
+| Pengaman pnpm | Status di npm | Pengganti |
+|---|---|---|
+| `onlyBuiltDependencies` — allowlist paket yang boleh menjalankan install script | Diganti | `ignore-scripts=true` di `.npmrc` mematikan **semua** install script. Paket yang benar-benar butuh build native dijalankan eksplisit lewat `npm run rebuild:native`. Script itulah allowlist-nya sekarang. |
+| `minimumReleaseAge: 1440` — tolak paket yang rilis <1 hari | **Hilang** | Tidak ada padanan di npm. Rilis npm berbahaya biasanya ketahuan dan ditarik dalam hitungan jam, jadi pertahanan ini nyata nilainya. Gantinya hanya kehati-hatian manual: jangan `npm update` sembarangan, dan periksa changelog sebelum menaikkan versi. |
+| `overrides: "paket>binary-platform-lain": "-"` — buang binary platform yang tidak dipakai | **Hilang** | npm tidak bisa menghapus optional dependency. Akibatnya `node_modules` lebih besar karena binary esbuild/rollup/lightningcss untuk semua platform ikut terpasang. Fungsional, hanya boros. |
+| `catalog:` — satu sumber versi untuk seluruh workspace | **Hilang** | Versi kini ditulis literal di tiap `package.json`. Kalau menaikkan versi paket yang dipakai lebih dari satu workspace (`drizzle-orm`, `zod`, `@types/node`), **naikkan di semua tempat** agar tidak terpasang dua versi berbeda. |
+
+Yang dipertahankan: pin `esbuild: "0.27.3"` lewat `overrides` di `package.json`
+root, karena drizzle-kit menarik esbuild versi lama yang rentan.
+
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
+- npm workspaces, Node.js 22+, TypeScript 5.9
 - Next.js 16 App Router + React 19, Server Components & Server Actions
 - Tailwind CSS 4, shadcn/ui, framer-motion, lucide-react
 - PostgreSQL (Supabase) + Drizzle ORM
@@ -65,17 +90,18 @@ Env wajib (di `artifacts/swipe-fashion-next/.env.local`, contoh ada di `.env.loc
 ## User preferences
 
 - Bahasa komentar kode dan dokumen: Indonesia.
-- Package manager **wajib pnpm**; `npm install` diblokir guard di `package.json` root.
-- Versi React dipatok **tepat 19.1.0** di catalog. Jangan diubah.
-- `minimumReleaseAge: 1440` di `pnpm-workspace.yaml` **jangan dinonaktifkan** — ini pertahanan supply-chain.
+- Package manager: **npm** (pindah dari pnpm atas permintaan user).
+- Versi React dipatok **tepat 19.1.0**. Jangan diubah.
+- `ignore-scripts=true` di `.npmrc` **jangan dimatikan** — lihat "Keamanan install".
 
 ## Gotchas
 
-- Dependency baru pakai `catalog:` bila namanya sudah ada di catalog root `pnpm-workspace.yaml`.
+- **`npm install` saja tidak cukup.** Karena install script dimatikan, esbuild dan sharp belum ter-build. Selalu lanjutkan dengan `npm run rebuild:native`, jika tidak Vitest dan optimisasi gambar `next/image` akan gagal.
+- Versi dependency ditulis literal, tidak ada `catalog:` lagi. Paket yang dipakai lintas workspace (`drizzle-orm`, `zod`, `@types/node`) harus dinaikkan serempak.
 - `drizzle-kit push` akan gagal lewat pooler 6543 — pastikan `DIRECT_URL` terisi.
 - `.env.local` berisi kredensial asli dan di-gitignore. Jangan pernah di-commit.
 - Ada dua halaman masuk yang tumpang tindih (`/welcome` dan `/landing`); `/` redirect ke `/welcome`. Salah satu perlu dipilih.
 
 ## Pointers
 
-- Lihat skill `pnpm-workspace` untuk struktur workspace, setup TypeScript, dan detail paket.
+- Struktur workspace didefinisikan di field `workspaces` pada `package.json` root: `artifacts/*`, `lib/*`, `scripts`.

@@ -2,13 +2,31 @@
   "name": "workspace",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {
-    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
-    "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
-  },
   "private": true,
+  "workspaces": [
+    "artifacts/*",
+    "lib/*",
+    "scripts"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @workspace/swipe-fashion-next",
+    "start": "npm run start -w @workspace/swipe-fashion-next",
+    "build": "npm run typecheck && npm run build -w @workspace/swipe-fashion-next",
+    "test": "npm run test -w @workspace/swipe-fashion-next",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "npm run typecheck:libs && npm run typecheck --workspaces --if-present",
+    "db:push": "npm run push -w @workspace/db",
+    "seed": "npm run seed -w @workspace/scripts",
+    "set-images": "npm run set-images -w @workspace/scripts",
+    "verify-stock": "npm run verify-stock -w @workspace/scripts",
+    "rebuild:native": "npm rebuild esbuild sharp"
+  },
+  "overrides": {
+    "esbuild": "0.27.3"
+  },
   "devDependencies": {
     "prettier": "^3.9.5",
     "typescript": "~5.9.3"
