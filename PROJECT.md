@@ -139,6 +139,7 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 | `artifacts/swipe-fashion-next/middleware.ts` | Set cookie sesi httpOnly bila belum ada |
 | `lib/db/src/schema/` | **Sumber kebenaran schema DB**: categories, products, orders, super-likes, swipes |
 | `scripts/src/` | Seed, set gambar produk, sinkron produk, verifikasi stok |
+| `scripts/generate-detail-images.py` | Membuat foto detail turunan dari tiap foto produk (`public/assets/details/`) |
 | `docs/design-reference/` | Screenshot referensi visual (with.is) yang jadi acuan tema coral |
 
 ## Architecture decisions

@@ -26,8 +26,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Burgundy"],
     images: [
       "/assets/dress-burgundy-silk.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/dress-burgundy-silk-detail.jpg",
     ],
     material: "シルク100%",
     dimensions: {
@@ -54,8 +53,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Green"],
     images: [
       "/assets/dress-emerald-satin.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/dress-emerald-satin-detail.jpg",
     ],
     material: "ポリエステル100%",
     dimensions: {
@@ -83,8 +81,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Beige"],
     images: [
       "/assets/coat-camel.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/coat-camel-detail.jpg",
     ],
     material: "ウール80% / カシミヤ20%",
     dimensions: {
@@ -112,8 +109,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Black"],
     images: [
       "/assets/jacket-black-leather.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/jacket-black-leather-detail.jpg",
     ],
     material: "牛革100%",
     dimensions: {
@@ -141,8 +137,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["White"],
     images: [
       "/assets/blazer-white-linen.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/blazer-white-linen-detail.jpg",
     ],
     material: "リネン100%",
     dimensions: {
@@ -170,8 +165,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["White"],
     images: [
       "/assets/shirt-white-poplin.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/shirt-white-poplin-detail.jpg",
     ],
     material: "コットン100%",
     dimensions: {
@@ -199,8 +193,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Grey"],
     images: [
       "/assets/sweater-grey-wool.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/sweater-grey-wool-detail.jpg",
     ],
     material: "ウール100%",
     dimensions: {
@@ -228,8 +221,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Black"],
     images: [
       "/assets/top-black-turtleneck.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/top-black-turtleneck-detail.jpg",
     ],
     material: "ウール70% / ナイロン30%",
     dimensions: {
@@ -257,8 +249,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Navy"],
     images: [
       "/assets/trousers-navy.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/trousers-navy-detail.jpg",
     ],
     material: "ウール95% / ポリウレタン5%",
     dimensions: {
@@ -286,8 +277,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Beige"],
     images: [
       "/assets/trousers-cream-wide.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/trousers-cream-wide-detail.jpg",
     ],
     material: "コットン60% / リネン40%",
     dimensions: {
@@ -315,8 +305,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Blue"],
     images: [
       "/assets/jeans-distressed.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/jeans-distressed-detail.jpg",
     ],
     material: "コットン100%",
     dimensions: {
@@ -344,8 +333,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Pink"],
     images: [
       "/assets/skirt-floral-wrap.jpg",
-      "/assets/generated_images/product.jpg",
-      "/assets/generated_images/texture.jpg",
+      "/assets/details/skirt-floral-wrap-detail.jpg",
     ],
     material: "レーヨン100%",
     dimensions: {
