@@ -62,17 +62,22 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 | `artifacts/swipe-fashion-next/app/` | Rute App Router: `/welcome`, `/landing`, `/feed`, `/lookbook`, `/obsessed`, `/orders`, `/product/[id]` |
 | `artifacts/swipe-fashion-next/app/actions.ts` | Server Actions: `createOrderAction`, `superLikeAction`, `confirmOrderAction`, `cancelOrderAction` |
 | `artifacts/swipe-fashion-next/lib/data.ts` | **Sumber kebenaran query baca** untuk Server Component |
+| `artifacts/swipe-fashion-next/lib/taste.ts` | **Mesin selera.** Bangun profil dari swipe, skor & urutkan produk. Murni, diuji unit |
+| `artifacts/swipe-fashion-next/lib/outfit.ts` | **Perakit outfit** "Complete the Look". Murni, diuji unit |
 | `artifacts/swipe-fashion-next/lib/format.ts` | Konversi row DB → tipe aplikasi. Murni, diuji unit |
 | `artifacts/swipe-fashion-next/lib/validation.ts` | Skema Zod input Server Action. Murni, diuji unit |
 | `artifacts/swipe-fashion-next/app/globals.css` | **Sumber kebenaran design token** (warna HSL, radius, font) |
 | `artifacts/swipe-fashion-next/middleware.ts` | Set cookie sesi httpOnly bila belum ada |
-| `lib/db/src/schema/` | **Sumber kebenaran schema DB**: categories, products, orders, super-likes |
+| `lib/db/src/schema/` | **Sumber kebenaran schema DB**: categories, products, orders, super-likes, swipes |
 | `scripts/src/` | Seed, set gambar produk, verifikasi stok |
 | `docs/design-reference/` | Screenshot referensi visual (with.is) yang jadi acuan tema coral |
 
 ## Architecture decisions
 
 - **Tidak ada lapisan HTTP internal.** Server Component meng-query Drizzle langsung; mutasi lewat Server Actions. Express API server, OpenAPI spec, dan client hasil Orval sudah dihapus karena tak ada yang memakainya.
+- **Logika personalisasi hidup di modul murni, bukan di query.** `lib/taste.ts` dan `lib/outfit.ts` tidak menyentuh DB sama sekali — `lib/data.ts` yang mengambil baris, modul murni yang memutuskan urutan dan padanan. Itulah sebabnya keduanya bisa diuji unit tanpa harness database, dan mengapa `listProducts` tidak lagi menyimpan aturan skor sendiri.
+- **Swipe kiri direkam, bukan dibuang.** Tabel `swipes` menyimpan `pass` / `like` / `super` dengan unique per sesi-produk. Tanpa sinyal negatif, profil hanya tahu apa yang disukai dan tak pernah belajar apa yang dihindari. Ini juga yang membuat produk yang sudah ditolak tidak muncul lagi di feed.
+- **Perekaman swipe sengaja fire-and-forget.** Animasi kartu tidak boleh menunggu jaringan; kalau satu request gagal, yang hilang cuma satu sinyal.
 - **Sesi = cookie httpOnly, bukan localStorage.** Server harus bisa membaca identitas sesi untuk memfilter order dan super-like, jadi `middleware.ts` yang menerbitkannya, bukan kode klien.
 - **Dua connection string Supabase.** Runtime memakai transaction pooler (6543) dengan `max: 1` karena tiap instance Vercel punya pool sendiri; DDL memakai direct (5432) karena pooler tidak mendukung DDL.
 - **Vitest hanya untuk modul murni.** Tidak ada harness test DB. Halaman dan Server Action diverifikasi lewat `next build`, `tsc --noEmit`, dan pemeriksaan manual.
@@ -81,7 +86,9 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 ## Product
 
 - **Welcome / Landing** — halaman masuk bertema.
-- **Feed** — tumpukan kartu produk yang bisa di-swipe; like memunculkan match overlay, super-like menyimpan ke koleksi Obsessed.
+- **Feed** — tumpukan kartu produk yang bisa di-swipe; like memunculkan match overlay, super-like menyimpan ke koleksi Obsessed. Urutan feed ditentukan mesin selera.
+- **Style DNA** — visualisasi apa yang dipelajari aplikasi dari swipe-mu: kategori yang dicari dan dihindari, label, palet warna, rentang harga, dan tingkat keyakinan. Punya gambar OG untuk di-share.
+- **Complete the Look** — outfit yang dirakit otomatis dari koleksi Obsessed (atasan + bawahan, atau dress, ditumpuk luaran).
 - **Lookbook** — grid katalog dengan filter kategori lewat query string URL.
 - **Product detail** — halaman produk dengan metadata SEO dan tag OpenGraph yang ter-render di server.
 - **Obsessed** — koleksi produk yang di-super-like pada sesi ini.
@@ -96,6 +103,7 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 
 ## Gotchas
 
+- **Tabel `swipes` wajib di-push sebelum personalisasi hidup.** Jalankan `npm run db:push`. Tanpa itu aplikasi tetap jalan (semua query dibungkus try/catch), tapi feed kembali ke urutan id dan Style DNA kosong.
 - **`npm install` saja tidak cukup.** Karena install script dimatikan, esbuild dan sharp belum ter-build. Selalu lanjutkan dengan `npm run rebuild:native`, jika tidak Vitest dan optimisasi gambar `next/image` akan gagal.
 - Versi dependency ditulis literal, tidak ada `catalog:` lagi. Paket yang dipakai lintas workspace (`drizzle-orm`, `zod`, `@types/node`) harus dinaikkan serempak.
 - `drizzle-kit push` akan gagal lewat pooler 6543 — pastikan `DIRECT_URL` terisi.

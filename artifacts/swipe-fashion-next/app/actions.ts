@@ -2,15 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { eq, sql } from "drizzle-orm";
-import { db, ordersTable, productsTable, superLikesTable } from "@workspace/db";
+import {
+  db,
+  ordersTable,
+  productsTable,
+  superLikesTable,
+  swipesTable,
+} from "@workspace/db";
 
 import { getSessionId } from "@/lib/session";
 import {
   confirmOrderSchema,
   createOrderSchema,
+  recordSwipeSchema,
   superLikeSchema,
   type ConfirmOrderInput,
   type CreateOrderInput,
+  type RecordSwipeInput,
   type SuperLikeInput,
 } from "@/lib/validation";
 
@@ -64,6 +72,48 @@ export async function createOrderAction(
 
   revalidatePath("/orders");
   return { ok: true };
+}
+
+// Merekam SATU keputusan swipe, termasuk swipe kiri. Ini bahan bakar mesin
+// selera di lib/taste.ts — tanpa sinyal negatif, profil hanya tahu apa yang
+// disukai dan tidak pernah belajar apa yang harus dihindari.
+export async function recordSwipeAction(
+  input: RecordSwipeInput,
+): Promise<ActionResult> {
+  const parsed = recordSwipeSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid swipe." };
+  }
+
+  const sessionId = await getSessionId();
+  if (!sessionId) {
+    return { ok: false, error: "No active session." };
+  }
+
+  try {
+    // Undo lalu swipe ulang ke arah lain harus menimpa keputusan lama, bukan
+    // menumpuk dua baris yang saling bertentangan.
+    await db
+      .insert(swipesTable)
+      .values({
+        sessionId,
+        productId: parsed.data.productId,
+        direction: parsed.data.direction,
+      })
+      .onConflictDoUpdate({
+        target: [swipesTable.sessionId, swipesTable.productId],
+        set: { direction: parsed.data.direction },
+      });
+
+    // Feed dan Style DNA sama-sama dibangun dari profil ini.
+    revalidatePath("/feed");
+    revalidatePath("/style-dna");
+    return { ok: true };
+  } catch {
+    // Tabel swipes mungkin belum di-push. Swipe tetap terasa mulus; yang
+    // hilang hanya personalisasinya.
+    return { ok: false, error: "Could not record swipe." };
+  }
 }
 
 export async function superLikeAction(

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { PackageSearch, RotateCcw } from "lucide-react";
 
-import { superLikeAction } from "@/app/actions";
+import { recordSwipeAction, superLikeAction } from "@/app/actions";
 import { MatchOverlay, type MatchType } from "@/components/match-overlay";
 import { OrderSheet } from "@/components/order-sheet";
 import { ProductCard } from "@/components/product-card";
@@ -24,9 +24,17 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
   const advance = () =>
     setTimeout(() => setCurrentIndex((prev) => prev + 1), 200);
 
+  // Setiap keputusan dikirim ke server, termasuk swipe kiri. Fire-and-forget
+  // secara sengaja: personalisasi tidak boleh menahan animasi kartu. Kalau
+  // request gagal, yang hilang cuma satu sinyal — swipe tetap terasa instan.
+  const record = (product: AppProduct, direction: "pass" | "like" | "super") => {
+    void recordSwipeAction({ productId: product.id, direction }).catch(() => {});
+  };
+
   const handleSwipeRight = (product: AppProduct) => {
     setMatchedProduct(product);
     setMatchType("match");
+    record(product, "like");
     advance();
   };
 
@@ -36,10 +44,13 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
     // Simpan ke koleksi Obsessed (dan boost feed). Fire-and-forget: kalau
     // gagal, momen "Super Match" tetap jalan.
     void superLikeAction({ productId: product.id }).catch(() => {});
+    record(product, "super");
     advance();
   };
 
-  const handleSwipeLeft = () => {
+  const handleSwipeLeft = (product: AppProduct) => {
+    // Dulu fungsi ini hanya memanggil advance() dan sinyalnya terbuang.
+    record(product, "pass");
     advance();
   };
 

@@ -11,6 +11,8 @@ export type AppProduct = {
   description: string;
   imageUrl: string;
   images: string[];
+  // Dipakai perakit outfit (lib/outfit.ts) dan mesin selera (lib/taste.ts).
+  category: string;
   sizes: string[];
   colors: string[];
   rating: number | null;
@@ -51,6 +53,7 @@ export function formatProduct(row: Product): AppProduct {
     // utama supaya carousel tetap tampil dengan satu slide.
     images:
       row.images && row.images.length > 0 ? row.images : [row.imageUrl],
+    category: row.category,
     sizes: row.sizes ?? [],
     colors: row.colors ?? [],
     rating: toNumber(row.rating),

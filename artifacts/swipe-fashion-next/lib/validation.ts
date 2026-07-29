@@ -20,6 +20,12 @@ export const superLikeSchema = z.object({
   productId: z.number().int().positive(),
 });
 
+export const recordSwipeSchema = z.object({
+  productId: z.number().int().positive(),
+  direction: z.enum(["pass", "like", "super"]),
+});
+
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export type ConfirmOrderInput = z.infer<typeof confirmOrderSchema>;
 export type SuperLikeInput = z.infer<typeof superLikeSchema>;
+export type RecordSwipeInput = z.infer<typeof recordSwipeSchema>;

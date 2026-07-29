@@ -7,10 +7,56 @@ import {
   ordersTable,
   productsTable,
   superLikesTable,
+  swipesTable,
 } from "@workspace/db";
 
 import { formatOrder, formatProduct } from "./format";
 import type { AppOrder, AppProduct } from "./format";
+import {
+  buildTasteProfile,
+  rankProducts,
+  type TasteProfile,
+  type TasteSignal,
+} from "./taste";
+
+// Membaca seluruh keputusan swipe sesi ini dan menggabungkannya dengan atribut
+// produk, siap dilempar ke mesin selera yang murni.
+async function loadTasteSignals(sessionId: string): Promise<TasteSignal[]> {
+  const rows = await db
+    .select({
+      direction: swipesTable.direction,
+      category: productsTable.category,
+      brand: productsTable.brand,
+      colors: productsTable.colors,
+      price: productsTable.price,
+    })
+    .from(swipesTable)
+    .innerJoin(productsTable, eq(productsTable.id, swipesTable.productId))
+    .where(eq(swipesTable.sessionId, sessionId));
+
+  return rows.map((row) => ({
+    direction: row.direction,
+    category: row.category,
+    brand: row.brand,
+    colors: row.colors ?? [],
+    // numeric Postgres kembali sebagai string lewat node-postgres.
+    price: parseFloat(row.price),
+  }));
+}
+
+// Profil selera sesi ini. Dipakai feed untuk mengurutkan dan halaman Style DNA
+// untuk memvisualkan. Mengembalikan profil kosong bila tabel belum ada.
+export async function getTasteProfile(
+  sessionId: string,
+): Promise<TasteProfile> {
+  if (!sessionId) return buildTasteProfile([]);
+
+  try {
+    return buildTasteProfile(await loadTasteSignals(sessionId));
+  } catch {
+    return buildTasteProfile([]);
+  }
+}
 
 export async function listProducts({
   category,
@@ -32,43 +78,33 @@ export async function listProducts({
     return rows.slice(0, limit).map(formatProduct);
   }
 
-  // Ambil "Obsessed" untuk mem-boost feed + menyembunyikan yang sudah disimpan.
-  let likedIds = new Set<number>();
-  let likedCategories = new Set<string>();
-  let likedBrands = new Set<string>();
+  // Produk yang sudah diputuskan (suka, super, atau lewat) tidak diulang.
+  // Sebelumnya hanya yang di-super-like yang disembunyikan, sehingga barang
+  // yang baru saja ditolak bisa muncul lagi di sesi yang sama.
+  let signals: TasteSignal[] = [];
+  let decidedIds = new Set<number>();
   try {
-    const liked = await db
-      .select({
-        id: productsTable.id,
-        category: productsTable.category,
-        brand: productsTable.brand,
-      })
-      .from(superLikesTable)
-      .innerJoin(productsTable, eq(productsTable.id, superLikesTable.productId))
-      .where(eq(superLikesTable.sessionId, sessionId));
+    signals = await loadTasteSignals(sessionId);
 
-    likedIds = new Set(liked.map((l) => l.id));
-    likedCategories = new Set(liked.map((l) => l.category));
-    likedBrands = new Set(liked.map((l) => l.brand));
+    const decided = await db
+      .select({ productId: swipesTable.productId })
+      .from(swipesTable)
+      .where(eq(swipesTable.sessionId, sessionId));
+    decidedIds = new Set(decided.map((d) => d.productId));
   } catch {
-    // Tabel super_likes mungkin belum ada — feed tetap jalan tanpa boost.
+    // Tabel swipes mungkin belum di-push — feed tetap jalan tanpa personalisasi.
     return rows.slice(0, limit).map(formatProduct);
   }
 
-  const candidates = rows.filter((r) => !likedIds.has(r.id));
+  const candidates = rows
+    .filter((r) => !decidedIds.has(r.id))
+    .map(formatProduct);
 
-  if (likedCategories.size === 0 && likedBrands.size === 0) {
-    return candidates.slice(0, limit).map(formatProduct);
-  }
+  // Pengurutan sepenuhnya diserahkan ke mesin selera yang murni dan teruji.
+  // Profil kosong (belum ada swipe) mengembalikan urutan asli apa adanya.
+  const profile = buildTasteProfile(signals);
 
-  // Skor 0 = cocok dengan gaya yang di-Obsessed → muncul lebih dulu.
-  // Array.sort stabil, jadi urutan id di dalam tiap grup tetap terjaga.
-  const score = (r: (typeof candidates)[number]) =>
-    likedCategories.has(r.category) || likedBrands.has(r.brand) ? 0 : 1;
-
-  const boosted = [...candidates].sort((a, b) => score(a) - score(b));
-
-  return boosted.slice(0, limit).map(formatProduct);
+  return rankProducts(profile, candidates).slice(0, limit);
 }
 
 export async function listObsessed(sessionId: string): Promise<AppProduct[]> {
