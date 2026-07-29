@@ -1,6 +1,13 @@
-import { pgTable, serial, text, integer, numeric, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, numeric, boolean, timestamp, jsonb, pgEnum } from "drizzle-orm/pg-core";
+
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+
+// Hanya dua nilai: anak-anak sengaja tidak ada di katalog ini.
+// Tidak dipakai "unisex" — tiap foto produk menampilkan model tertentu, dan
+// menaruh foto model perempuan di bawah filter 男性 langsung terlihat salah.
+export const genderEnum = pgEnum("product_gender", ["women", "men"]);
+
 
 export const productsTable = pgTable("products", {
   id: serial("id").primaryKey(),
@@ -12,6 +19,7 @@ export const productsTable = pgTable("products", {
   imageUrl: text("image_url").notNull(),
   images: text("images").array().notNull().default([]),
   category: text("category").notNull(),
+  gender: genderEnum("gender").notNull().default("women"),
   sizes: text("sizes").array().notNull().default([]),
   colors: text("colors").array().notNull().default([]),
   // Komposisi bahan, mis. "ウール80% / カシミヤ20%".

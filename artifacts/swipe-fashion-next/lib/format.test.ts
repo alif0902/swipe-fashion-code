@@ -12,6 +12,7 @@ const row = {
   imageUrl: "/assets/coat-camel.jpg",
   images: [],
   category: "outerwear",
+  gender: "women" as const,
   sizes: ["S", "M"],
   colors: ["Beige"],
   material: "ウール100%",

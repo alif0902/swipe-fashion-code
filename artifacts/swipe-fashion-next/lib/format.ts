@@ -13,6 +13,7 @@ export type AppProduct = {
   images: string[];
   // Dipakai perakit outfit (lib/outfit.ts) dan mesin selera (lib/taste.ts).
   category: string;
+  gender: "women" | "men";
   // Komposisi bahan dan ukuran detail, dirender di blok 基本情報 kartu feed.
   material: string | null;
   dimensions: Record<string, string>;
@@ -83,6 +84,7 @@ export function formatProduct(row: Product): AppProduct {
     images:
       row.images && row.images.length > 0 ? row.images : [row.imageUrl],
     category: row.category,
+    gender: row.gender,
     material: row.material,
     dimensions: row.dimensions ?? {},
     sizes: row.sizes ?? [],

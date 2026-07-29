@@ -24,6 +24,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "厚みのあるシルクシャルムーズをバイアス裁ちで。体に沿いながら張りつかず、ドレープの落ち方がきれいに出ます。",
     imageUrl: "/assets/dress-burgundy-silk.jpg",
     category: "dresses",
+    gender: "women",
     sizes: ["XS", "S", "M", "L"],
     colors: ["Burgundy"],
     images: [
@@ -51,6 +52,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "とろみのあるサテンをふくらはぎ丈に。深いエメラルドが、光の角度で表情を変えます。",
     imageUrl: "/assets/dress-emerald-satin.jpg",
     category: "dresses",
+    gender: "women",
     sizes: ["XS", "S", "M", "L"],
     colors: ["Green"],
     images: [
@@ -79,6 +81,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "ダブルフェイスのウールを一枚仕立てで。裏地がないぶん軽く、肩からまっすぐ落ちるシルエットです。",
     imageUrl: "/assets/coat-camel.jpg",
     category: "outerwear",
+    gender: "women",
     sizes: ["S", "M", "L"],
     colors: ["Beige"],
     images: [
@@ -107,6 +110,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "厚手の牛革を使ったライダース。着るほどに体に沿い、色の濃淡が出てきます。",
     imageUrl: "/assets/jacket-black-leather.jpg",
     category: "outerwear",
+    gender: "men",
     sizes: ["XS", "S", "M", "L"],
     colors: ["Black"],
     images: [
@@ -135,6 +139,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "リネン100%のアンコンジャケット。肩パッドを入れず、シャツのように羽織れます。",
     imageUrl: "/assets/blazer-white-linen.jpg",
     category: "outerwear",
+    gender: "women",
     sizes: ["S", "M", "L"],
     colors: ["White"],
     images: [
@@ -163,6 +168,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "しっかり打ち込んだコットンポプリン。洗うほどに肌なじみがよくなります。",
     imageUrl: "/assets/shirt-white-poplin.jpg",
     category: "tops",
+    gender: "women",
     sizes: ["XS", "S", "M", "L", "XL"],
     colors: ["White"],
     images: [
@@ -191,6 +197,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "空気を含ませて編んだウール。一枚でも、シャツの上からでも。",
     imageUrl: "/assets/sweater-grey-wool.jpg",
     category: "tops",
+    gender: "women",
     sizes: ["S", "M", "L"],
     colors: ["Grey"],
     images: [
@@ -219,6 +226,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "薄手で首元が沿うタートルネック。ジャケットの下でもたつきません。",
     imageUrl: "/assets/top-black-turtleneck.jpg",
     category: "tops",
+    gender: "women",
     sizes: ["XS", "S", "M", "L"],
     colors: ["Black"],
     images: [
@@ -247,6 +255,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "ウールにわずかなストレッチを効かせて。センタープレスが脚をまっすぐ見せます。",
     imageUrl: "/assets/trousers-navy.jpg",
     category: "bottoms",
+    gender: "men",
     sizes: ["XS", "S", "M", "L"],
     colors: ["Navy"],
     images: [
@@ -275,6 +284,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "コットンリネンのワイドシルエット。腰まわりはすっきり、裾に向かって広がります。",
     imageUrl: "/assets/trousers-cream-wide.jpg",
     category: "bottoms",
+    gender: "women",
     sizes: ["XS", "S", "M"],
     colors: ["Beige"],
     images: [
@@ -303,6 +313,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "リジッドデニムに手作業で色落ちを施しました。ストレートで、丈は好みに合わせて。",
     imageUrl: "/assets/jeans-distressed.jpg",
     category: "bottoms",
+    gender: "men",
     sizes: ["XS", "S", "M", "L", "XL"],
     colors: ["Blue"],
     images: [
@@ -331,6 +342,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "レーヨンの落ち感を生かした巻きスカート。歩くたびに柄が静かに動きます。",
     imageUrl: "/assets/skirt-floral-wrap.jpg",
     category: "bottoms",
+    gender: "women",
     sizes: ["XS", "S", "M", "L"],
     colors: ["Pink"],
     images: [

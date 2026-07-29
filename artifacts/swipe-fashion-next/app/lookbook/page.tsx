@@ -5,7 +5,8 @@ import { Search } from "lucide-react";
 
 import { AppLayout } from "@/components/layout";
 import { PageHeader } from "@/components/page-header";
-import { listCategories, listProducts } from "@/lib/data";
+import { FilterFab } from "@/components/filter-fab";
+import { listCategories, listProducts, type ProductSort } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { categoryLabel, formatPrice } from "@/lib/format";
 
@@ -24,21 +25,64 @@ const tabClass = (active: boolean) =>
       : "bg-card text-muted-foreground border border-border hover:border-primary/40",
   );
 
+// Query string jadi satu-satunya sumber kebenaran filter, bukan state React:
+// hasilnya bisa di-bookmark, tombol back bekerja, dan daftarnya tetap dirender
+// di server.
+const GENDERS = [
+  { value: "women", label: "レディース" },
+  { value: "men", label: "メンズ" },
+] as const;
+
+// Membangun URL dengan mempertahankan filter lain yang sedang aktif — mengganti
+// gender tidak boleh diam-diam menghapus pilihan 並び替え.
+function buildHref(
+  current: Record<string, string | undefined>,
+  patch: Record<string, string | null>,
+) {
+  const next = new URLSearchParams();
+  for (const [k, v] of Object.entries({ ...current, ...patch })) {
+    if (v) next.set(k, v);
+  }
+  const qs = next.toString();
+  return qs ? `/lookbook?${qs}` : "/lookbook";
+}
+
+const segClass = (active: boolean) =>
+  cn(
+    "flex-1 text-center py-2 rounded-full text-sm font-medium transition-all",
+    active
+      ? "bg-card text-foreground shadow-sm"
+      : "text-muted-foreground hover:text-foreground",
+  );
+
 export default async function LookbookPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{
+    category?: string;
+    gender?: string;
+    sort?: string;
+    stock?: string;
+  }>;
 }) {
-  const { category } = await searchParams;
+  const sp = await searchParams;
+  const { category, sort, stock } = sp;
+  const gender = sp.gender === "men" || sp.gender === "women" ? sp.gender : undefined;
 
   const [categories, products] = await Promise.all([
     listCategories(),
-    listProducts({ category, limit: 50 }),
+    listProducts({
+      category,
+      gender,
+      sort: (sort as ProductSort) ?? "recommended",
+      inStockOnly: stock === "1",
+      limit: 50,
+    }),
   ]);
 
   return (
     <AppLayout>
-      <div className="min-h-full bg-background">
+      <div className="relative min-h-full bg-background">
         <PageHeader
           icon={Search}
           eyebrow="COLLECTION"
@@ -47,16 +91,39 @@ export default async function LookbookPage({
           count={products.length}
           countLabel="点"
         >
-          {/* Tab kategori jadi anak header, bukan blok terpisah — supaya
-              filter terbaca sebagai bagian dari judul halaman. */}
-          <div className="flex overflow-x-auto no-scrollbar gap-2 mt-5 px-6">
-            <Link href="/lookbook" className={tabClass(!category)}>
+          {/* Dua tingkat filter, sesuai urutan cara orang mempersempit
+              pilihan: dulu siapa yang memakainya, baru jenis barangnya. */}
+          <div className="mt-5 px-6">
+            <div className="flex gap-2 p-1 rounded-full bg-muted/70">
+              <Link
+                href={buildHref(sp, { gender: null })}
+                className={segClass(!gender)}
+              >
+                すべて
+              </Link>
+              {GENDERS.map((g) => (
+                <Link
+                  key={g.value}
+                  href={buildHref(sp, { gender: g.value })}
+                  className={segClass(gender === g.value)}
+                >
+                  {g.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex overflow-x-auto no-scrollbar gap-2 mt-3 px-6">
+            <Link
+              href={buildHref(sp, { category: null })}
+              className={tabClass(!category)}
+            >
               すべて
             </Link>
             {categories.map((cat) => (
               <Link
                 key={cat.id}
-                href={`/lookbook?category=${cat.slug}`}
+                href={buildHref(sp, { category: cat.slug })}
                 className={tabClass(category === cat.slug)}
               >
                 {categoryLabel(cat.slug)}
@@ -102,10 +169,12 @@ export default async function LookbookPage({
             </div>
           ) : (
             <div className="text-center py-20 text-muted-foreground">
-              <p>このカテゴリーのアイテムはまだありません。</p>
+              <p>条件に合うアイテムはまだありません。</p>
             </div>
           )}
         </div>
+
+        <FilterFab params={sp} resultCount={products.length} />
       </div>
     </AppLayout>
   );

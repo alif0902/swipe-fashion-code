@@ -1,6 +1,6 @@
 import "server-only";
 
-import { asc, count, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt } from "drizzle-orm";
 import {
   categoriesTable,
   db,
@@ -58,24 +58,53 @@ export async function getTasteProfile(
   }
 }
 
+export type ProductSort = "recommended" | "price-asc" | "price-desc" | "new";
+
 export async function listProducts({
   category,
+  gender,
+  sort = "recommended",
+  inStockOnly = false,
   limit = 10,
   sessionId,
 }: {
   category?: string;
+  gender?: "women" | "men";
+  sort?: ProductSort;
+  inStockOnly?: boolean;
   limit?: number;
   sessionId?: string;
 } = {}): Promise<AppProduct[]> {
+  // and() mengabaikan undefined, jadi filter yang tidak dipakai tidak perlu
+  // percabangan sendiri.
   const rows = await db
     .select()
     .from(productsTable)
-    .where(category ? eq(productsTable.category, category) : undefined)
+    .where(
+      and(
+        category ? eq(productsTable.category, category) : undefined,
+        gender ? eq(productsTable.gender, gender) : undefined,
+        inStockOnly ? gt(productsTable.stock, 0) : undefined,
+      ),
+    )
     .orderBy(asc(productsTable.id));
 
-  // Tanpa sesi (lookbook, landing): perilaku lama — urut id, potong ke limit.
+  // Pengurutan dilakukan di JS, bukan SQL: kolom price bertipe numeric dan
+  // kembali sebagai STRING lewat node-postgres. ORDER BY di SQL memang benar,
+  // tapi menyortir setelah formatProduct membuat perbandingannya numerik dan
+  // konsisten dengan nilai yang benar-benar dirender.
+  const sortProducts = (list: AppProduct[]) => {
+    if (sort === "price-asc") return [...list].sort((a, b) => a.price - b.price);
+    if (sort === "price-desc") return [...list].sort((a, b) => b.price - a.price);
+    if (sort === "new") {
+      return [...list].sort((a, b) => Number(b.isNew) - Number(a.isNew));
+    }
+    return list;
+  };
+
+  // Tanpa sesi (lookbook, landing): urut id lalu diurutkan sesuai pilihan.
   if (!sessionId) {
-    return rows.slice(0, limit).map(formatProduct);
+    return sortProducts(rows.map(formatProduct)).slice(0, limit);
   }
 
   // Produk yang sudah diputuskan (suka, super, atau lewat) tidak diulang.
