@@ -1,17 +1,7 @@
-import { AppLayout } from "@/components/layout";
-import { SwipeFeed } from "@/components/swipe-feed";
-import { listProducts } from "@/lib/data";
+import { redirect } from "next/navigation";
 
-// Stok dan katalog berubah saat order dibuat, jadi feed tidak boleh
-// di-cache statis saat build.
-export const dynamic = "force-dynamic";
-
-export default async function FeedPage() {
-  const products = await listProducts({ limit: 10 });
-
-  return (
-    <AppLayout>
-      <SwipeFeed products={products} />
-    </AppLayout>
-  );
+// Halaman pertama yang dilihat pengunjung adalah welcome. Feed swipe kini
+// tinggal di /feed.
+export default function HomePage() {
+  redirect("/welcome");
 }

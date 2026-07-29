@@ -2,14 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { eq, sql } from "drizzle-orm";
-import { db, ordersTable, productsTable } from "@workspace/db";
+import { db, ordersTable, productsTable, superLikesTable } from "@workspace/db";
 
 import { getSessionId } from "@/lib/session";
 import {
   confirmOrderSchema,
   createOrderSchema,
+  superLikeSchema,
   type ConfirmOrderInput,
   type CreateOrderInput,
+  type SuperLikeInput,
 } from "@/lib/validation";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
@@ -62,6 +64,45 @@ export async function createOrderAction(
 
   revalidatePath("/orders");
   return { ok: true };
+}
+
+export async function superLikeAction(
+  input: SuperLikeInput,
+): Promise<ActionResult> {
+  const parsed = superLikeSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid product." };
+  }
+
+  const sessionId = await getSessionId();
+  if (!sessionId) {
+    return { ok: false, error: "No active session." };
+  }
+
+  try {
+    const [product] = await db
+      .select()
+      .from(productsTable)
+      .where(eq(productsTable.id, parsed.data.productId));
+
+    if (!product) {
+      return { ok: false, error: "Product not found." };
+    }
+
+    // Sekali per sesi — super like berulang diabaikan diam-diam.
+    await db
+      .insert(superLikesTable)
+      .values({ sessionId, productId: parsed.data.productId })
+      .onConflictDoNothing();
+
+    // Feed di-boost oleh koleksi ini, jadi keduanya perlu di-revalidate.
+    revalidatePath("/obsessed");
+    revalidatePath("/feed");
+    return { ok: true };
+  } catch {
+    // Tabel super_likes mungkin belum di-push — jangan bikin UX gagal total.
+    return { ok: false, error: "Could not save right now." };
+  }
 }
 
 export async function confirmOrderAction(

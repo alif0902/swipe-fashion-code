@@ -10,6 +10,7 @@ export type AppProduct = {
   originalPrice: number | null;
   description: string;
   imageUrl: string;
+  images: string[];
   sizes: string[];
   colors: string[];
   rating: number | null;
@@ -46,6 +47,10 @@ export function formatProduct(row: Product): AppProduct {
     originalPrice: toNumber(row.originalPrice),
     description: row.description,
     imageUrl: row.imageUrl,
+    // Kalau kolom images terisi, pakai itu; kalau tidak, jatuh ke satu foto
+    // utama supaya carousel tetap tampil dengan satu slide.
+    images:
+      row.images && row.images.length > 0 ? row.images : [row.imageUrl],
     sizes: row.sizes ?? [],
     colors: row.colors ?? [],
     rating: toNumber(row.rating),

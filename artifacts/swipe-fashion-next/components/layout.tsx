@@ -1,6 +1,6 @@
 "use client";
 
-import { GalleryVerticalEnd, Layers, ShoppingBag } from "lucide-react";
+import { GalleryVerticalEnd, Layers, ShoppingBag, Star } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -13,13 +13,13 @@ export function BottomNav() {
     <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-lg border-t border-border pb-safe">
       <div className="flex justify-around items-center h-16 max-w-md mx-auto px-4">
         <Link
-          href="/"
+          href="/feed"
           className={cn(
             "flex flex-col items-center justify-center w-16 h-full gap-1 text-muted-foreground transition-colors",
-            pathname === "/" && "text-foreground",
+            pathname === "/feed" && "text-foreground",
           )}
         >
-          <Layers className="w-6 h-6" strokeWidth={pathname === "/" ? 2.5 : 1.5} />
+          <Layers className="w-6 h-6" strokeWidth={pathname === "/feed" ? 2.5 : 1.5} />
           <span className="text-[10px] font-medium uppercase tracking-wider">
             Feed
           </span>
@@ -37,6 +37,22 @@ export function BottomNav() {
           />
           <span className="text-[10px] font-medium uppercase tracking-wider">
             Lookbook
+          </span>
+        </Link>
+        <Link
+          href="/obsessed"
+          className={cn(
+            "flex flex-col items-center justify-center w-16 h-full gap-1 text-muted-foreground transition-colors",
+            pathname === "/obsessed" && "text-foreground",
+          )}
+        >
+          <Star
+            className="w-6 h-6"
+            strokeWidth={pathname === "/obsessed" ? 2.5 : 1.5}
+            fill={pathname === "/obsessed" ? "currentColor" : "none"}
+          />
+          <span className="text-[10px] font-medium uppercase tracking-wider">
+            Obsessed
           </span>
         </Link>
         <Link
@@ -62,7 +78,7 @@ export function BottomNav() {
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-[100dvh] w-full bg-background text-foreground flex flex-col relative overflow-hidden">
-      <main className="flex-1 w-full max-w-md mx-auto relative pb-16">
+      <main className="flex-1 w-full max-w-md mx-auto relative pb-[calc(4rem+env(safe-area-inset-bottom))]">
         {children}
       </main>
       <BottomNav />

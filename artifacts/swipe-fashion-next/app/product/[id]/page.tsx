@@ -59,7 +59,7 @@ export default async function ProductPage({
     <div className="min-h-[100dvh] w-full bg-background text-foreground flex flex-col relative max-w-md mx-auto">
       <Link
         href="/lookbook"
-        className="absolute top-safe-8 left-4 z-50 rounded-full w-10 h-10 bg-background/50 backdrop-blur-md border-0 text-foreground flex items-center justify-center hover:bg-background/70 transition-colors"
+        className="absolute top-[calc(env(safe-area-inset-top)+1rem)] left-4 z-50 rounded-full w-10 h-10 bg-background/50 backdrop-blur-md border-0 text-foreground flex items-center justify-center hover:bg-background/70 transition-colors"
       >
         <ChevronLeft className="w-6 h-6" />
       </Link>

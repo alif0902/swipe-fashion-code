@@ -16,5 +16,10 @@ export const confirmOrderSchema = z.object({
   customerEmail: z.string().email(),
 });
 
+export const superLikeSchema = z.object({
+  productId: z.number().int().positive(),
+});
+
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 export type ConfirmOrderInput = z.infer<typeof confirmOrderSchema>;
+export type SuperLikeInput = z.infer<typeof superLikeSchema>;

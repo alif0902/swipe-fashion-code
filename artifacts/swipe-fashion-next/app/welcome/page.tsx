@@ -7,9 +7,8 @@ import { ArrowRight, MoveRight, MoveLeft, Heart, X, Zap, Smartphone, CheckCircle
 
 // Alias @assets tidak ada di Next. Gambar-gambar ini sekarang berada di
 // public/assets, jadi dirujuk lewat path string biasa.
-const heroImg = '/assets/generated_images/hero.jpg';
-const productImg = '/assets/generated_images/product.jpg';
-const textureImg = '/assets/generated_images/texture.jpg';
+const heroImg = '/assets/blazer-white-linen.jpg';
+const productImg = '/assets/shirt-white-poplin.jpg';
 
 // Anotasi Variants diperlukan supaya [0.16, 1, 0.3, 1] terbaca sebagai tuple
 // cubic-bezier, bukan number[]. Tanpa ini next build gagal — vite build tidak
@@ -32,12 +31,12 @@ const staggerContainer: Variants = {
 
 const Navbar = () => (
   <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-6 md:px-12 mix-blend-difference text-white">
-    <Link href="/" className="text-2xl tracking-tighter" data-testid="link-logo">
+    <Link href="/welcome" className="text-2xl tracking-tighter" data-testid="link-logo">
       <span className="font-sans font-extrabold uppercase">SWIPE</span>
       <span className="font-serif italic tracking-normal ml-0.5 font-light">Fash</span>
     </Link>
-    <Link 
-      href="/" 
+    <Link
+      href="/feed"
       className="group flex items-center gap-2 text-sm font-medium tracking-wide uppercase hover:opacity-70 transition-opacity"
       data-testid="link-nav-cta"
     >
@@ -53,17 +52,17 @@ const HeroSection = () => {
   const opacity = useTransform(scrollY, [0, 800], [1, 0]);
 
   return (
-    <section className="relative h-screen w-full overflow-hidden flex items-center justify-center bg-background">
+    <section className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center bg-background py-24">
       <motion.div 
         className="absolute inset-0 z-0"
         style={{ y, opacity }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/20 to-background z-10" />
-        <div className="absolute inset-0 bg-background/30 mix-blend-multiply z-10" />
-        <img 
-          src={heroImg} 
-          alt="Dark avant-garde fashion" 
-          className="w-full h-full object-cover object-top opacity-90 scale-105 animate-in fade-in zoom-in duration-1000"
+        <div className="absolute inset-0 bg-background/35 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-transparent to-background z-10" />
+        <img
+          src={heroImg}
+          alt="Soft linen editorial"
+          className="w-full h-full object-cover object-center scale-105 animate-in fade-in zoom-in duration-1000"
         />
       </motion.div>
 
@@ -79,18 +78,18 @@ const HeroSection = () => {
           </motion.span>
           <motion.h1 
             variants={fadeUp}
-            className="text-6xl md:text-8xl lg:text-9xl leading-[0.9] font-serif mb-8 text-primary"
+            className="text-5xl md:text-8xl lg:text-9xl leading-[0.95] md:leading-[0.9] font-serif mb-8 text-primary"
           >
             Don't <span className="italic text-muted-foreground">shop.</span><br />
             Just <span className="italic">swipe.</span>
           </motion.h1>
-          <motion.p variants={fadeUp} className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-12 font-light leading-relaxed">
+          <motion.p variants={fadeUp} className="text-lg md:text-xl text-foreground/80 max-w-xl mx-auto mb-12 font-light leading-relaxed">
             The world's most dangerous curation algorithm. High-fashion editorial meets the dopamine hit of a swipe game.
           </motion.p>
           <motion.div variants={fadeUp}>
-            <Link 
-              href="/" 
-              className="inline-flex items-center justify-center h-16 px-10 bg-primary text-primary-foreground font-sans text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform duration-300 ease-out"
+            <Link
+              href="/feed"
+              className="inline-flex items-center justify-center h-16 px-10 rounded-full bg-primary text-primary-foreground font-sans text-sm tracking-[0.2em] uppercase shadow-lg shadow-primary/25 hover:scale-105 transition-transform duration-300 ease-out"
               data-testid="link-hero-cta"
             >
               Enter the Experience
@@ -99,7 +98,7 @@ const HeroSection = () => {
         </motion.div>
       </div>
       
-      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-4 animate-pulse opacity-50">
+      <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-4 animate-pulse opacity-60 text-foreground">
         <span className="text-[10px] uppercase tracking-[0.2em] font-sans">Scroll</span>
         <div className="w-[1px] h-12 bg-primary/50" />
       </div>
@@ -236,8 +235,8 @@ const ShowcaseSection = () => {
               ))}
             </motion.ul>
             <motion.div variants={fadeUp}>
-              <Link 
-                href="/" 
+              <Link
+                href="/feed"
                 className="inline-flex items-center gap-4 border-b border-primary pb-2 text-sm uppercase tracking-[0.2em] hover:text-muted-foreground hover:border-muted-foreground transition-colors group"
                 data-testid="link-showcase-cta"
               >
@@ -258,16 +257,11 @@ const TextureSection = () => {
 
   return (
     <section className="h-[70vh] w-full relative overflow-hidden flex items-center justify-center bg-background z-20 border-y border-border">
-      <motion.div 
-        className="absolute inset-0 z-0 opacity-40"
+      <motion.div
+        className="absolute inset-0 z-0"
         style={{ y }}
       >
-        <img 
-          src={textureImg} 
-          alt="Dark textured fabric" 
-          className="w-full h-[130%] object-cover object-center scale-110"
-        />
-        <div className="absolute inset-0 bg-background/50 mix-blend-multiply" />
+        <div className="w-full h-[130%] bg-gradient-to-br from-secondary via-background to-accent" />
       </motion.div>
       
       <div className="relative z-10 text-center px-6 max-w-3xl">
@@ -341,9 +335,9 @@ const CTASection = () => {
             The grid is dead. Long live the swipe. Join the fashion revolution today.
           </motion.p>
           <motion.div variants={fadeUp}>
-            <Link 
-              href="/" 
-              className="inline-flex items-center justify-center h-16 px-12 bg-primary text-primary-foreground font-sans text-sm tracking-[0.2em] uppercase hover:scale-105 transition-transform duration-300 ease-out"
+            <Link
+              href="/feed"
+              className="inline-flex items-center justify-center h-16 px-12 rounded-full bg-primary text-primary-foreground font-sans text-sm tracking-[0.2em] uppercase shadow-lg shadow-primary/25 hover:scale-105 transition-transform duration-300 ease-out"
               data-testid="link-final-cta"
             >
               Start Swiping Now
