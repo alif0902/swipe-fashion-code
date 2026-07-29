@@ -36,13 +36,18 @@ ditebak lewat dashboard selain env var.
 **Root Directory di Vercel = `artifacts/swipe-fashion-next`.** Vercel
 menyetelnya otomatis saat import, dan itu memang jalur yang direkomendasikan
 untuk monorepo. Konsekuensinya semua perintah berjalan dengan cwd di folder
-aplikasi, bukan root repo — inilah yang membentuk isi `vercel.json`:
+aplikasi, bukan root repo.
 
-- `installCommand` diawali `cd ../..` karena `npm ci` harus dijalankan dari
-  root workspace. Kalau dijalankan dari dalam subfolder, npm memperlakukannya
-  sebagai proyek terpisah dan membuat `node_modules` bersarang. Skrip
-  `rebuild:native` juga hanya ada di `package.json` root.
-- `buildCommand` cukup `npm run build`, yang dari folder aplikasi berarti
+Perintahnya sengaja dibuat **bekerja dari kedua lokasi**, bukan diikat ke salah
+satu. Alasannya praktis: override di Project Settings dashboard dan isi
+`vercel.json` bisa berbeda, dan menebak mana yang menang adalah sumber
+kegagalan deploy yang sulit dilacak. Jadi:
+
+- `rebuild:native` ada di **dua** `package.json`. Versi root menjalankan
+  `npm rebuild esbuild sharp`; versi aplikasi menjalankan hal yang sama setelah
+  `cd ../..`. Perintah `npm run rebuild:native` karena itu selalu berhasil.
+- `npm run build` juga bermakna di kedua tempat — di root berarti typecheck
+  seluruh workspace lalu build aplikasi, di folder aplikasi berarti
   `next build`.
 - `outputDirectory` tidak diset — bawaannya `.next` relatif terhadap Root
   Directory, dan itu sudah benar.
@@ -80,8 +85,9 @@ kalau project Supabase-mu di `ap-southeast-2`. Sengaja tidak dipin di
   di-import. Koneksi sungguhan tidak dibutuhkan saat build, cukup string-nya ada.
 - **`npm ci` gagal** — `package-lock.json` tidak sinkron dengan `package.json`.
   Jalankan `npm install` lokal, commit lockfile-nya.
-- **`Missing script: "rebuild:native"`** — perintah berjalan di folder aplikasi,
-  bukan root. Pastikan `installCommand` masih diawali `cd ../..`.
+- **`Missing script: "rebuild:native"`** — skrip itu hilang dari salah satu dari
+  dua `package.json` yang harus memilikinya (root dan aplikasi). Keduanya wajib
+  ada supaya perintah bekerja apa pun cwd-nya.
 - **`installCommand` memanggil `rebuild:native`** karena `.npmrc` mematikan
   install script. Tanpa itu `sharp` berisiko tidak ter-build dan optimisasi
   gambar `next/image` mati di produksi. Lihat "Keamanan install" di bawah.

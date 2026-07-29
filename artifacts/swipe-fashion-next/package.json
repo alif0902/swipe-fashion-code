@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start --port ${PORT:-20100}",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "rebuild:native": "cd ../.. && npm rebuild esbuild sharp"
   },
   "dependencies": {
     "@radix-ui/react-label": "^2.1.3",
