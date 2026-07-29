@@ -124,7 +124,7 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
                 今日はここまで。
               </h2>
               <p className="text-muted-foreground text-lg max-w-[250px]">
-                新着はまた入荷します。ルックブックも覗いてみてください。
+                新着はまた入荷します。「探す」から一覧も見られます。
               </p>
             </motion.div>
           )}

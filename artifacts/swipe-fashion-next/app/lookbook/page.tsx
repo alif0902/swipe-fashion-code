@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { categoryLabel, formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "ルックブック｜SwipeFash",
+  title: "探す｜SwipeFash",
   description: "カテゴリーごとに、コレクション全体を。",
 };
 
@@ -36,7 +36,7 @@ export default async function LookbookPage({
     <AppLayout>
       <div className="min-h-[calc(100dvh-64px)] bg-background">
         <header className="px-6 pt-10 pb-6 sticky top-0 bg-background/90 backdrop-blur-xl z-20">
-          <h1 className="font-serif text-4xl mb-4">ルックブック</h1>
+          <h1 className="font-serif text-4xl mb-4">探す</h1>
 
           <div className="flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-6 px-6">
             <Link href="/lookbook" className={tabClass(!category)}>

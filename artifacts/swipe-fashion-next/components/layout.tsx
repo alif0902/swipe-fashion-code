@@ -36,7 +36,7 @@ export function BottomNav() {
             strokeWidth={pathname === "/lookbook" ? 2.5 : 1.5}
           />
           <span className="text-[10px] font-medium tracking-wider">
-            ルックブック
+            探す
           </span>
         </Link>
         <Link
