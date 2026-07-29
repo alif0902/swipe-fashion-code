@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { PackageSearch } from "lucide-react";
+import { PackageSearch, RotateCcw } from "lucide-react";
 
 import { recordSwipeAction, superLikeAction } from "@/app/actions";
 import { MatchOverlay, type MatchType } from "@/components/match-overlay";
@@ -104,9 +104,23 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
               <h2 className="font-serif text-3xl mb-3">
                 今日はここまで。
               </h2>
-              <p className="text-muted-foreground text-lg max-w-[250px]">
+              <p className="text-muted-foreground text-lg max-w-[250px] mb-8">
                 新着はまた入荷します。「探す」から一覧も見られます。
               </p>
+              {/* Reset LOKAL yang disengaja, bukan router.refresh(): feed di
+                  server menyembunyikan produk yang sudah diputuskan, jadi
+                  refresh pada katalog yang sudah habis hanya mengembalikan
+                  layar kosong ini lagi. Memutar ulang tumpukan yang sama
+                  membuat tombolnya selalu berfungsi — penting untuk demo. */}
+              <button
+                type="button"
+                onClick={() => setCurrentIndex(0)}
+                data-testid="button-restart-feed"
+                className="inline-flex items-center gap-2.5 h-14 px-8 rounded-full bg-primary text-primary-foreground text-lg font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 hover:scale-[1.02] transition"
+              >
+                <RotateCcw className="w-5 h-5" />
+                もう一度見る
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
