@@ -68,7 +68,7 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 | `artifacts/swipe-fashion-next/middleware.ts` | Set cookie sesi httpOnly bila belum ada |
 | `lib/db/src/schema/` | **Sumber kebenaran schema DB**: categories, products, orders, super-likes |
 | `scripts/src/` | Seed, set gambar produk, verifikasi stok |
-| `docs/superpowers/` | Spec dan plan migrasi Next.js |
+| `docs/design-reference/` | Screenshot referensi visual (with.is) yang jadi acuan tema coral |
 
 ## Architecture decisions
 
