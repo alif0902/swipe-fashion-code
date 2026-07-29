@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Mars, Search, Users, Venus } from "lucide-react";
 
 import { AppLayout } from "@/components/layout";
 import { PageHeader } from "@/components/page-header";
@@ -29,8 +29,8 @@ const tabClass = (active: boolean) =>
 // hasilnya bisa di-bookmark, tombol back bekerja, dan daftarnya tetap dirender
 // di server.
 const GENDERS = [
-  { value: "women", label: "レディース" },
-  { value: "men", label: "メンズ" },
+  { value: "women", label: "レディース", icon: Venus },
+  { value: "men", label: "メンズ", icon: Mars },
 ] as const;
 
 // Membangun URL dengan mempertahankan filter lain yang sedang aktif — mengganti
@@ -49,7 +49,7 @@ function buildHref(
 
 const segClass = (active: boolean) =>
   cn(
-    "flex-1 text-center py-2 rounded-full text-sm font-medium transition-all",
+    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-sm font-medium transition-all",
     active
       ? "bg-card text-foreground shadow-sm"
       : "text-muted-foreground hover:text-foreground",
@@ -94,22 +94,37 @@ export default async function LookbookPage({
           {/* Dua tingkat filter, sesuai urutan cara orang mempersempit
               pilihan: dulu siapa yang memakainya, baru jenis barangnya. */}
           <div className="mt-5 px-6">
-            <div className="flex gap-2 p-1 rounded-full bg-muted/70">
+            <div className="flex gap-1 p-1 rounded-full bg-muted/70">
               <Link
                 href={buildHref(sp, { gender: null })}
                 className={segClass(!gender)}
               >
+                <Users className="w-4 h-4" />
                 すべて
               </Link>
-              {GENDERS.map((g) => (
-                <Link
-                  key={g.value}
-                  href={buildHref(sp, { gender: g.value })}
-                  className={segClass(gender === g.value)}
-                >
-                  {g.label}
-                </Link>
-              ))}
+              {GENDERS.map((g) => {
+                const Icon = g.icon;
+                const active = gender === g.value;
+                return (
+                  <Link
+                    key={g.value}
+                    href={buildHref(sp, { gender: g.value })}
+                    className={segClass(active)}
+                  >
+                    {/* Ikon diberi warna khas gendernya hanya saat aktif.
+                        Kalau selalu berwarna, ketiganya bersaing menarik
+                        perhatian dan justru tidak jelas mana yang terpilih. */}
+                    <Icon
+                      className={cn(
+                        "w-4 h-4",
+                        active &&
+                          (g.value === "men" ? "text-sky-500" : "text-pink-500"),
+                      )}
+                    />
+                    {g.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
