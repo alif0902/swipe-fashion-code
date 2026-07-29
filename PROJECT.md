@@ -33,17 +33,26 @@ Env wajib (di `artifacts/swipe-fashion-next/.env.local`, contoh ada di `.env.loc
 Konfigurasi dipin di `vercel.json` di root repo, jadi tidak ada yang perlu
 ditebak lewat dashboard selain env var.
 
-**Root Directory di Vercel dibiarkan di root repo**, bukan diarahkan ke
-`artifacts/swipe-fashion-next`. Alasannya: semua perintah lalu berjalan di
-tempat npm workspaces memang bekerja. `npm ci` dari dalam subfolder workspace
-akan memperlakukannya sebagai proyek terpisah dan membuat `node_modules`
-bersarang. `outputDirectory` yang menunjuk ke `.next` di dalam subfolder itulah
-yang memberitahu Vercel di mana hasil build berada.
+**Root Directory di Vercel = `artifacts/swipe-fashion-next`.** Vercel
+menyetelnya otomatis saat import, dan itu memang jalur yang direkomendasikan
+untuk monorepo. Konsekuensinya semua perintah berjalan dengan cwd di folder
+aplikasi, bukan root repo — inilah yang membentuk isi `vercel.json`:
+
+- `installCommand` diawali `cd ../..` karena `npm ci` harus dijalankan dari
+  root workspace. Kalau dijalankan dari dalam subfolder, npm memperlakukannya
+  sebagai proyek terpisah dan membuat `node_modules` bersarang. Skrip
+  `rebuild:native` juga hanya ada di `package.json` root.
+- `buildCommand` cukup `npm run build`, yang dari folder aplikasi berarti
+  `next build`.
+- `outputDirectory` tidak diset — bawaannya `.next` relatif terhadap Root
+  Directory, dan itu sudah benar.
+
+`vercel.json` sendiri tetap dibaca dari root repo apa pun Root Directory-nya.
 
 Langkah sekali jalan:
 
 1. vercel.com → **Add New → Project** → import repo GitHub-nya.
-2. **Jangan ubah Root Directory.** Biarkan di root.
+2. Pastikan **Root Directory** = `artifacts/swipe-fashion-next`.
 3. Framework, install, dan build command sudah terbaca dari `vercel.json` —
    biarkan apa adanya.
 4. **Environment Variables** — tambahkan sebelum deploy pertama:
@@ -71,6 +80,8 @@ kalau project Supabase-mu di `ap-southeast-2`. Sengaja tidak dipin di
   di-import. Koneksi sungguhan tidak dibutuhkan saat build, cukup string-nya ada.
 - **`npm ci` gagal** — `package-lock.json` tidak sinkron dengan `package.json`.
   Jalankan `npm install` lokal, commit lockfile-nya.
+- **`Missing script: "rebuild:native"`** — perintah berjalan di folder aplikasi,
+  bukan root. Pastikan `installCommand` masih diawali `cd ../..`.
 - **`installCommand` memanggil `rebuild:native`** karena `.npmrc` mematikan
   install script. Tanpa itu `sharp` berisiko tidak ter-build dan optimisasi
   gambar `next/image` mati di produksi. Lihat "Keamanan install" di bawah.

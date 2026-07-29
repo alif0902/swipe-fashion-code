@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "installCommand": "npm ci && npm run rebuild:native",
-  "buildCommand": "npm run build",
-  "outputDirectory": "artifacts/swipe-fashion-next/.next"
+  "installCommand": "cd ../.. && npm ci && npm run rebuild:native",
+  "buildCommand": "npm run build"
 }
