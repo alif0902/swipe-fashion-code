@@ -36,5 +36,24 @@ export async function getUserProfile(
     .from(userTable)
     .where(eq(userTable.id, userId));
 
-  return row ?? null;
+  if (!row) return null;
+
+  return { ...row, image: normalizeImage(row.image) };
+}
+
+/**
+ * Membuang URL avatar dari model penyimpanan lama.
+ *
+ * Sebelum pindah ke Vercel Blob, foto profil disajikan lewat rute
+ * `/api/avatar/{id}?v={ts}`. Rute itu sudah tidak ada, tapi barisnya masih
+ * menyimpan alamat lamanya — dan next/image menolak jalur lokal bertanda tanya
+ * dengan melempar runtime error, bukan sekadar gagal memuat gambar.
+ *
+ * Dianggap "tidak punya foto" saja: pemiliknya tinggal mengunggah ulang, dan
+ * barisnya tertimpa dengan URL Blob yang benar.
+ */
+function normalizeImage(image: string | null): string | null {
+  if (!image) return null;
+  if (image.startsWith("/api/avatar/")) return null;
+  return image;
 }

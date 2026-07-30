@@ -1,6 +1,9 @@
 import "server-only";
 
 import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
+import { db, userTable } from "@workspace/db";
 
 import { auth } from "@/lib/auth";
 import { SESSION_COOKIE } from "@/lib/session-cookie";
@@ -45,4 +48,51 @@ export async function getOwnerId(): Promise<string> {
   const user = await getCurrentUser();
   if (user) return user.id;
   return getAnonId();
+}
+
+/**
+ * Peran akun, dibaca LANGSUNG dari database.
+ *
+ * Sengaja tidak memakai `role` dari objek sesi. Sesi disalin ke cookie cache
+ * selama beberapa menit — kalau seseorang dicabut hak adminnya, salinan itu
+ * masih menyebutnya admin sampai cache-nya kedaluwarsa. Untuk pemeriksaan izin,
+ * jeda beberapa menit adalah jeda yang terlalu panjang.
+ */
+async function readRole(userId: string): Promise<string> {
+  const [row] = await db
+    .select({ role: userTable.role })
+    .from(userTable)
+    .where(eq(userTable.id, userId));
+
+  return row?.role ?? "user";
+}
+
+export async function isAdmin(): Promise<boolean> {
+  const user = await getCurrentUser();
+  if (!user) return false;
+  return (await readRole(user.id)) === "admin";
+}
+
+/**
+ * Penjaga tunggal untuk seluruh area admin.
+ *
+ * Dipanggil sebagai baris pertama di SETIAP halaman dan SETIAP Server Action
+ * di bawah /admin — bukan sekali di layout. Layout tidak melindungi Server
+ * Action, dan Server Action adalah yang benar-benar mengubah data: siapa pun
+ * bisa memanggilnya langsung tanpa pernah membuka halamannya.
+ *
+ * Satu fungsi yang selalu sama, bukan pemeriksaan yang ditulis ulang tiap
+ * kali — karena satu tempat yang lupa memeriksa adalah satu lubang.
+ */
+export async function requireAdmin() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/account");
+
+  if ((await readRole(user.id)) !== "admin") {
+    // Dialihkan, bukan 403. Halaman admin sebaiknya tidak mengonfirmasi
+    // keberadaannya kepada orang yang tidak berhak membukanya.
+    redirect("/feed");
+  }
+
+  return user;
 }

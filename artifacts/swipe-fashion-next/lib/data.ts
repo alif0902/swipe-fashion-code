@@ -95,6 +95,10 @@ export async function listProducts({
     .from(productsTable)
     .where(
       and(
+        // Produk yang diarsipkan admin tidak pernah muncul di feed maupun
+        // katalog. Barisnya tetap ada supaya riwayat pesanan lama tidak
+        // kehilangan nama barangnya.
+        eq(productsTable.isArchived, false),
         category ? eq(productsTable.category, category) : undefined,
         gender ? eq(productsTable.gender, gender) : undefined,
         inStockOnly ? gt(productsTable.stock, 0) : undefined,

@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "verify-stock": "tsx ./src/verify-stock.ts",
     "sync-products": "tsx ./src/sync-products.ts",
-    "dedupe-products": "tsx ./src/dedupe-products.ts"
+    "dedupe-products": "tsx ./src/dedupe-products.ts",
+    "make-admin": "tsx ./src/make-admin.ts"
   },
   "dependencies": {
     "@workspace/db": "*",

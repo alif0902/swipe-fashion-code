@@ -42,6 +42,11 @@ export const productsTable = pgTable("products", {
   reviewCount: integer("review_count").notNull().default(0),
   isNew: boolean("is_new").notNull().default(false),
   isSale: boolean("is_sale").notNull().default(false),
+  // Produk tidak pernah benar-benar dihapus. `swipes`, `super_likes`, dan
+  // `orders` semuanya menunjuk ke id ini — menghapus barisnya akan membuat
+  // riwayat pesanan orang kehilangan nama barangnya. Diarsipkan berarti hilang
+  // dari feed dan katalog, tapi pesanan lama tetap utuh.
+  isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

@@ -4,7 +4,7 @@ import { UserRound } from "lucide-react";
 import { AppLayout } from "@/components/layout";
 import { PageHeader } from "@/components/page-header";
 import { AccountPanel } from "@/components/account-panel";
-import { getCurrentUser, getOwnerId } from "@/lib/session";
+import { getCurrentUser, getOwnerId, isAdmin } from "@/lib/session";
 import { getTasteProfile, listObsessed } from "@/lib/data";
 import { getUserProfile } from "@/lib/profile";
 
@@ -20,10 +20,11 @@ export default async function AccountPage() {
 
   // Dijalankan bersamaan, bukan berurutan: tiap kueri berarti satu perjalanan
   // ke Sydney, dan halaman ini butuh tiga di antaranya.
-  const [profile, obsessed, stored] = await Promise.all([
+  const [profile, obsessed, stored, admin] = await Promise.all([
     getTasteProfile(ownerId),
     listObsessed(ownerId),
     user ? getUserProfile(user.id) : Promise.resolve(null),
+    isAdmin(),
   ]);
 
   return (
@@ -48,6 +49,7 @@ export default async function AccountPage() {
                   email: user.email,
                   image: stored?.image ?? null,
                   hasAddress: Boolean(stored?.address),
+                  isAdmin: admin,
                 }
               : null
           }

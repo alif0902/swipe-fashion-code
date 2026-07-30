@@ -47,6 +47,26 @@ export const auth = betterAuth({
     },
   }),
 
+  user: {
+    additionalFields: {
+      // input: false adalah baris paling penting di berkas ini.
+      //
+      // Tanpa itu, siapa pun bisa mengirim request pendaftaran buatan sendiri
+      // berisi `role: "admin"` — melewati formulir sepenuhnya — dan Better
+      // Auth akan menyimpannya apa adanya. Dengan ini, field tersebut dibuang
+      // dari input klien dan kolomnya selalu memakai nilai bawaan `user`.
+      //
+      // Satu-satunya jalan menjadi admin adalah `npm run make-admin`, yang
+      // menulis langsung ke database dari terminalmu.
+      role: {
+        type: "string",
+        required: false,
+        input: false,
+        defaultValue: "user",
+      },
+    },
+  },
+
   emailAndPassword: {
     enabled: true,
     // Verifikasi email dimatikan: mengirim email butuh layanan terpisah

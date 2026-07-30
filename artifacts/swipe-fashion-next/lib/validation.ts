@@ -104,6 +104,65 @@ export const profileSchema = z.object({
     .or(z.literal("")),
 });
 
+// ---------------------------------------------------------------------------
+// Produk (admin)
+// ---------------------------------------------------------------------------
+
+/**
+ * Kunci ukuran yang diusulkan per kategori.
+ *
+ * Kolom `dimensions` bertipe jsonb dengan kunci bebas, dan itu disengaja —
+ * atasan diukur 着丈/身幅/肩幅, bawahan diukur ウエスト/股上/股下. Tapi kunci
+ * bebas berarti admin harus mengarang nama kolomnya sendiri setiap kali, dan
+ * satu salah ketik membuat tabel 基本情報 di kartu feed tampil tidak konsisten.
+ *
+ * Daftar ini yang mengisinya otomatis begitu kategori dipilih. Admin tinggal
+ * mengisi angkanya, dan tetap boleh menambah kunci sendiri kalau perlu.
+ */
+export const DIMENSION_PRESETS: Record<string, string[]> = {
+  tops: ["着丈", "身幅", "肩幅", "袖丈"],
+  outerwear: ["着丈", "身幅", "肩幅", "袖丈"],
+  dresses: ["着丈", "身幅", "肩幅", "袖丈"],
+  bottoms: ["ウエスト", "股上", "股下", "わたり幅"],
+};
+
+export const SIZE_PRESETS: Record<string, string[]> = {
+  tops: ["S", "M", "L"],
+  outerwear: ["S", "M", "L"],
+  dresses: ["S", "M", "L"],
+  bottoms: ["S", "M", "L", "XL"],
+};
+
+export const productSchema = z
+  .object({
+    name: z.string().min(1, "商品名を入力してください").max(120, "商品名が長すぎます"),
+    brand: z.string().min(1, "ブランド名を入力してください").max(60, "ブランド名が長すぎます"),
+    price: z.number().positive("価格を入力してください").max(99_999_999),
+    originalPrice: z.number().positive().max(99_999_999).nullable(),
+    description: z.string().min(1, "商品説明を入力してください").max(2000),
+    // Minimal satu foto: kartu feed tidak punya keadaan "tanpa gambar", dan
+    // membuatnya hanya untuk kasus yang seharusnya tidak ada itu sia-sia.
+    images: z.array(z.string().url()).min(1, "写真を1枚以上追加してください").max(6),
+    category: z.string().min(1, "カテゴリーを選んでください"),
+    gender: z.enum(["women", "men"]),
+    sizes: z.array(z.string()).max(12),
+    colors: z.array(z.string()).max(12),
+    material: z.string().max(120).nullable(),
+    dimensions: z.record(z.string(), z.string()),
+    stock: z.number().int().min(0, "在庫は0以上で入力してください").max(9999),
+    isNew: z.boolean(),
+    isSale: z.boolean(),
+  })
+  // Harga coret yang lebih murah dari harga jual adalah kesalahan ketik yang
+  // tampil sebagai diskon negatif di kartu feed. Ditangkap di sini, bukan
+  // dibiarkan sampai ada yang melihatnya.
+  .refine(
+    (v) => v.originalPrice === null || v.originalPrice > v.price,
+    { message: "参考価格は販売価格より高くしてください", path: ["originalPrice"] },
+  );
+
+export type ProductInput = z.infer<typeof productSchema>;
+
 export type SignUpInput = z.infer<typeof signUpSchema>;
 export type SignInInput = z.infer<typeof signInSchema>;
 export type ProfileInput = z.infer<typeof profileSchema>;

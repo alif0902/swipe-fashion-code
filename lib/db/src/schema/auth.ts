@@ -4,7 +4,25 @@ import {
   timestamp,
   boolean,
   index,
+  pgEnum,
+  serial,
+  integer,
 } from "drizzle-orm/pg-core";
+
+/**
+ * Peran akun.
+ *
+ * Hanya dua nilai, dan itu disengaja. "Admin" di perusahaan besar sebenarnya
+ * puluhan pekerjaan berbeda dengan izin yang rinci — tapi di sini hanya ada
+ * satu orang yang mengelola katalog. Matriks izin untuk satu orang adalah
+ * kerumitan tanpa manfaat.
+ *
+ * Nilai bawaannya `user`, dan kolom ini TIDAK PERNAH diisi dari klien. Lihat
+ * `user.additionalFields` di lib/auth.ts: `input: false` yang membuat Better
+ * Auth membuang field ini kalau ada yang menyisipkannya lewat request buatan
+ * sendiri. Satu-satunya cara mengubahnya adalah `npm run make-admin`.
+ */
+export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
 
 /**
  * Tabel milik Better Auth.
@@ -32,9 +50,10 @@ export const userTable = pgTable("user", {
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false),
 
-  // URL foto profil, BUKAN fotonya sendiri — isinya jalur pendek seperti
-  // "/api/avatar/xxx?v=123". Datanya ada di tabel userAvatarsTable di bawah.
-  // Lihat komentar di sana untuk alasannya.
+  role: userRoleEnum("role").notNull().default("user"),
+
+  // URL foto profil di Vercel Blob. Kolom ini hanya menyimpan alamatnya —
+  // gambarnya sendiri tidak pernah masuk database. Lihat lib/storage.ts.
   image: text("image"),
 
   // Alamat pengiriman. Disimpan di sini, bukan di tabel terpisah, karena
@@ -44,34 +63,6 @@ export const userTable = pgTable("user", {
   address: text("address"),
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-/**
- * Foto profil, sengaja di tabel terpisah dari `user`.
- *
- * Alasannya bukan kerapian melainkan dua kegagalan nyata kalau digabung:
- *
- * 1. Better Auth menaruh seluruh baris `user` ke dalam cookie cache sesi.
- *    Cookie dibatasi 4 KB oleh browser — foto base64 puluhan KB akan membuat
- *    cache-nya gagal diam-diam, dan setiap render halaman kembali menembak
- *    database.
- * 2. Setiap pembacaan sesi akan ikut menyeret puluhan KB dari Sydney.
- *
- * Dengan tabel sendiri, baris ini hanya dibaca oleh rute /api/avatar yang
- * memang meminta gambarnya, dan hasilnya di-cache browser.
- *
- * Menyimpan gambar di Postgres tetap bukan praktik terbaik. Kalau nanti butuh
- * berkembang, pindahkan ke Vercel Blob — yang berubah hanya isi kolom
- * `user.image`, karena seluruh aplikasi hanya membaca URL dari sana.
- */
-export const userAvatarsTable = pgTable("user_avatars", {
-  userId: text("user_id")
-    .primaryKey()
-    .references(() => userTable.id, { onDelete: "cascade" }),
-  // JPEG base64. Klien mengecilkan ke 256px sebelum mengirim, jadi sekitar
-  // 15–25 KB — cukup untuk lingkaran 96px di layar retina.
-  data: text("data").notNull(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
@@ -129,5 +120,32 @@ export const verificationTable = pgTable("verification", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+/**
+ * Catatan audit tindakan admin.
+ *
+ * Ditiru dari praktik perusahaan besar, dan salah satu dari sedikit praktik
+ * mereka yang masuk akal di skala ini: murah dibangun, dan menjawab pertanyaan
+ * "siapa yang mengubah harga ini?" yang tidak bisa dijawab oleh tabel produk.
+ *
+ * `actorId` tidak memakai foreign key ke `user` dengan cascade delete —
+ * catatan audit harus tetap ada meski akunnya dihapus. Itu inti dari audit.
+ */
+export const adminAuditLogTable = pgTable(
+  "admin_audit_log",
+  {
+    id: serial("id").primaryKey(),
+    actorId: text("actor_id").notNull(),
+    actorEmail: text("actor_email").notNull(),
+    // mis. "product.create", "product.update", "product.archive"
+    action: text("action").notNull(),
+    targetId: integer("target_id"),
+    summary: text("summary"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("admin_audit_created_idx").on(t.createdAt)],
+);
+
 export type User = typeof userTable.$inferSelect;
+export type UserRole = User["role"];
 export type AuthSession = typeof sessionTable.$inferSelect;
+export type AdminAuditEntry = typeof adminAuditLogTable.$inferSelect;

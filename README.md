@@ -82,6 +82,18 @@ Dibangun dengan **Better Auth**: tabelnya ada di Postgres yang sama, password di
 
 **マイページ** berisi foto profil yang bisa diganti, **足あと** (semua yang pernah dilihat di feed), **いいね！履歴**, dan **お届け先**. Alamat yang sudah terdaftar mengisi langkah pengiriman secara otomatis — checkout berikutnya tidak perlu mengetik ulang.
 
+### 7.管理画面 — sisi lain dari mesin selera
+
+Panel admin untuk desktop: menambah produk beserta fotonya, dan **dashboard yang membaca ulang data swipe secara agregat.**
+
+Style DNA memperlihatkan apa yang dipelajari aplikasi tentang **satu orang**. Dashboard memperlihatkan apa yang dipelajari tentang **seluruh katalog** — produk mana yang paling sering dilihat lalu dilewati. Toko biasa hanya tahu apa yang dibeli; yang ini tahu apa yang ditolak, dan itu hanya mungkin karena swipe kiri direkam sejak awal.
+
+Nol tabel analitik baru: semuanya satu `GROUP BY` di atas tabel `swipes` yang sudah ada.
+
+Formulir produknya menampilkan **pratinjau kartu feed hidup** di sebelahnya — memakai komponen yang sama persis dengan feed sungguhan, bukan tiruan. Memilih kategori otomatis mengisi kolom ukuran yang benar (着丈・身幅・肩幅 untuk atasan, ウエスト・股上・股下 untuk bawahan).
+
+Peran admin **tidak bisa dipilih saat mendaftar.** Tidak ada halaman pendaftaran admin dan tidak ada tombol; satu-satunya jalur adalah `npm run make-admin` yang dijalankan dari terminal.
+
 ---
 
 ## Panduan singkat untuk penguji
@@ -148,7 +160,7 @@ Disebutkan terbuka, bukan disembunyikan:
 - **Katalog berisi 12 produk.** Cukup untuk memperlihatkan mesin seleranya bekerja, tapi feed akan cepat habis.
 - **Foto kedua tiap produk adalah crop dari foto utamanya**, bukan pemotretan terpisah.
 - **Akun belum diverifikasi lewat email.** Pendaftaran langsung aktif; tidak ada email konfirmasi maupun reset password, karena keduanya memerlukan layanan pengiriman email terpisah.
-- **Belum ada peran admin.** Katalog masih diisi lewat skrip, belum lewat antarmuka.
-- **Foto profil disimpan di Postgres, bukan di object storage.** Dikecilkan ke 256px lebih dulu dan diletakkan di tabel terpisah agar tidak membebani pembacaan sesi, tapi tempat yang benar untuk gambar adalah Vercel Blob atau S3. Jalur pindahnya sudah disiapkan: seluruh aplikasi hanya membaca URL dari satu kolom.
+- **Moderasi belum ada.** Admin bisa menambah dan mengarsipkan produk, tapi tidak ada alur persetujuan.
+- **Satu peran admin saja, tanpa izin rinci.** Cukup untuk satu pengelola; perusahaan yang lebih besar memisahkan izin per pekerjaan.
 - **Tidak ada mode offline.** PWA-nya bisa dipasang, tapi hampir semua halaman butuh database — service worker sengaja tidak dipasang daripada menyajikan konten basi.
 - **Swipe ke atas untuk super like dilepas** ketika area foto dibuat bisa di-scroll — dua gestur itu tidak bisa berbagi sumbu yang sama. Tombol ★ menggantikannya.

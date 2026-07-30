@@ -8,11 +8,11 @@ import {
   productsTable,
   superLikesTable,
   swipesTable,
-  userAvatarsTable,
   userTable,
 } from "@workspace/db";
 
 import { getCurrentUser, getOwnerId } from "@/lib/session";
+import { putDataUrl } from "@/lib/storage";
 import {
   confirmOrderSchema,
   createOrderSchema,
@@ -269,11 +269,6 @@ export async function updateProfileAction(
   return { ok: true };
 }
 
-// Batas ukuran dijaga di server juga, bukan hanya di klien. Klien mengecilkan
-// ke 256px sehingga hasilnya jauh di bawah ini; angkanya ada untuk menahan
-// kiriman yang dibuat manual, bukan untuk pemakaian normal.
-const MAX_AVATAR_BYTES = 400 * 1024;
-
 export async function updateAvatarAction(
   dataUrl: string,
 ): Promise<ActionResult> {
@@ -282,31 +277,16 @@ export async function updateAvatarAction(
     return { ok: false, error: "ログインが必要です。" };
   }
 
-  const match = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(
-    dataUrl,
-  );
-  if (!match) {
-    return { ok: false, error: "画像を読み取れませんでした。" };
+  // Validasi format dan ukuran ada di dalam putDataUrl — satu tempat, dipakai
+  // foto profil maupun foto produk.
+  const stored = await putDataUrl(dataUrl, "avatars");
+  if (!stored.ok) {
+    return { ok: false, error: stored.error };
   }
 
-  const base64 = match[2];
-  if (Buffer.byteLength(base64, "base64") > MAX_AVATAR_BYTES) {
-    return { ok: false, error: "画像のサイズが大きすぎます。" };
-  }
-
-  await db
-    .insert(userAvatarsTable)
-    .values({ userId: user.id, data: base64, updatedAt: new Date() })
-    .onConflictDoUpdate({
-      target: userAvatarsTable.userId,
-      set: { data: base64, updatedAt: new Date() },
-    });
-
-  // Parameter versi memaksa browser mengambil ulang. Tanpa ini foto lama tetap
-  // muncul karena rute avatar sengaja di-cache selamanya.
   await db
     .update(userTable)
-    .set({ image: `/api/avatar/${user.id}?v=${Date.now()}`, updatedAt: new Date() })
+    .set({ image: stored.url, updatedAt: new Date() })
     .where(eq(userTable.id, user.id));
 
   revalidatePath("/account");

@@ -22,6 +22,9 @@ const row = {
   reviewCount: 87,
   isNew: true,
   isSale: false,
+  // Produk diarsipkan disaring di lapisan kueri, bukan di formatProduct —
+  // fixture ini hanya perlu memenuhi bentuk baris yang benar.
+  isArchived: false,
   createdAt: new Date("2026-01-01"),
 };
 

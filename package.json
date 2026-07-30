@@ -24,7 +24,8 @@
     "verify-stock": "npm run verify-stock -w @workspace/scripts",
     "rebuild:native": "npm rebuild esbuild sharp",
     "sync-products": "npm run sync-products -w @workspace/scripts",
-    "dedupe-products": "npm run dedupe-products -w @workspace/scripts"
+    "dedupe-products": "npm run dedupe-products -w @workspace/scripts",
+    "make-admin": "npm run make-admin -w @workspace/scripts --"
   },
   "overrides": {
     "esbuild": "0.27.3"

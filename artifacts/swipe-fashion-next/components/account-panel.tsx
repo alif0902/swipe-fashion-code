@@ -10,6 +10,7 @@ import {
   LogOut,
   MapPin,
   Pencil,
+  ShieldCheck,
   ShoppingBag,
   Sparkles,
   Star,
@@ -29,6 +30,7 @@ export type AccountUser = {
   email: string;
   image: string | null;
   hasAddress: boolean;
+  isAdmin: boolean;
 };
 
 export type AccountStats = {
@@ -188,6 +190,18 @@ export function AccountPanel({
           highlight={!user.hasAddress}
         />
       )}
+      {/* Hanya tampil untuk admin. Ini kenyamanan, bukan pengaman —
+          menyembunyikan tautan tidak menghalangi siapa pun mengetik /admin
+          langsung. Yang menghalangi adalah requireAdmin() di sisi server. */}
+      {user?.isAdmin && (
+        <MenuRow
+          href="/admin"
+          icon={ShieldCheck}
+          tone="bg-foreground/10 text-foreground"
+          label="管理画面"
+          hint="商品の追加と、スワイプの集計"
+        />
+      )}
     </div>
   );
 
@@ -262,10 +276,6 @@ export function AccountPanel({
                   fill
                   sizes="80px"
                   className="object-cover"
-                  // unoptimized: sumbernya rute API kita sendiri yang sudah
-                  // mengirim JPEG 256px dengan cache abadi. Melewatkannya lagi
-                  // ke optimizer Next hanya menambah kerja tanpa manfaat.
-                  unoptimized
                 />
               ) : (
                 <span className="w-full h-full flex items-center justify-center text-primary font-bold text-2xl">
