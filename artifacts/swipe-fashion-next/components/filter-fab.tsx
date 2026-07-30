@@ -91,7 +91,7 @@ export function FilterFab({
             </DrawerTitle>
           </DrawerHeader>
 
-          <div className="px-4 pb-8 space-y-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-8 space-y-6">
             <section>
               <h3 className="text-sm font-bold text-foreground/70 mb-3">
                 並び替え

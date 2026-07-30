@@ -27,12 +27,25 @@ if (!process.env.BETTER_AUTH_SECRET) {
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
 
-  // Di Vercel, URL deployment berubah tiap deploy. Kalau BETTER_AUTH_URL tidak
-  // diset, pakai URL deployment saat itu; untuk login email+password ini hanya
-  // dipakai membangun URL absolut, jadi aman.
-  baseURL:
-    process.env.BETTER_AUTH_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined),
+  // Dibiarkan undefined kecuali diset manual, dan itu disengaja.
+  //
+  // Versi sebelumnya jatuh ke `https://${VERCEL_URL}` — dan itu keliru.
+  // VERCEL_URL berisi URL DEPLOYMENT (mis. proyek-abc123.vercel.app), bukan
+  // domain yang dibuka orang. Better Auth membandingkan header Origin
+  // permintaan dengan baseURL untuk menangkal CSRF, jadi permintaan dari
+  // domain produksi ditolak sebagai asal yang tidak dikenal — pendaftaran
+  // gagal di Vercel padahal mulus di localhost.
+  //
+  // Tanpa baseURL, Better Auth menyimpulkannya dari permintaan itu sendiri,
+  // sehingga localhost, preview, dan produksi sama-sama cocok.
+  baseURL: process.env.BETTER_AUTH_URL,
+
+  // Domain tambahan yang boleh mengirim permintaan autentikasi, dipisah koma.
+  // Hanya perlu diisi kalau kamu memakai domain kustom yang berbeda dari yang
+  // sedang diakses.
+  trustedOrigins: process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
 
   database: drizzleAdapter(db, {
     provider: "pg",

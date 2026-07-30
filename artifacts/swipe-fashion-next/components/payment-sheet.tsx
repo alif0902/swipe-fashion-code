@@ -164,8 +164,10 @@ export function PaymentSheet({
 
   return (
     <Drawer open={isOpen} onOpenChange={close}>
-      <DrawerContent className="max-h-[92vh]">
-        <DrawerHeader className="pb-2">
+      {/* dvh, bukan vh: di Safari iOS, vh mengabaikan bilah alamat sehingga
+          92vh masih lebih tinggi dari ruang yang benar-benar terlihat. */}
+      <DrawerContent className="max-h-[92dvh]">
+        <DrawerHeader className="pb-2 shrink-0">
           <div className="flex items-center gap-2">
             {step !== "method" && step !== "processing" && step !== "done" && (
               <button
@@ -196,7 +198,10 @@ export function PaymentSheet({
           </div>
         </DrawerHeader>
 
-        <div className="px-4 pb-8 overflow-y-auto">
+        {/* flex-1 min-h-0 wajib menemani overflow-y-auto. Tanpa min-h-0, anak
+            flex menolak menyusut di bawah tinggi kontennya dan overflow tidak
+            pernah aktif — isinya tetap tumbuh melewati layar. */}
+        <div className="flex-1 min-h-0 px-4 pb-8 overflow-y-auto">
           {step === "method" && (
             <div className="space-y-2.5 pt-2">
               {PAYMENT_METHODS.map((m) => {
