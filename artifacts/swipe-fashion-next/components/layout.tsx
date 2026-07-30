@@ -1,6 +1,12 @@
 "use client";
 
-import { GalleryVerticalEnd, Layers, ShoppingBag, Star } from "lucide-react";
+import {
+  GalleryVerticalEnd,
+  Layers,
+  ShoppingBag,
+  Star,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -75,6 +81,21 @@ export function BottomNav() {
             バッグ
           </span>
         </Link>
+        <Link
+          href="/account"
+          className={cn(
+            "flex flex-col items-center justify-center w-16 h-full gap-1 text-muted-foreground transition-colors",
+            pathname === "/account" && "text-foreground",
+          )}
+        >
+          <UserRound
+            className="w-6 h-6"
+            strokeWidth={pathname === "/account" ? 2.5 : 1.5}
+          />
+          <span className="text-[10px] font-medium tracking-wider">
+            マイページ
+          </span>
+        </Link>
       </div>
     </div>
   );
@@ -108,7 +129,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* min-h-0 wajib: tanpa itu flex item menolak menyusut di bawah tinggi
           kontennya, dan halaman panjang akan mendorong bilah navigasi keluar
           bingkai alih-alih menggulir di dalamnya. */}
-      <main className="flex-1 min-h-0 w-full relative overflow-y-auto overscroll-none">
+      {/* overflow-x-hidden: menyetel overflow-y saja membuat overflow-x
+          otomatis jadi `auto`, sehingga elemen apa pun yang sengaja menjorok
+          keluar tepi (panah foto di kartu produk) mengubah seluruh layar jadi
+          bisa digeser mendatar. */}
+      <main className="flex-1 min-h-0 w-full relative overflow-y-auto overflow-x-hidden overscroll-none">
         {children}
       </main>
       {/* Di dalam bingkai, bukan di luar: ajakan harus menempel pada aplikasi,

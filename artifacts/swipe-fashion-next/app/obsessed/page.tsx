@@ -6,7 +6,7 @@ import { ChevronRight, Shirt, Sparkles, Star } from "lucide-react";
 import { AppLayout } from "@/components/layout";
 import { PageHeader } from "@/components/page-header";
 import { getTasteProfile, listObsessed } from "@/lib/data";
-import { getSessionId } from "@/lib/session";
+import { getOwnerId } from "@/lib/session";
 import { formatPrice } from "@/lib/format";
 import { buildLooks, describeLookGap } from "@/lib/outfit";
 import { describeTaste } from "@/lib/taste";
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ObsessedPage() {
-  const sessionId = await getSessionId();
+  const sessionId = await getOwnerId();
   const [products, profile] = await Promise.all([
     listObsessed(sessionId),
     getTasteProfile(sessionId),

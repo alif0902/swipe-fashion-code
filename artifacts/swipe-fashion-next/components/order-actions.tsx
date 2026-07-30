@@ -4,7 +4,11 @@ import { useState, useTransition } from "react";
 import { CreditCard, Loader2 } from "lucide-react";
 
 import { cancelOrderAction } from "@/app/actions";
-import { PaymentSheet } from "@/components/payment-sheet";
+import { AuthSheet } from "@/components/auth-sheet";
+import {
+  PaymentSheet,
+  type ShippingDefaults,
+} from "@/components/payment-sheet";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { AppOrder } from "@/lib/format";
@@ -16,14 +20,19 @@ export function OrderActions({
   orderId,
   status,
   amount,
+  isSignedIn,
+  shippingDefaults,
 }: {
   orderId: number;
   status: AppOrder["status"];
   amount: number;
+  isSignedIn: boolean;
+  shippingDefaults?: ShippingDefaults;
 }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isPaying, setIsPaying] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
 
   if (status === "cancelled") return null;
 
@@ -63,12 +72,24 @@ export function OrderActions({
   // Formulir nama/email/alamat yang dulu ada di sini sudah pindah ke dalam
   // PaymentSheet — meminta alamat sebelum pembeli memilih cara membayar adalah
   // urutan yang terbalik dari checkout mana pun.
+  // Satu-satunya tempat di aplikasi ini yang benar-benar memerlukan akun.
+  // Pesanan butuh identitas yang bertahan lebih lama dari sebuah cookie:
+  // pembeli harus bisa menemukan pesanannya lagi besok, dari perangkat lain.
+  // Swipe, 一目惚れ, dan Style DNA sengaja tetap terbuka tanpa mendaftar.
+  const startCheckout = () => {
+    if (!isSignedIn) {
+      setIsAuthOpen(true);
+      return;
+    }
+    setIsPaying(true);
+  };
+
   return (
     <>
       <div className="flex gap-3">
         <Button
           className="flex-1 h-12 rounded-full font-bold"
-          onClick={() => setIsPaying(true)}
+          onClick={startCheckout}
           data-testid="button-checkout"
         >
           <CreditCard className="w-4 h-4 mr-2" />
@@ -93,6 +114,13 @@ export function OrderActions({
         amount={amount}
         isOpen={isPaying}
         onOpenChange={setIsPaying}
+        shippingDefaults={shippingDefaults}
+      />
+
+      <AuthSheet
+        open={isAuthOpen}
+        onOpenChange={setIsAuthOpen}
+        reason="ご注文の確認のため、アカウントが必要です。登録後、そのままお支払いに進めます。"
       />
     </>
   );

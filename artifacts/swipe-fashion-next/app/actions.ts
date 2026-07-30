@@ -8,16 +8,20 @@ import {
   productsTable,
   superLikesTable,
   swipesTable,
+  userAvatarsTable,
+  userTable,
 } from "@workspace/db";
 
-import { getSessionId } from "@/lib/session";
+import { getCurrentUser, getOwnerId } from "@/lib/session";
 import {
   confirmOrderSchema,
   createOrderSchema,
+  profileSchema,
   recordSwipeSchema,
   superLikeSchema,
   type ConfirmOrderInput,
   type CreateOrderInput,
+  type ProfileInput,
   type RecordSwipeInput,
   type SuperLikeInput,
 } from "@/lib/validation";
@@ -32,7 +36,7 @@ export async function createOrderAction(
     return { ok: false, error: "注文内容が正しくありません。" };
   }
 
-  const sessionId = await getSessionId();
+  const sessionId = await getOwnerId();
   if (!sessionId) {
     return { ok: false, error: "セッションが見つかりません。" };
   }
@@ -85,7 +89,7 @@ export async function recordSwipeAction(
     return { ok: false, error: "スワイプを記録できませんでした。" };
   }
 
-  const sessionId = await getSessionId();
+  const sessionId = await getOwnerId();
   if (!sessionId) {
     return { ok: false, error: "セッションが見つかりません。" };
   }
@@ -124,7 +128,7 @@ export async function superLikeAction(
     return { ok: false, error: "商品が正しくありません。" };
   }
 
-  const sessionId = await getSessionId();
+  const sessionId = await getOwnerId();
   if (!sessionId) {
     return { ok: false, error: "セッションが見つかりません。" };
   }
@@ -164,7 +168,7 @@ export async function confirmOrderAction(
     return { ok: false, error: "入力内容をご確認ください。" };
   }
 
-  const sessionId = await getSessionId();
+  const sessionId = await getOwnerId();
 
   const [existing] = await db
     .select()
@@ -196,7 +200,7 @@ export async function confirmOrderAction(
 export async function cancelOrderAction(
   orderId: number,
 ): Promise<ActionResult> {
-  const sessionId = await getSessionId();
+  const sessionId = await getOwnerId();
 
   const [existing] = await db
     .select()
@@ -226,5 +230,85 @@ export async function cancelOrderAction(
     .where(eq(ordersTable.id, orderId));
 
   revalidatePath("/orders");
+  return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Profil akun
+// ---------------------------------------------------------------------------
+
+export async function updateProfileAction(
+  input: ProfileInput,
+): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "ログインが必要です。" };
+  }
+
+  const parsed = profileSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0].message };
+  }
+
+  const { name, postalCode, address } = parsed.data;
+
+  await db
+    .update(userTable)
+    .set({
+      name,
+      // Kolom dikosongkan jadi NULL, bukan string kosong: pengecekan "sudah
+      // punya alamat?" di checkout cukup satu bentuk, tidak dua.
+      postalCode: postalCode?.trim() || null,
+      address: address?.trim() || null,
+      updatedAt: new Date(),
+    })
+    .where(eq(userTable.id, user.id));
+
+  revalidatePath("/account");
+  revalidatePath("/orders");
+  return { ok: true };
+}
+
+// Batas ukuran dijaga di server juga, bukan hanya di klien. Klien mengecilkan
+// ke 256px sehingga hasilnya jauh di bawah ini; angkanya ada untuk menahan
+// kiriman yang dibuat manual, bukan untuk pemakaian normal.
+const MAX_AVATAR_BYTES = 400 * 1024;
+
+export async function updateAvatarAction(
+  dataUrl: string,
+): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "ログインが必要です。" };
+  }
+
+  const match = /^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/.exec(
+    dataUrl,
+  );
+  if (!match) {
+    return { ok: false, error: "画像を読み取れませんでした。" };
+  }
+
+  const base64 = match[2];
+  if (Buffer.byteLength(base64, "base64") > MAX_AVATAR_BYTES) {
+    return { ok: false, error: "画像のサイズが大きすぎます。" };
+  }
+
+  await db
+    .insert(userAvatarsTable)
+    .values({ userId: user.id, data: base64, updatedAt: new Date() })
+    .onConflictDoUpdate({
+      target: userAvatarsTable.userId,
+      set: { data: base64, updatedAt: new Date() },
+    });
+
+  // Parameter versi memaksa browser mengambil ulang. Tanpa ini foto lama tetap
+  // muncul karena rute avatar sengaja di-cache selamanya.
+  await db
+    .update(userTable)
+    .set({ image: `/api/avatar/${user.id}?v=${Date.now()}`, updatedAt: new Date() })
+    .where(eq(userTable.id, user.id));
+
+  revalidatePath("/account");
   return { ok: true };
 }

@@ -137,7 +137,13 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 | Path | Isi |
 |---|---|
 | `artifacts/swipe-fashion-next/` | Satu-satunya aplikasi. Semua rute, komponen, dan data layer. |
-| `artifacts/swipe-fashion-next/app/` | Rute App Router: `/welcome`, `/feed`, `/lookbook`, `/obsessed`, `/orders`, `/style-dna`, `/product/[id]` |
+| `artifacts/swipe-fashion-next/app/` | Rute App Router: `/welcome`, `/feed`, `/lookbook`, `/obsessed`, `/orders`, `/style-dna`, `/account`, `/product/[id]` |
+| `artifacts/swipe-fashion-next/app/api/auth/[...all]/` | Satu-satunya rute API. Milik Better Auth; dipanggil dari browser |
+| `artifacts/swipe-fashion-next/lib/auth.ts` | Konfigurasi Better Auth: adapter Drizzle, email+password, cookie cache, hook klaim |
+| `artifacts/swipe-fashion-next/lib/session.ts` | **Titik sambung identitas.** `getOwnerId()`, `getCurrentUser()`, `getAnonId()` |
+| `artifacts/swipe-fashion-next/lib/claim.ts` | Memindahkan riwayat anonim ke akun saat login |
+| `artifacts/swipe-fashion-next/lib/profile.ts` | Baca profil (nama, foto, 住所) langsung dari tabel `user`, bukan dari objek sesi |
+| `artifacts/swipe-fashion-next/app/api/avatar/[userId]/` | Menyajikan foto profil sebagai JPEG dengan cache abadi |
 | `artifacts/swipe-fashion-next/app/actions.ts` | Server Actions: `createOrderAction`, `superLikeAction`, `confirmOrderAction`, `cancelOrderAction` |
 | `artifacts/swipe-fashion-next/lib/data.ts` | **Sumber kebenaran query baca** untuk Server Component |
 | `artifacts/swipe-fashion-next/lib/taste.ts` | **Mesin selera.** Bangun profil dari swipe, skor & urutkan produk. Murni, diuji unit |
@@ -147,7 +153,7 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 | `artifacts/swipe-fashion-next/lib/validation.ts` | Skema Zod input Server Action. Murni, diuji unit |
 | `artifacts/swipe-fashion-next/app/globals.css` | **Sumber kebenaran design token** (warna HSL, radius, font) |
 | `artifacts/swipe-fashion-next/middleware.ts` | Set cookie sesi httpOnly bila belum ada |
-| `lib/db/src/schema/` | **Sumber kebenaran schema DB**: categories, products, orders, super-likes, swipes |
+| `lib/db/src/schema/` | **Sumber kebenaran schema DB**: auth, categories, products, orders, super-likes, swipes |
 | `scripts/src/catalog.ts` | **Sumber kebenaran katalog demo.** Data saja, tanpa efek samping |
 | `scripts/src/` | Seed, sinkron produk, dedupe, set gambar, verifikasi stok |
 | `scripts/generate-detail-images.py` | Membuat foto detail turunan dari tiap foto produk (`public/assets/details/`) |
@@ -161,6 +167,14 @@ root, karena drizzle-kit menarik esbuild versi lama yang rentan.
 - **Nomor kartu tidak pernah menyeberang ke server.** Ia hidup di state komponen PaymentSheet saja dan hilang saat lembar ditutup. Yang dikirim ke Server Action hanyalah label hasil `paymentLabel()`, mis. `クレジットカード（Visa •••• 4242）`. Kolom `orders.paymentMethod` karena itu aman dibaca siapa pun.
 - **Perekaman swipe sengaja fire-and-forget.** Animasi kartu tidak boleh menunggu jaringan; kalau satu request gagal, yang hilang cuma satu sinyal.
 - **Sesi = cookie httpOnly, bukan localStorage.** Server harus bisa membaca identitas sesi untuk memfilter order dan super-like, jadi `middleware.ts` yang menerbitkannya, bukan kode klien.
+- **Identitas punya satu titik sambung: `getOwnerId()` di `lib/session.ts`.** Semua data pengguna berkunci pada satu kolom `session_id`, dan fungsi itulah yang memutuskan isinya — `user.id` bila login, UUID cookie bila tidak. Karena terpusat, penambahan akun tidak mengubah satu baris pun di `lib/data.ts` maupun mesin selera. Jangan membaca sesi login langsung di halaman; lewati fungsi ini.
+- **Riwayat anonim diklaim saat login, bukan dibuang.** `lib/claim.ts` memindahkan `swipes`, `super_likes`, dan `orders` dari UUID cookie ke `user.id`, dipicu dari `databaseHooks.session.create.after` — satu-satunya hook yang menangkap sign-up dan sign-in sekaligus. Urutannya wajib DELETE-lalu-UPDATE karena `swipes` dan `super_likes` punya unique(session_id, product_id); baris milik akun yang menang. Kegagalannya di-catch dan tidak boleh menggagalkan login itu sendiri.
+- **`session.cookieCache` Better Auth wajib menyala.** Tanpa itu setiap render halaman menambah satu kueri sesi. Database ada di Sydney; itu berarti satu perjalanan lintas benua ekstra per halaman.
+- **Foto profil ada di tabel `user_avatars`, bukan di kolom `user`.** Better Auth menyalin seluruh baris `user` ke cookie cache sesi, dan cookie dibatasi 4 KB — base64 puluhan KB akan membuat cache gagal diam-diam sehingga setiap render kembali menembak database. Kolom `user.image` hanya menyimpan URL pendek `/api/avatar/{id}?v={ts}`. Parameter `v` yang membuat foto baru langsung terlihat meski rutenya di-cache `immutable`.
+- **Menyimpan gambar di Postgres bukan praktik terbaik, dan itu disengaja untuk sekarang.** Alternatifnya (Vercel Blob) menuntut pembuatan store dan token, yang berarti pengembangan lokal mati tanpa setup. Jalur peningkatannya sudah bersih: seluruh aplikasi hanya membaca URL dari `user.image`, jadi pindah ke Blob cukup mengubah `updateAvatarAction`.
+- **Foto dikecilkan di klien, bukan di server.** Canvas memotongnya persegi lalu mengekspor JPEG 256px (~20 KB) sebelum dikirim. Selain menghemat unggahan, menggambar ulang lewat canvas membuang metadata EXIF termasuk koordinat GPS.
+- **足あと dan いいね！履歴 tidak punya tabel sendiri.** Keduanya dibaca dari `swipes`, yang sudah merekam setiap keputusan berikut waktunya — 足あと adalah semua arah, いいね！履歴 adalah `like` + `super`.
+- **Gerbang login sengaja lunak.** Hanya checkout yang memerlukan akun. Swipe, 一目惚れ, dan Style DNA tetap terbuka tanpa mendaftar — premis produknya "buka tautan, langsung swipe", dan halaman pendaftaran di depan pintu membunuh itu. Ajakan mendaftar diletakkan di Style DNA (ambang 5 swipe), bukan di feed, karena kartu feed memenuhi layar dan banner apa pun akan menutupi foto atau tombol aksi.
 - **Dua connection string Supabase.** Runtime memakai transaction pooler (6543) dengan `max: 1` karena tiap instance Vercel punya pool sendiri; DDL memakai direct (5432) karena pooler tidak mendukung DDL.
 - **Vitest hanya untuk modul murni.** Tidak ada harness test DB. Halaman dan Server Action diverifikasi lewat `next build`, `tsc --noEmit`, dan pemeriksaan manual.
 - **Gestur swipe hanya aktif di area foto kartu feed.** Badan kartu bisa di-scroll, dan drag framer-motion ikut menangkap gerakan vertikal — kalau drag dipasang pada seluruh kartu, menggulir tabel 基本情報 malah menyeret kartunya. Karena itu `dragListener={false}` dan drag dimulai manual lewat `useDragControls` dari area foto saja.

@@ -63,16 +63,33 @@ type Step = "method" | "detail" | "shipping" | "processing" | "done";
  * lembarnya ditutup; yang dikirim ke server hanyalah label seperti
  * "クレジットカード（Visa •••• 4242）".
  */
+export type ShippingDefaults = {
+  customerName: string;
+  customerEmail: string;
+  shippingAddress: string;
+};
+
+const EMPTY_SHIPPING: ShippingDefaults = {
+  customerName: "",
+  customerEmail: "",
+  shippingAddress: "",
+};
+
 export function PaymentSheet({
   orderId,
   amount,
   isOpen,
   onOpenChange,
+  shippingDefaults = EMPTY_SHIPPING,
 }: {
   orderId: number;
   amount: number;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  // Diambil dari profil akun. Kalau alamat sudah terdaftar, langkah pengiriman
+  // sudah terisi begitu dibuka — pembeli tinggal memeriksanya, bukan mengetik
+  // ulang hal yang sama setiap kali membeli.
+  shippingDefaults?: ShippingDefaults;
 }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -86,11 +103,7 @@ export function PaymentSheet({
     holder: "",
   });
   const [errors, setErrors] = useState<CardErrors>({});
-  const [shipping, setShipping] = useState({
-    customerName: "",
-    customerEmail: "",
-    shippingAddress: "",
-  });
+  const [shipping, setShipping] = useState(shippingDefaults);
 
   const brand = detectCardBrand(card.number);
 

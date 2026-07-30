@@ -3,8 +3,9 @@ import Link from "next/link";
 import { Sparkles, ThumbsDown, ThumbsUp, Wallet } from "lucide-react";
 
 import { AppLayout } from "@/components/layout";
+import { SaveTastePrompt } from "@/components/save-taste-prompt";
 import { getTasteProfile } from "@/lib/data";
-import { getSessionId } from "@/lib/session";
+import { getCurrentUser, getOwnerId } from "@/lib/session";
 import { categoryLabel, formatPrice } from "@/lib/format";
 import { describeTaste, type Affinity } from "@/lib/taste";
 
@@ -68,7 +69,7 @@ function Section({
 }
 
 export default async function StyleDnaPage() {
-  const sessionId = await getSessionId();
+  const [sessionId, user] = await Promise.all([getOwnerId(), getCurrentUser()]);
   const profile = await getTasteProfile(sessionId);
 
   const summary = describeTaste(profile);
@@ -230,6 +231,12 @@ export default async function StyleDnaPage() {
                 </div>
               </div>
             </Section>
+          )}
+
+          {/* Ambang 5 swipe: di bawah itu profilnya masih terlalu tipis untuk
+              layak "disimpan", dan ajakannya akan terbaca sebagai gangguan. */}
+          {!user && profile.totalSwipes >= 5 && (
+            <SaveTastePrompt swipeCount={profile.totalSwipes} />
           )}
 
           <Link

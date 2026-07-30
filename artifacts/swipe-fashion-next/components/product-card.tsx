@@ -174,9 +174,17 @@ export function ProductCard({
           <span className="text-red-500 font-black text-3xl tracking-widest">パス</span>
         </motion.div>
         {/* ---- Wadah scroll tunggal: foto, gelembung, thumbnail, panel ---- */}
+        {/* overflow-x-hidden WAJIB, bukan sekadar rapi. Menyetel overflow-y
+            saja membuat overflow-x ikut jadi `auto` menurut spesifikasi CSS —
+            dan panah foto sengaja menjorok setengah lingkaran keluar tepi
+            kartu, jadi wadah ini punya isi yang lebih lebar dari dirinya.
+            Akibatnya kartu bisa digeser MENDATAR seperti scrollbar: foto,
+            thumbnail, dan panel putih bergeser ke kiri sementara tombol aksi
+            — yang berada di luar wadah ini — tetap di tempat, dan tata
+            letaknya tampak rusak. */}
         <div
           ref={scrollRef}
-          className="h-full overflow-y-auto overscroll-none scrollbar-none"
+          className="h-full overflow-y-auto overflow-x-hidden overscroll-none scrollbar-none"
         >
         {/* ---- Foto: geser mendatar = swipe, geser tegak = scroll ----
              touch-pan-y memberi tahu browser bahwa gestur tegak di sini boleh

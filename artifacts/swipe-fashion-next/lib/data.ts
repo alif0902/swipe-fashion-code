@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, asc, count, desc, eq, gt } from "drizzle-orm";
+import { and, asc, count, desc, eq, gt, inArray } from "drizzle-orm";
 import {
   categoriesTable,
   db,
@@ -157,6 +157,58 @@ export async function listProducts({
   const profile = buildTasteProfile(signals);
 
   return rankProducts(profile, candidates).slice(0, limit);
+}
+
+export type SwipeHistoryEntry = {
+  product: AppProduct;
+  direction: "pass" | "like" | "super";
+  decidedAt: Date;
+};
+
+/**
+ * Riwayat swipe, terbaru dulu. Menyokong dua halaman sekaligus:
+ *
+ *   足あと         → semua arah, artinya semua yang pernah dilihat di feed
+ *   いいね！履歴   → hanya like dan super like
+ *
+ * Tidak ada tabel baru untuk ini. Tabel `swipes` sudah merekam setiap
+ * keputusan berikut waktunya, jadi "pernah dilihat" dan "pernah disukai"
+ * keduanya sudah ada di sana — tinggal disaring.
+ */
+export async function listSwipeHistory(
+  sessionId: string,
+  { likedOnly = false }: { likedOnly?: boolean } = {},
+): Promise<SwipeHistoryEntry[]> {
+  if (!sessionId) return [];
+
+  try {
+    const rows = await db
+      .select({
+        product: productsTable,
+        direction: swipesTable.direction,
+        decidedAt: swipesTable.createdAt,
+      })
+      .from(swipesTable)
+      .innerJoin(productsTable, eq(productsTable.id, swipesTable.productId))
+      .where(
+        and(
+          eq(swipesTable.sessionId, sessionId),
+          likedOnly
+            ? inArray(swipesTable.direction, ["like", "super"])
+            : undefined,
+        ),
+      )
+      .orderBy(desc(swipesTable.createdAt));
+
+    return rows.map((row) => ({
+      product: formatProduct(row.product),
+      direction: row.direction,
+      decidedAt: row.decidedAt,
+    }));
+  } catch {
+    // Tabel swipes mungkin belum di-push — halaman menampilkan keadaan kosong.
+    return [];
+  }
 }
 
 export async function listObsessed(sessionId: string): Promise<AppProduct[]> {

@@ -70,6 +70,18 @@ Formulir kartunya sungguhan secara logika, bukan tempelan:
 
 > **Ini simulasi.** Tidak ada uang berpindah dan tidak ada penyedia pembayaran yang dihubungi. **Nomor kartu tidak pernah dikirim ke server maupun disimpan** — yang tercatat hanya label seperti `クレジットカード（Visa •••• 4242）`. Nomor uji tersedia langsung di dalam formulir agar tidak ada yang tergoda memakai kartu asli.
 
+### 6. Akun (opsional)
+
+Daftar dengan email dan password, atau **jangan sama sekali** — semua fitur tetap jalan tanpa akun.
+
+Gerbangnya sengaja dibuat lunak. Premis produk ini adalah *"buka tautan, langsung swipe"*, dan halaman pendaftaran di depan pintu akan membunuhnya. Jadi hanya **checkout** yang benar-benar memerlukan akun, karena pesanan butuh identitas yang bertahan lebih lama dari sebuah cookie.
+
+Bagian yang paling penting justru tidak terlihat: **riwayat swipe ikut berpindah.** Kamu bisa swipe 10 barang sebagai tamu, baru mendaftar — dan Style DNA-mu tetap utuh, sekarang tersimpan di akun dan bisa dibuka dari perangkat lain.
+
+Dibangun dengan **Better Auth**: tabelnya ada di Postgres yang sama, password di-hash dengan Argon2id, sesi disimpan di database dan dibawa lewat cookie httpOnly. Tidak ada layanan autentikasi pihak ketiga.
+
+**マイページ** berisi foto profil yang bisa diganti, **足あと** (semua yang pernah dilihat di feed), **いいね！履歴**, dan **お届け先**. Alamat yang sudah terdaftar mengisi langkah pengiriman secara otomatis — checkout berikutnya tidak perlu mengetik ulang.
+
 ---
 
 ## Panduan singkat untuk penguji
@@ -78,6 +90,7 @@ Formulir kartunya sungguhan secara logika, bukan tempelan:
 2. **`/feed`** — swipe 5–6 barang dengan pola jelas. Misalnya: sukai semua アウター, tolak semua ボトムス.
 3. **`/style-dna`** — profil sudah terbentuk. Perhatikan bagian *「見送るもの」* — itu bukti aplikasi belajar dari penolakan, bukan hanya dari kesukaan.
 4. **Kembali ke `/feed`** — urutannya sudah berubah.
+   Di bawah hasil Style DNA ada ajakan **アカウントを作成**. Daftar di situ, lalu buka lagi `/style-dna` — hasilnya tetap sama persis. Itulah buktinya riwayat tamu ikut dipindahkan ke akun, bukan dibuang.
 5. **`/一目惚れ`** — lihat coordinate yang dirakit dari barang yang disimpan.
 6. **`/orders`** → **お支払いへ進む** — coba alur pembayaran. Ketuk salah satu nomor uji di formulir kartu, atau pilih PayPay untuk melihat layar QR.
 
@@ -89,7 +102,7 @@ Formulir kartunya sungguhan secara logika, bukan tempelan:
 
 **Tidak ada lapisan HTTP internal.** Server Component meng-query Drizzle langsung; mutasi lewat Server Actions. API server Express beserta client hasil generate sudah dihapus karena tak ada yang memakainya.
 
-**Sesi memakai cookie httpOnly, bukan localStorage,** supaya server bisa memfilter pesanan dan profil selera per sesi. Tidak ada registrasi — buka tautan, langsung swipe.
+**Identitas punya satu titik sambung, bukan tersebar.** Semua data pengguna berkunci pada satu kolom `session_id`. Satu fungsi — `getOwnerId()` — memutuskan isinya: `user.id` kalau sudah login, UUID cookie kalau belum. Karena keputusan itu terpusat, menambahkan akun **tidak mengubah satu baris pun** di lapisan data maupun mesin selera. Saat seseorang mendaftar, baris-baris lamanya dipindahkan ke id akun, jadi tidak ada riwayat yang hilang.
 
 **Perekaman swipe sengaja *fire-and-forget*.** Animasi kartu tidak boleh menunggu jaringan; kalau satu request gagal, yang hilang cuma satu sinyal.
 
@@ -134,6 +147,8 @@ Disebutkan terbuka, bukan disembunyikan:
 - **Pembayaran adalah simulasi.** Tidak terhubung ke penyedia mana pun.
 - **Katalog berisi 12 produk.** Cukup untuk memperlihatkan mesin seleranya bekerja, tapi feed akan cepat habis.
 - **Foto kedua tiap produk adalah crop dari foto utamanya**, bukan pemotretan terpisah.
-- **Tanpa akun.** Identitas melekat pada cookie sesi, jadi berganti perangkat berarti mulai dari nol.
+- **Akun belum diverifikasi lewat email.** Pendaftaran langsung aktif; tidak ada email konfirmasi maupun reset password, karena keduanya memerlukan layanan pengiriman email terpisah.
+- **Belum ada peran admin.** Katalog masih diisi lewat skrip, belum lewat antarmuka.
+- **Foto profil disimpan di Postgres, bukan di object storage.** Dikecilkan ke 256px lebih dulu dan diletakkan di tabel terpisah agar tidak membebani pembacaan sesi, tapi tempat yang benar untuk gambar adalah Vercel Blob atau S3. Jalur pindahnya sudah disiapkan: seluruh aplikasi hanya membaca URL dari satu kolom.
 - **Tidak ada mode offline.** PWA-nya bisa dipasang, tapi hampir semua halaman butuh database — service worker sengaja tidak dipasang daripada menyajikan konten basi.
 - **Swipe ke atas untuk super like dilepas** ketika area foto dibuat bisa di-scroll — dua gestur itu tidak bisa berbagi sumbu yang sama. Tombol ★ menggantikannya.

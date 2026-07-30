@@ -7,7 +7,8 @@ import { AppLayout } from "@/components/layout";
 import { PageHeader } from "@/components/page-header";
 import { OrderActions } from "@/components/order-actions";
 import { listOrders } from "@/lib/data";
-import { getSessionId } from "@/lib/session";
+import { getCurrentUser, getOwnerId } from "@/lib/session";
+import { getUserProfile } from "@/lib/profile";
 import { formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
@@ -36,8 +37,25 @@ const statusClass: Record<string, string> = {
 };
 
 export default async function OrdersPage() {
-  const sessionId = await getSessionId();
-  const orders = sessionId ? await listOrders(sessionId) : [];
+  const [sessionId, user] = await Promise.all([getOwnerId(), getCurrentUser()]);
+  const [orders, stored] = await Promise.all([
+    sessionId ? listOrders(sessionId) : Promise.resolve([]),
+    user ? getUserProfile(user.id) : Promise.resolve(null),
+  ]);
+
+  // Alamat yang tersimpan mengisi langkah pengiriman di muka. Kode pos
+  // digabung ke satu baris alamat karena kolom `orders.shippingAddress` memang
+  // satu teks — memecahnya jadi dua kolom hanya demi tampilan formulir akan
+  // mengubah skema tanpa ada yang membacanya terpisah.
+  const shippingDefaults = stored
+    ? {
+        customerName: stored.name,
+        customerEmail: stored.email,
+        shippingAddress: [stored.postalCode ? `〒${stored.postalCode}` : "", stored.address ?? ""]
+          .filter(Boolean)
+          .join(" "),
+      }
+    : undefined;
 
   return (
     <AppLayout>
@@ -108,6 +126,8 @@ export default async function OrdersPage() {
                   orderId={order.id}
                   status={order.status}
                   amount={order.totalPrice}
+                  isSignedIn={Boolean(user)}
+                  shippingDefaults={shippingDefaults}
                 />
               </div>
             ))}
