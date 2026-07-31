@@ -13,7 +13,9 @@
     "dedupe-products": "tsx ./src/dedupe-products.ts",
     "remove-dark-products": "tsx ./src/remove-dark-products.ts",
     "make-admin": "tsx ./src/make-admin.ts",
-    "list-users": "tsx ./src/list-users.ts"
+    "list-users": "tsx ./src/list-users.ts",
+    "archive-missing-images": "tsx ./src/archive-missing-images.ts",
+    "rename-products-ja": "tsx ./src/rename-products-ja.ts"
   },
   "dependencies": {
     "@workspace/db": "*",

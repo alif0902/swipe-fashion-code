@@ -84,25 +84,65 @@ export function passwordStrength(password: string): 0 | 1 | 2 | 3 {
   return Math.min(score, 3) as 0 | 1 | 2 | 3;
 }
 
+/**
+ * 47 prefektur, urutan resmi dari utara ke selatan (kode JIS).
+ *
+ * Dipakai sebagai daftar pilihan, bukan kolom ketik bebas. Prefektur adalah
+ * himpunan tertutup, dan salah ketik satu huruf membuat alamat gagal dipilah
+ * kurir — persis alasan setiap toko Jepang memakai dropdown di sini.
+ */
+export const PREFECTURES = [
+  "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
+  "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県",
+  "新潟県", "富山県", "石川県", "福井県", "山梨県", "長野県",
+  "岐阜県", "静岡県", "愛知県", "三重県",
+  "滋賀県", "京都府", "大阪府", "兵庫県", "奈良県", "和歌山県",
+  "鳥取県", "島根県", "岡山県", "広島県", "山口県",
+  "徳島県", "香川県", "愛媛県", "高知県",
+  "福岡県", "佐賀県", "長崎県", "熊本県", "大分県", "宮崎県", "鹿児島県",
+  "沖縄県",
+] as const;
+
 // Alamat opsional — orang boleh punya akun tanpa pernah berbelanja. Yang
 // memaksanya terisi adalah checkout, bukan formulir profil.
-export const profileSchema = z.object({
-  name: z
-    .string()
-    .min(1, "お名前を入力してください")
-    .max(50, "お名前が長すぎます"),
-  // Format Jepang: 7 digit, tanda hubung boleh ada boleh tidak.
-  postalCode: z
-    .string()
-    .regex(/^\d{3}-?\d{4}$/, "郵便番号は7桁で入力してください")
-    .optional()
-    .or(z.literal("")),
-  address: z
-    .string()
-    .max(200, "住所が長すぎます")
-    .optional()
-    .or(z.literal("")),
-});
+//
+// Tapi kalau salah satu bagian alamat diisi, tiga bagian wajibnya harus ikut
+// terisi. Alamat setengah jadi lebih berbahaya daripada alamat kosong: yang
+// kosong meminta diisi saat checkout, yang setengah jadi lolos begitu saja.
+const optionalText = (max: number, message: string) =>
+  z.string().trim().max(max, message).optional().or(z.literal(""));
+
+export const profileSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1, "お名前を入力してください")
+      .max(50, "お名前が長すぎます"),
+    // 7 digit, tanda hubung boleh ada boleh tidak — keduanya lazim ditulis.
+    postalCode: z
+      .string()
+      .regex(/^\d{3}-?\d{4}$/, "郵便番号は7桁で入力してください")
+      .optional()
+      .or(z.literal("")),
+    prefecture: z
+      .union([z.enum(PREFECTURES), z.literal("")])
+      .optional(),
+    city: optionalText(60, "市区町村が長すぎます"),
+    address: optionalText(100, "番地が長すぎます"),
+    building: optionalText(100, "建物名が長すぎます"),
+  })
+  .refine(
+    (v) => {
+      const filled = [v.postalCode, v.prefecture, v.city, v.address, v.building]
+        .some((part) => (part ?? "").trim() !== "");
+      if (!filled) return true;
+      return Boolean(v.prefecture && v.city?.trim() && v.address?.trim());
+    },
+    {
+      message: "都道府県・市区町村・番地をすべて入力してください",
+      path: ["address"],
+    },
+  );
 
 // ---------------------------------------------------------------------------
 // Produk (admin)

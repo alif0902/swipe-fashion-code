@@ -197,6 +197,15 @@ export async function listSwipeHistory(
       .where(
         and(
           eq(swipesTable.sessionId, sessionId),
+          // Produk yang diarsipkan disembunyikan dari riwayat juga, bukan
+          // hanya dari feed.
+          //
+          // Pengarsipan terjadi tepat ketika sebuah produk tidak bisa lagi
+          // ditampilkan — fotonya terhapus, atau ia duplikat. Menampilkannya
+          // di 足あと berarti merender baris yang gambarnya menunjuk berkas
+          // yang tidak ada. Riwayat memang ideal kalau lengkap, tapi baris
+          // rusak lebih buruk daripada baris yang hilang.
+          eq(productsTable.isArchived, false),
           likedOnly
             ? inArray(swipesTable.direction, ["like", "super"])
             : undefined,
@@ -225,7 +234,16 @@ export async function listObsessed(sessionId: string): Promise<AppProduct[]> {
       .select({ product: productsTable })
       .from(superLikesTable)
       .innerJoin(productsTable, eq(productsTable.id, superLikesTable.productId))
-      .where(eq(superLikesTable.sessionId, sessionId))
+      .where(
+        and(
+          eq(superLikesTable.sessionId, sessionId),
+          // Sama seperti riwayat: yang diarsipkan tidak bisa dirender dengan
+          // benar. Ini juga menjaga perakit outfit di lib/outfit.ts — ia
+          // menyusun koordinat dari daftar ini, dan satu potong tanpa foto
+          // merusak seluruh coordinate.
+          eq(productsTable.isArchived, false),
+        ),
+      )
       .orderBy(desc(superLikesTable.createdAt));
 
     return rows.map((r) => formatProduct(r.product));
@@ -238,7 +256,11 @@ export async function getProduct(id: number): Promise<AppProduct | null> {
   const [row] = await db
     .select()
     .from(productsTable)
-    .where(eq(productsTable.id, id));
+    // Produk yang diarsipkan diperlakukan seperti tidak ada, sehingga halaman
+    // detailnya menjadi 404. Tanpa ini, tautan lama atau bookmark tetap
+    // membuka halaman produk yang fotonya sudah terhapus — satu-satunya
+    // pintu masuk yang tersisa setelah feed dan 探す menyaringnya.
+    .where(and(eq(productsTable.id, id), eq(productsTable.isArchived, false)));
 
   return row ? formatProduct(row) : null;
 }
@@ -255,7 +277,16 @@ export async function listCategories(): Promise<
       productCount: count(productsTable.id),
     })
     .from(categoriesTable)
-    .leftJoin(productsTable, eq(productsTable.category, categoriesTable.slug))
+    // Syarat isArchived ikut ke dalam ON, bukan ke WHERE. Di WHERE ia akan
+    // mengubah leftJoin jadi innerJoin secara diam-diam — kategori yang semua
+    // produknya diarsipkan akan hilang dari daftar, bukan tampil dengan 0.
+    .leftJoin(
+      productsTable,
+      and(
+        eq(productsTable.category, categoriesTable.slug),
+        eq(productsTable.isArchived, false),
+      ),
+    )
     .groupBy(categoriesTable.id, categoriesTable.name, categoriesTable.slug)
     .orderBy(asc(categoriesTable.name));
 

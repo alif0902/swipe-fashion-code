@@ -76,10 +76,10 @@ export function MatchOverlay({
               ) : (
                 <Sparkles className="w-3.5 h-3.5" />
               )}
-              {isSuper ? "スーパーマッチ" : "マッチ"}
+              {isSuper ? "一目惚れ" : "マッチ"}
             </span>
             <h2 className="font-serif text-5xl md:text-6xl mb-6 leading-none">
-              {isSuper ? "スーパーマッチ！" : "マッチしました！"}
+              {isSuper ? "一目惚れしました！" : "マッチしました！"}
             </h2>
 
             <div className="w-48 h-60 rounded-3xl overflow-hidden border-4 border-white shadow-2xl mb-5 bg-white/10">

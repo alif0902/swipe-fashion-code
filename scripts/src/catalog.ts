@@ -22,7 +22,7 @@ export const categories = [
 // dimensions yang berbeda — dan db.insert menolaknya.
 export const products: (typeof productsTable.$inferInsert)[] = [
   {
-    name: "White Linen Blazer",
+    name: "リネンテーラードジャケット",
     brand: "CORSO",
     price: "59200.00",
     originalPrice: null,
@@ -51,7 +51,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     isSale: false,
   },
   {
-    name: "White Poplin Shirt",
+    name: "コットンポプリンシャツ",
     brand: "CORSO",
     price: "24800.00",
     originalPrice: null,
@@ -80,7 +80,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     isSale: false,
   },
   {
-    name: "Grey Wool Sweater",
+    name: "ウールクルーネックニット",
     brand: "NORD",
     price: "36800.00",
     originalPrice: null,
@@ -109,7 +109,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     isSale: false,
   },
   {
-    name: "Navy Tailored Trousers",
+    name: "ウールテーパードスラックス",
     brand: "CORSO",
     price: "42800.00",
     originalPrice: null,
@@ -138,7 +138,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     isSale: false,
   },
   {
-    name: "Cream Wide-Leg Trousers",
+    name: "リネンブレンドワイドパンツ",
     brand: "MAISON NOIR",
     price: "46500.00",
     originalPrice: null,
@@ -167,7 +167,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     isSale: false,
   },
   {
-    name: "Floral Wrap Skirt",
+    name: "フラワープリントラップスカート",
     brand: "ATELIER SUD",
     price: "33000.00",
     originalPrice: "44200.00",

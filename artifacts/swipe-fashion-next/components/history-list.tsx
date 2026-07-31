@@ -13,8 +13,11 @@ const directionBadge = {
     icon: Star,
     className: "bg-violet-500/10 text-violet-500",
   },
+  // Arah `like` sekarang berarti "digeser ke kanan", yaitu memulai pembelian —
+  // bukan lagi menekan tombol いいね. Labelnya menyesuaikan supaya lencana ini
+  // tidak menyebut aksi yang sudah berpindah arti.
   like: {
-    label: "いいね",
+    label: "気になる",
     icon: ThumbsUp,
     className: "bg-primary/10 text-primary",
   },

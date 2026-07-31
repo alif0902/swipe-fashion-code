@@ -250,16 +250,21 @@ export async function updateProfileAction(
     return { ok: false, error: parsed.error.issues[0].message };
   }
 
-  const { name, postalCode, address } = parsed.data;
+  const { name, postalCode, prefecture, city, address, building } = parsed.data;
+
+  // Kolom dikosongkan jadi NULL, bukan string kosong: pengecekan "sudah punya
+  // alamat?" di checkout jadi cukup satu bentuk, tidak dua.
+  const orNull = (value: string | undefined) => value?.trim() || null;
 
   await db
     .update(userTable)
     .set({
       name,
-      // Kolom dikosongkan jadi NULL, bukan string kosong: pengecekan "sudah
-      // punya alamat?" di checkout cukup satu bentuk, tidak dua.
-      postalCode: postalCode?.trim() || null,
-      address: address?.trim() || null,
+      postalCode: orNull(postalCode),
+      prefecture: orNull(prefecture),
+      city: orNull(city),
+      address: orNull(address),
+      building: orNull(building),
       updatedAt: new Date(),
     })
     .where(eq(userTable.id, user.id));

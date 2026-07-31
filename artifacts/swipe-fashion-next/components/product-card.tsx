@@ -15,12 +15,14 @@ import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Star, ThumbsUp, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ThumbsUp } from 'lucide-react';
 
 interface ProductCardProps {
   product: AppProduct;
+  /** Geser kanan — memulai pembelian. Hanya lewat gestur, tidak ada tombolnya. */
   onSwipeRight: (product: AppProduct) => void;
   onSwipeLeft: (product: AppProduct) => void;
+  /** Tombol いいね — menyimpan ke 一目惚れ. */
   onSuperLike: (product: AppProduct) => void;
   isFront: boolean;
 }
@@ -106,8 +108,9 @@ export function ProductCard({
 
   const swipeThreshold = 100;
 
-  // Swipe ke ATAS untuk super like sengaja dihapus: sumbu tegak sekarang
-  // milik scroll. Tombol ★ tetap tersedia.
+  // Sumbu tegak milik scroll, jadi geser ke atas tidak berarti apa-apa.
+  // Geser kanan = memulai pembelian, geser kiri = lewat. Menyimpan ke
+  // 一目惚れ dilakukan lewat tombol いいね, bukan gestur.
   const handleDragEnd = async (_e: unknown, info: PanInfo) => {
     const { offset, velocity } = info;
 
@@ -127,16 +130,9 @@ export function ProductCard({
     }
   };
 
-  const forceSwipeRight = async () => {
-    await controls.start({ x: 500, transition: { duration: 0.3 } });
-    onSwipeRight(product);
-  };
-
-  const forceSwipeLeft = async () => {
-    await controls.start({ x: -500, transition: { duration: 0.3 } });
-    onSwipeLeft(product);
-  };
-
+  // Tidak ada padanan tombol untuk geser kanan, dan itu disengaja: tombol
+  // besar sekarang milik 一目惚れ. Membeli menuntut gestur — keputusan yang
+  // paling berkonsekuensi jadi yang paling disengaja.
   const forceSuperLike = async () => {
     await controls.start({ y: -700, transition: { duration: 0.3 } });
     onSuperLike(product);
@@ -401,47 +397,31 @@ export function ProductCard({
         </div>
         </div>
 
-        {/* ---- Tombol ala aplikasi rujukan: satu pil coral besar mengambang
-             di atas panel, dengan ikon jempol di ujung kiri. Pass dan super
-             jadi lingkaran kecil di sisinya — hierarkinya disengaja, like
-             adalah aksi utama. Tanpa gradasi latar: pil dibiarkan melayang
-             dengan bayangan, seperti di referensi. ---- */}
+        {/* ---- Satu tombol saja.
+             Pembagiannya sekarang bersih: GESTUR untuk memilah, TOMBOL untuk
+             menyimpan. Geser kanan membeli, geser kiri melewati, dan tombol
+             いいね！menyimpan ke 一目惚れ.
+
+             × dan ★ sama-sama dihapus. Keduanya cuma menduplikasi sesuatu
+             yang sudah bisa dilakukan — dan tiga tombol berjajar membuat
+             orang menimbang pilihan alih-alih bereaksi, padahal reaksi cepat
+             itulah inti dari antarmuka swipe. ---- */}
         {isFront && (
           <div
-            className="absolute bottom-4 left-4 right-4 z-30 flex items-center gap-3"
+            className="absolute bottom-4 left-4 right-4 z-30 flex justify-center"
             onPointerDown={(e) => e.stopPropagation()}
           >
+            {/* Dibatasi max-w supaya tidak membentang penuh di layar lebar. */}
             <Button
-              size="icon"
-              variant="outline"
-              className="w-12 h-12 shrink-0 rounded-full border-0 bg-card shadow-lg hover:bg-red-50 text-red-400"
-              onClick={forceSwipeLeft}
-              data-testid="button-skip"
-              aria-label="パス"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-            {/* Pil dibatasi max-w agar tidak membentang penuh di layar lebar;
-                mx-auto menjaganya tetap di tengah setelah dibatasi. */}
-            <Button
-              className="relative flex-1 max-w-[220px] mx-auto h-12 rounded-full bg-primary text-primary-foreground text-base font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 transition"
-              onClick={forceSwipeRight}
-              data-testid="button-buy"
+              className="relative w-full max-w-[260px] h-12 rounded-full bg-primary text-primary-foreground text-base font-bold shadow-lg shadow-primary/30 hover:bg-primary/90 transition"
+              onClick={forceSuperLike}
+              data-testid="button-like"
+              aria-label="一目惚れに保存"
             >
               <span className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
                 <ThumbsUp className="w-5 h-5 fill-current" />
               </span>
               いいね！
-            </Button>
-            <Button
-              size="icon"
-              variant="outline"
-              className="w-12 h-12 shrink-0 rounded-full border-0 bg-card shadow-lg hover:bg-violet-50 text-violet-500"
-              onClick={forceSuperLike}
-              data-testid="button-super"
-              aria-label="スーパーライク"
-            >
-              <Star className="w-5 h-5 fill-current" />
             </Button>
           </div>
         )}

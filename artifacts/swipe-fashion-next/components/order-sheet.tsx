@@ -22,6 +22,14 @@ interface OrderSheetProps {
   product: AppProduct | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * Dipanggil setelah pesanan berhasil dibuat.
+   *
+   * Ada supaya pemanggil bisa menentukan apa yang terjadi sesudahnya — tetap
+   * di halaman, atau langsung menuju バッグ untuk membayar. Lembar ini sendiri
+   * tidak tahu (dan tidak perlu tahu) niat penggunanya.
+   */
+  onAdded?: () => void;
 }
 
 const colorMap: Record<string, string> = {
@@ -43,6 +51,7 @@ export function OrderSheet({
   product,
   isOpen,
   onOpenChange,
+  onAdded,
 }: OrderSheetProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
@@ -90,6 +99,7 @@ export function OrderSheet({
         description: `${product.name} is waiting for you.`,
       });
       onOpenChange(false);
+      onAdded?.();
       setTimeout(() => {
         setSelectedSize("");
         setSelectedColor("");

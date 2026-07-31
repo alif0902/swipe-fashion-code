@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ProductCard } from "@/components/product-card";
 import { useToast } from "@/hooks/use-toast";
-import type { AppProduct } from "@/lib/format";
+import { PLACEHOLDER_IMAGE, type AppProduct } from "@/lib/format";
 import {
   DIMENSION_PRESETS,
   SIZE_PRESETS,
@@ -34,11 +34,10 @@ const CATEGORIES = [
 
 const FEED_WIDTH = 1080;
 
-// Foto pengganti untuk pratinjau saat admin belum mengunggah gambar apa pun.
-// Sengaja menunjuk aset generik, bukan foto produk katalog: dulu ini memakai
-// /assets/coat-camel.jpg, dan ketika produk itu dihapus pratinjaunya jadi
-// kotak kosong — next/image gagal memuat berkas yang sudah tidak ada.
-const PREVIEW_FALLBACK_IMAGE = "/assets/generated_images/product.jpg";
+// Pratinjau memakai gambar pengganti yang sama dengan sisa aplikasi, bukan
+// jalur yang ditulis ulang di sini. Versi sebelumnya menunjuk foto produk
+// katalog, lalu produk itu dihapus dan pratinjaunya jadi kotak kosong.
+const PREVIEW_FALLBACK_IMAGE = PLACEHOLDER_IMAGE;
 
 // Foto dikecilkan di browser, sama seperti avatar — hanya targetnya lebar feed,
 // bukan 256px persegi. Rasio aslinya dipertahankan: memaksa foto produk jadi

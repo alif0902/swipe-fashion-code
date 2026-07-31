@@ -7,6 +7,7 @@ import { AccountPanel } from "@/components/account-panel";
 import { getCurrentUser, getOwnerId, isAdmin } from "@/lib/session";
 import { getTasteProfile, listObsessed } from "@/lib/data";
 import { getUserProfile } from "@/lib/profile";
+import { hasCompleteAddress } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +49,7 @@ export default async function AccountPage() {
                   name: stored?.name ?? user.name,
                   email: user.email,
                   image: stored?.image ?? null,
-                  hasAddress: Boolean(stored?.address),
+                  hasAddress: stored ? hasCompleteAddress(stored) : false,
                   isAdmin: admin,
                 }
               : null

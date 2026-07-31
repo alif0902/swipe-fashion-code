@@ -39,7 +39,10 @@ export default async function EditProfilePage() {
           initial={{
             name: stored?.name ?? user.name,
             postalCode: stored?.postalCode ?? "",
+            prefecture: stored?.prefecture ?? "",
+            city: stored?.city ?? "",
             address: stored?.address ?? "",
+            building: stored?.building ?? "",
           }}
         />
       </div>

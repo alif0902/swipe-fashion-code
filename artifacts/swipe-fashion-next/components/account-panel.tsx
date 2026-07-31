@@ -157,7 +157,7 @@ export function AccountPanel({
         hint={
           stats.obsessed > 0
             ? `${stats.obsessed}点を保存中`
-            : "★ で特別な一着を保存"
+            : "フィードで「いいね！」を押すと貯まります"
         }
       />
       <MenuRow

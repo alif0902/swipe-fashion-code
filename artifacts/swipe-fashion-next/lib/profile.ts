@@ -8,7 +8,10 @@ export type StoredProfile = {
   email: string;
   image: string | null;
   postalCode: string | null;
+  prefecture: string | null;
+  city: string | null;
   address: string | null;
+  building: string | null;
 };
 
 /**
@@ -31,7 +34,10 @@ export async function getUserProfile(
       email: userTable.email,
       image: userTable.image,
       postalCode: userTable.postalCode,
+      prefecture: userTable.prefecture,
+      city: userTable.city,
       address: userTable.address,
+      building: userTable.building,
     })
     .from(userTable)
     .where(eq(userTable.id, userId));

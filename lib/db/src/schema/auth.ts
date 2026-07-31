@@ -56,11 +56,25 @@ export const userTable = pgTable("user", {
   // gambarnya sendiri tidak pernah masuk database. Lihat lib/storage.ts.
   image: text("image"),
 
-  // Alamat pengiriman. Disimpan di sini, bukan di tabel terpisah, karena
-  // ukurannya kecil dan selalu dibaca bersama profilnya. Sekali diisi, langkah
-  // pengiriman saat checkout terisi otomatis.
+  // Alamat pengiriman, dipecah mengikuti bentuk alamat Jepang. Disimpan di
+  // sini, bukan di tabel terpisah, karena ukurannya kecil dan selalu dibaca
+  // bersama profilnya.
+  //
+  // Dipecah, bukan satu kolom teks, karena formulir alamat Jepang memang
+  // berkolom — dan itu bukan sekadar tampilan. Kode pos menentukan prefektur
+  // dan kota, kurir memilah berdasarkan prefektur, dan nama gedung berada di
+  // baris terpisah dari nomor banchi. Satu kolom bebas memaksa pembeli
+  // menebak urutannya, dan menghasilkan alamat yang tidak bisa dipilah.
+  //
+  // Catatan: kolom `address` sudah ada sebelumnya dan dulu memuat alamat utuh
+  // dalam satu baris. Sekarang artinya menyempit jadi 丁目・番地・号 saja.
+  // Sengaja tidak diganti nama supaya tidak ada kolom yang perlu dihapus —
+  // data lama tetap masuk ke kolom yang paling mendekati maknanya.
   postalCode: text("postal_code"),
+  prefecture: text("prefecture"),
+  city: text("city"),
   address: text("address"),
+  building: text("building"),
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

@@ -27,7 +27,9 @@
     "dedupe-products": "npm run dedupe-products -w @workspace/scripts",
     "remove-dark-products": "npm run remove-dark-products -w @workspace/scripts",
     "make-admin": "npm run make-admin -w @workspace/scripts --",
-    "list-users": "npm run list-users -w @workspace/scripts"
+    "list-users": "npm run list-users -w @workspace/scripts",
+    "archive-missing-images": "npm run archive-missing-images -w @workspace/scripts",
+    "rename-products-ja": "npm run rename-products-ja -w @workspace/scripts"
   },
   "overrides": {
     "esbuild": "0.27.3"

@@ -21,9 +21,9 @@ import type { AppProduct } from "@/lib/format";
  *
  * Bedanya hanya pada apa yang terjadi setelah aksi. Di feed, kartu berikutnya
  * menggantikan yang sekarang; di sini tidak ada tumpukan, jadi:
- * - パス   → kembali ke halaman sebelumnya
- * - いいね！ → overlay match, lalu bisa lanjut ke bag
- * - スーパー → simpan ke 一目惚れ, overlay super
+ * - パス       → kembali ke halaman sebelumnya
+ * - geser kanan → overlay マッチ, lalu bisa lanjut ke バッグ
+ * - tombol いいね！ → simpan ke 一目惚れ
  *
  * Swipe tetap merekam sinyal ke mesin selera, sama seperti di feed. Artinya
  * menelusuri katalog lewat 探す juga ikut melatih profil, bukan cuma feed.

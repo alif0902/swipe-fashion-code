@@ -9,7 +9,7 @@ import { OrderActions } from "@/components/order-actions";
 import { listOrders } from "@/lib/data";
 import { getCurrentUser, getOwnerId } from "@/lib/session";
 import { getUserProfile } from "@/lib/profile";
-import { formatPrice } from "@/lib/format";
+import { formatAddress, formatPrice, safeImage } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "バッグ｜SwipeFash",
@@ -43,17 +43,15 @@ export default async function OrdersPage() {
     user ? getUserProfile(user.id) : Promise.resolve(null),
   ]);
 
-  // Alamat yang tersimpan mengisi langkah pengiriman di muka. Kode pos
-  // digabung ke satu baris alamat karena kolom `orders.shippingAddress` memang
-  // satu teks — memecahnya jadi dua kolom hanya demi tampilan formulir akan
-  // mengubah skema tanpa ada yang membacanya terpisah.
+  // Alamat yang tersimpan mengisi langkah pengiriman di muka. Bagian-bagiannya
+  // dirangkai jadi satu baris karena kolom `orders.shippingAddress` memang satu
+  // teks — pesanan menyimpan alamat sebagaimana tertulis saat itu, dan tidak
+  // boleh ikut berubah kalau profilnya disunting nanti.
   const shippingDefaults = stored
     ? {
         customerName: stored.name,
         customerEmail: stored.email,
-        shippingAddress: [stored.postalCode ? `〒${stored.postalCode}` : "", stored.address ?? ""]
-          .filter(Boolean)
-          .join(" "),
+        shippingAddress: formatAddress(stored),
       }
     : undefined;
 
@@ -89,7 +87,7 @@ export default async function OrdersPage() {
                 <div className="flex gap-4">
                   <div className="relative w-20 h-24 shrink-0 rounded-md overflow-hidden bg-muted">
                     <Image
-                      src={order.product?.imageUrl ?? ""}
+                      src={safeImage(order.product?.imageUrl)}
                       alt={order.product?.name ?? "商品"}
                       fill
                       sizes="80px"
@@ -98,10 +96,13 @@ export default async function OrdersPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
-                      {order.product?.brand}
+                      {order.product?.brand ?? "—"}
                     </p>
+                    {/* Produk bisa lenyap dari katalog sementara pesanannya
+                        tetap ada. Baris tanpa judul terbaca seperti data yang
+                        gagal dimuat; kalimat ini menjelaskan apa yang terjadi. */}
                     <h3 className="font-sans font-bold text-base leading-snug mb-1 truncate">
-                      {order.product?.name}
+                      {order.product?.name ?? "取り扱いが終了した商品"}
                     </h3>
                     <p className="text-xs text-muted-foreground mb-2">
                       サイズ {order.selectedSize} · {order.selectedColor} ·{" "}

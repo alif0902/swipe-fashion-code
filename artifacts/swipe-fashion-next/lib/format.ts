@@ -40,6 +40,63 @@ export type AppOrder = {
   status: Order["status"];
 };
 
+/**
+ * Gambar pengganti ketika sebuah baris tidak punya foto yang bisa dipakai.
+ *
+ * Bukan kemewahan: `next/image` MELEMPAR error kalau `src` berupa string
+ * kosong, jadi pola `src={mungkinKosong ?? ""}` menjatuhkan seluruh halaman —
+ * bukan sekadar menampilkan gambar rusak. Riwayat pesanan adalah tempat
+ * paling mungkin hal itu terjadi, karena pesanan bertahan lebih lama daripada
+ * produk yang dibelinya.
+ */
+export const PLACEHOLDER_IMAGE = "/assets/placeholder.jpg";
+
+/** Mengembalikan src yang selalu bisa dirender. */
+export function safeImage(src: string | null | undefined): string {
+  return src && src.trim() !== "" ? src : PLACEHOLDER_IMAGE;
+}
+
+export type JapaneseAddress = {
+  postalCode?: string | null;
+  prefecture?: string | null;
+  city?: string | null;
+  address?: string | null;
+  building?: string | null;
+};
+
+/**
+ * Menyusun alamat Jepang jadi satu baris untuk ditampilkan dan dikirim.
+ *
+ * Urutannya dari besar ke kecil — prefektur, kota, banchi, gedung — kebalikan
+ * dari alamat Barat. Menuliskannya terbalik membuat alamat terbaca janggal
+ * bagi pembaca Jepang, dan bisa menyulitkan pemilahan di kurir.
+ *
+ * Bagian yang kosong dilewati, jadi alamat yang belum lengkap tetap terbaca
+ * masuk akal alih-alih menyisakan spasi dan tanda baca menggantung.
+ *
+ * Murni dan tanpa efek samping, jadi bisa diuji unit.
+ */
+export function formatAddress(parts: JapaneseAddress): string {
+  const postal = parts.postalCode?.trim();
+
+  return [
+    postal ? `〒${postal}` : "",
+    parts.prefecture?.trim() ?? "",
+    parts.city?.trim() ?? "",
+    parts.address?.trim() ?? "",
+    parts.building?.trim() ?? "",
+  ]
+    .filter((segment) => segment !== "")
+    .join(" ");
+}
+
+/** Alamat dianggap terisi hanya bila tiga bagian wajibnya ada. */
+export function hasCompleteAddress(parts: JapaneseAddress): boolean {
+  return Boolean(
+    parts.prefecture?.trim() && parts.city?.trim() && parts.address?.trim(),
+  );
+}
+
 // Kolom numeric Postgres kembali sebagai string lewat node-postgres.
 // UI memperlakukan harga sebagai angka, jadi konversinya wajib di sini.
 function toNumber(value: string | null): number | null {
