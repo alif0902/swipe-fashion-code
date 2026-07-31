@@ -11,6 +11,7 @@
     "verify-stock": "tsx ./src/verify-stock.ts",
     "sync-products": "tsx ./src/sync-products.ts",
     "dedupe-products": "tsx ./src/dedupe-products.ts",
+    "remove-dark-products": "tsx ./src/remove-dark-products.ts",
     "make-admin": "tsx ./src/make-admin.ts",
     "list-users": "tsx ./src/list-users.ts"
   },
