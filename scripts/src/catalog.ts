@@ -22,63 +22,6 @@ export const categories = [
 // dimensions yang berbeda — dan db.insert menolaknya.
 export const products: (typeof productsTable.$inferInsert)[] = [
   {
-    name: "Burgundy Silk Slip Dress",
-    brand: "MAISON NOIR",
-    price: "43400.00",
-    originalPrice: "61500.00",
-    description:
-      "厚みのあるシルクシャルムーズをバイアス裁ちで。体に沿いながら張りつかず、ドレープの落ち方がきれいに出ます。",
-    imageUrl: "/assets/dress-burgundy-silk.jpg",
-    category: "dresses",
-    gender: "women",
-    sizes: ["XS", "S", "M", "L"],
-    colors: ["Burgundy"],
-    images: [
-      "/assets/dress-burgundy-silk.jpg",
-      "/assets/details/dress-burgundy-silk-detail.jpg",
-    ],
-    material: "シルク100%",
-    dimensions: {
-      "着丈": "120cm",
-      "身幅": "44cm",
-      "裄丈": "32cm",
-    },
-    stock: 12,
-    rating: "4.80",
-    reviewCount: 64,
-    isNew: false,
-    isSale: true,
-  },
-  {
-    name: "Camel Wool Overcoat",
-    brand: "ATELIER SUD",
-    price: "93000.00",
-    originalPrice: null,
-    description:
-      "ダブルフェイスのウールを一枚仕立てで。裏地がないぶん軽く、肩からまっすぐ落ちるシルエットです。",
-    imageUrl: "/assets/coat-camel.jpg",
-    category: "outerwear",
-    gender: "women",
-    sizes: ["S", "M", "L"],
-    colors: ["Beige"],
-    images: [
-      "/assets/coat-camel.jpg",
-      "/assets/details/coat-camel-detail.jpg",
-    ],
-    material: "ウール80% / カシミヤ20%",
-    dimensions: {
-      "着丈": "110cm",
-      "身幅": "58cm",
-      "肩幅": "46cm",
-      "袖丈": "62cm",
-    },
-    stock: 5,
-    rating: "4.90",
-    reviewCount: 87,
-    isNew: true,
-    isSale: false,
-  },
-  {
     name: "White Linen Blazer",
     brand: "CORSO",
     price: "59200.00",

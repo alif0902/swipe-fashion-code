@@ -25,6 +25,7 @@
     "rebuild:native": "npm rebuild esbuild sharp",
     "sync-products": "npm run sync-products -w @workspace/scripts",
     "dedupe-products": "npm run dedupe-products -w @workspace/scripts",
+    "remove-dark-products": "npm run remove-dark-products -w @workspace/scripts",
     "make-admin": "npm run make-admin -w @workspace/scripts --",
     "list-users": "npm run list-users -w @workspace/scripts"
   },

@@ -34,6 +34,12 @@ const CATEGORIES = [
 
 const FEED_WIDTH = 1080;
 
+// Foto pengganti untuk pratinjau saat admin belum mengunggah gambar apa pun.
+// Sengaja menunjuk aset generik, bukan foto produk katalog: dulu ini memakai
+// /assets/coat-camel.jpg, dan ketika produk itu dihapus pratinjaunya jadi
+// kotak kosong — next/image gagal memuat berkas yang sudah tidak ada.
+const PREVIEW_FALLBACK_IMAGE = "/assets/generated_images/product.jpg";
+
 // Foto dikecilkan di browser, sama seperti avatar — hanya targetnya lebar feed,
 // bukan 256px persegi. Rasio aslinya dipertahankan: memaksa foto produk jadi
 // persegi memotong sepatu atau kepala model.
@@ -216,8 +222,9 @@ export function ProductForm({
     return {
       id: productId ?? 0,
       ...payload,
-      images: payload.images.length > 0 ? payload.images : ["/assets/coat-camel.jpg"],
-      imageUrl: payload.images[0] ?? "/assets/coat-camel.jpg",
+      images:
+        payload.images.length > 0 ? payload.images : [PREVIEW_FALLBACK_IMAGE],
+      imageUrl: payload.images[0] ?? PREVIEW_FALLBACK_IMAGE,
       name: payload.name || "商品名",
       brand: payload.brand || "ブランド",
       description: payload.description || "商品説明がここに入ります。",
