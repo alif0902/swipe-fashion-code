@@ -27,7 +27,7 @@ export default async function EditProfilePage() {
 
   return (
     <AppLayout>
-      <div className="min-h-full bg-background">
+      <div className="min-h-full bg-background pb-28">
         <PageHeader
           icon={Pencil}
           eyebrow="EDIT"

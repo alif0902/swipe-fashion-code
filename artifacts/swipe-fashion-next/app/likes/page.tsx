@@ -20,7 +20,7 @@ export default async function LikesPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-full bg-background">
+      <div className="min-h-full bg-background pb-28">
         <PageHeader
           icon={ThumbsUp}
           eyebrow="LIKED"

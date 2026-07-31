@@ -297,3 +297,41 @@ export async function updateAvatarAction(
   revalidatePath("/account");
   return { ok: true };
 }
+
+/**
+ * Menghapus pesanan yang sudah dibatalkan dari daftar.
+ *
+ * Hanya berlaku untuk status `cancelled`, dan itu batasan yang disengaja:
+ * pesanan aktif harus dibatalkan lebih dulu supaya stoknya dikembalikan.
+ * Kalau baris aktif boleh langsung dihapus, stok yang sudah dipotong akan
+ * hilang tanpa pernah dikembalikan — dan tidak ada jejak untuk melacaknya.
+ *
+ * Baris pesanan tidak dirujuk tabel lain, jadi penghapusan di sini aman —
+ * berbeda dengan produk, yang justru diarsipkan karena banyak yang menunjuk
+ * ke sana.
+ */
+export async function deleteOrderAction(
+  orderId: number,
+): Promise<ActionResult> {
+  const sessionId = await getOwnerId();
+
+  const [existing] = await db
+    .select()
+    .from(ordersTable)
+    .where(eq(ordersTable.id, orderId));
+
+  // Cek kepemilikan sama seperti aksi pesanan lain: sesi hanya boleh
+  // menyentuh barisnya sendiri.
+  if (!existing || existing.sessionId !== sessionId) {
+    return { ok: false, error: "注文が見つかりません。" };
+  }
+
+  if (existing.status !== "cancelled") {
+    return { ok: false, error: "キャンセルした注文のみ削除できます。" };
+  }
+
+  await db.delete(ordersTable).where(eq(ordersTable.id, orderId));
+
+  revalidatePath("/orders");
+  return { ok: true };
+}

@@ -9,7 +9,13 @@ export const dynamic = "force-dynamic";
 
 export default async function FeedPage() {
   const sessionId = await getOwnerId();
-  const products = await listProducts({ limit: 10, sessionId });
+  // rankByTaste: inilah satu-satunya tempat mesin selera menentukan urutan.
+  // 探す memakai pilihan 並び替え biasa.
+  const products = await listProducts({
+    limit: 10,
+    sessionId,
+    rankByTaste: true,
+  });
 
   return (
     <AppLayout>

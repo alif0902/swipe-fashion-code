@@ -74,7 +74,7 @@ export default async function LookbookPage({
     listProducts({
       category,
       gender,
-      sort: (sort as ProductSort) ?? "recommended",
+      sort: (sort as ProductSort) ?? "new",
       inStockOnly: stock === "1",
       limit: 50,
     }),
@@ -82,7 +82,7 @@ export default async function LookbookPage({
 
   return (
     <AppLayout>
-      <div className="relative min-h-full bg-background">
+      <div className="relative min-h-full bg-background pb-28">
         <PageHeader
           icon={Search}
           eyebrow="COLLECTION"

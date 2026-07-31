@@ -102,7 +102,7 @@ export default async function StyleDnaPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-full bg-background">
+      <div className="min-h-full bg-background pb-28">
         <header className="px-6 pt-10 pb-6">
           <div className="flex items-center gap-2 mb-1">
             <Sparkles className="w-4 h-4 text-primary" />

@@ -17,16 +17,32 @@ export function BottomNav() {
   const pathname = usePathname();
 
   return (
-    // Dulu `fixed`, yang berarti menempel ke viewport. Di dalam bingkai
-    // perangkat pada layar besar itu salah — bilahnya akan melayang di dasar
-    // layar, lepas dari bingkainya. Sekarang jadi anak flex biasa di dalam
-    // bingkai, sehingga ikut ke mana pun bingkainya berada.
-    <div className="shrink-0 z-40 bg-background/80 backdrop-blur-lg border-t border-border pb-safe">
-      <div className="flex justify-around items-center h-16 max-w-md mx-auto px-4">
+    // `absolute`, BUKAN `fixed`. Fixed menempel ke viewport, dan di dalam
+    // bingkai perangkat pada layar besar itu salah — bilahnya akan melayang
+    // di dasar layar, lepas dari bingkainya. Absolute menempel ke bingkai,
+    // jadi ia ikut ke mana pun bingkainya berada.
+    //
+    // Wadah luar `pointer-events-none` supaya celah transparan di kiri, kanan,
+    // dan bawah pil tidak menghalangi sentuhan ke konten di baliknya. Hanya
+    // pilnya sendiri yang menerima sentuhan.
+    <div className="absolute bottom-0 inset-x-0 z-40 px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pointer-events-none">
+      {/*
+        Efek kaca.
+        - backdrop-blur-2xl mengaburkan apa pun yang lewat di belakangnya.
+          Ini yang membuatnya terbaca sebagai kaca, bukan sekadar panel
+          semitransparan — jadi konten memang harus mengalir di bawahnya,
+          bukan berhenti di atasnya.
+        - Latar putih 55% menahan agar teks tetap terbaca di atas foto gelap.
+        - Dua garis: border putih terang di luar, dan inset shadow putih tipis
+          di dalam. Pasangan itu yang meniru tepi kaca yang menangkap cahaya.
+        - saturate-150 mengangkat warna yang terlihat menembus kaca; tanpa itu
+          hasil blur cenderung kelabu dan mati.
+      */}
+      <div className="pointer-events-auto mx-auto max-w-sm rounded-[1.75rem] bg-white/55 backdrop-blur-2xl backdrop-saturate-150 border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.7)] flex justify-around items-center h-16 px-2">
         <Link
           href="/feed"
           className={cn(
-            "flex flex-col items-center justify-center w-16 h-full gap-1 text-muted-foreground transition-colors",
+            "flex flex-col items-center justify-center flex-1 h-full gap-1 text-muted-foreground transition-colors",
             pathname === "/feed" && "text-foreground",
           )}
         >
@@ -38,7 +54,7 @@ export function BottomNav() {
         <Link
           href="/lookbook"
           className={cn(
-            "flex flex-col items-center justify-center w-16 h-full gap-1 text-muted-foreground transition-colors",
+            "flex flex-col items-center justify-center flex-1 h-full gap-1 text-muted-foreground transition-colors",
             pathname === "/lookbook" && "text-foreground",
           )}
         >
@@ -53,7 +69,7 @@ export function BottomNav() {
         <Link
           href="/obsessed"
           className={cn(
-            "flex flex-col items-center justify-center w-16 h-full gap-1 text-muted-foreground transition-colors",
+            "flex flex-col items-center justify-center flex-1 h-full gap-1 text-muted-foreground transition-colors",
             pathname === "/obsessed" && "text-foreground",
           )}
         >
@@ -69,7 +85,7 @@ export function BottomNav() {
         <Link
           href="/orders"
           className={cn(
-            "flex flex-col items-center justify-center w-16 h-full gap-1 text-muted-foreground transition-colors",
+            "flex flex-col items-center justify-center flex-1 h-full gap-1 text-muted-foreground transition-colors",
             pathname === "/orders" && "text-foreground",
           )}
         >
@@ -84,7 +100,7 @@ export function BottomNav() {
         <Link
           href="/account"
           className={cn(
-            "flex flex-col items-center justify-center w-16 h-full gap-1 text-muted-foreground transition-colors",
+            "flex flex-col items-center justify-center flex-1 h-full gap-1 text-muted-foreground transition-colors",
             pathname === "/account" && "text-foreground",
           )}
         >
@@ -127,8 +143,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <PhoneFrame>
       {/* min-h-0 wajib: tanpa itu flex item menolak menyusut di bawah tinggi
-          kontennya, dan halaman panjang akan mendorong bilah navigasi keluar
-          bingkai alih-alih menggulir di dalamnya. */}
+          kontennya, dan halaman panjang tidak akan menggulir di dalam bingkai.
+
+          Sejak bilah navigasi jadi pil mengambang (absolute), ia tidak lagi
+          memakan ruang di kolom flex ini — jadi main memenuhi seluruh tinggi
+          bingkai dan konten mengalir DI BAWAH kacanya. Itu memang syarat efek
+          kacanya: backdrop-blur butuh sesuatu untuk dikaburkan.
+
+          Konsekuensinya tiap halaman berdaftar perlu ruang bawah sendiri
+          (pb-28) agar baris terakhirnya tidak tertutup pil. */}
       {/* overflow-x-hidden: menyetel overflow-y saja membuat overflow-x
           otomatis jadi `auto`, sehingga elemen apa pun yang sengaja menjorok
           keluar tepi (panah foto di kartu produk) mengubah seluruh layar jadi

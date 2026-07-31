@@ -3,14 +3,13 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { CreditCard, ShoppingBag, Star } from "lucide-react";
+import { ShoppingBag, Star } from "lucide-react";
 
 import { OrderSheet } from "@/components/order-sheet";
 import { formatPrice, type AppProduct } from "@/lib/format";
 
 /**
- * Grid koleksi 一目惚れ, dengan pintasan ke バッグ dan ke pembayaran.
+ * Grid koleksi 一目惚れ, dengan pintasan memasukkan barang ke バッグ.
  *
  * SOAL "muncul saat hover": hover tidak ada di layar sentuh. Di ponsel,
  * sentuhan pertama memicu keadaan hover lalu menempel di sana sampai ada yang
@@ -18,31 +17,17 @@ import { formatPrice, type AppProduct } from "@/lib/format";
  * bisa ditekan. Karena aplikasi ini mobile-only, menyembunyikannya di balik
  * hover berarti menyembunyikannya dari hampir semua penggunanya.
  *
- * Jadi kedua tombol SELALU terlihat di layar sentuh, dan baru bersembunyi
- * di balik hover pada layar lebar (md ke atas) tempat kursor memang ada.
- * Perilaku yang kamu minta tetap dapat, tanpa mengorbankan ponsel.
+ * Jadi tombolnya SELALU terlihat di layar sentuh, dan baru bersembunyi di
+ * balik hover pada layar lebar (md ke atas) tempat kursor memang ada.
  */
 
-type Intent = "bag" | "checkout";
-
 export function ObsessedGrid({ products }: { products: AppProduct[] }) {
-  const router = useRouter();
   const [selected, setSelected] = useState<AppProduct | null>(null);
-  const [intent, setIntent] = useState<Intent>("bag");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const start = (product: AppProduct, next: Intent) => {
+  const start = (product: AppProduct) => {
     setSelected(product);
-    setIntent(next);
     setIsSheetOpen(true);
-  };
-
-  // Kedua tombol melewati lembar pilih ukuran yang sama. Bedanya cuma apa yang
-  // terjadi sesudahnya — dan itu memang satu-satunya yang berbeda: pesanan
-  // tanpa ukuran tidak bisa dibuat, jadi "langsung checkout" pun tetap harus
-  // menanyakannya.
-  const handleAdded = () => {
-    if (intent === "checkout") router.push("/orders");
   };
 
   return (
@@ -74,33 +59,22 @@ export function ObsessedGrid({ products }: { products: AppProduct[] }) {
                 </span>
               </span>
 
-              {/* SATU pil berisi dua aksi, bukan dua lingkaran terpisah.
-                  Dua lingkaran mengambang terbaca seperti tempelan di atas
-                  foto; satu wadah dengan pemisah tipis terbaca sebagai satu
-                  kontrol, dan menutupi lebih sedikit gambar. */}
-              <div className="absolute bottom-2 right-2 flex items-center rounded-full bg-white/95 backdrop-blur shadow-md overflow-hidden md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                <button
-                  type="button"
-                  onClick={() => start(product, "bag")}
-                  data-testid={`button-bag-${product.id}`}
-                  aria-label="バッグに入れる"
-                  title="バッグに入れる"
-                  className="w-9 h-8 flex items-center justify-center text-foreground/80 transition hover:bg-muted active:bg-muted"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                </button>
-                <span className="w-px h-4 bg-border" />
-                <button
-                  type="button"
-                  onClick={() => start(product, "checkout")}
-                  data-testid={`button-checkout-${product.id}`}
-                  aria-label="今すぐ購入"
-                  title="今すぐ購入"
-                  className="w-9 h-8 flex items-center justify-center text-primary transition hover:bg-primary/10 active:bg-primary/10"
-                >
-                  <CreditCard className="w-4 h-4" />
-                </button>
-              </div>
+              {/* Satu aksi saja: masuk バッグ.
+                  Tombol "beli langsung" dihapus karena keduanya tetap melewati
+                  lembar pilih ukuran yang sama — bedanya cuma ke mana pengguna
+                  dibawa sesudahnya. Dua tombol untuk perbedaan sekecil itu
+                  membuat orang berhenti menimbang, padahal pembayaran sudah
+                  menunggu satu ketukan lagi di halaman バッグ. */}
+              <button
+                type="button"
+                onClick={() => start(product)}
+                data-testid={`button-bag-${product.id}`}
+                aria-label="バッグに入れる"
+                title="バッグに入れる"
+                className="absolute bottom-2 right-2 w-9 h-9 rounded-full bg-white/95 backdrop-blur shadow-md flex items-center justify-center text-foreground/80 transition hover:scale-105 hover:text-primary active:scale-95 md:opacity-0 md:group-hover:opacity-100"
+              >
+                <ShoppingBag className="w-4 h-4" />
+              </button>
             </div>
 
             <Link href={`/product/${product.id}`} className="block p-3">
@@ -122,7 +96,6 @@ export function ObsessedGrid({ products }: { products: AppProduct[] }) {
         product={selected}
         isOpen={isSheetOpen}
         onOpenChange={setIsSheetOpen}
-        onAdded={handleAdded}
       />
     </>
   );

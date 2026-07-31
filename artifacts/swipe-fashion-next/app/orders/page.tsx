@@ -6,6 +6,7 @@ import { ShoppingBag } from "lucide-react";
 import { AppLayout } from "@/components/layout";
 import { PageHeader } from "@/components/page-header";
 import { OrderActions } from "@/components/order-actions";
+import { OrderDeleteButton } from "@/components/order-delete-button";
 import { listOrders } from "@/lib/data";
 import { getCurrentUser, getOwnerId } from "@/lib/session";
 import { getUserProfile } from "@/lib/profile";
@@ -57,7 +58,7 @@ export default async function OrdersPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-full bg-background">
+      <div className="min-h-full bg-background pb-28">
         <PageHeader
           icon={ShoppingBag}
           eyebrow="YOUR BAG"
@@ -82,8 +83,14 @@ export default async function OrdersPage() {
             {orders.map((order) => (
               <div
                 key={order.id}
-                className="bg-card border border-card-border rounded-2xl p-4 space-y-4"
+                className="relative bg-card border border-card-border rounded-2xl p-4 space-y-4"
               >
+                {/* Hanya baris yang sudah dibatalkan yang bisa dibuang. Yang
+                    masih aktif harus dibatalkan dulu agar stoknya kembali. */}
+                {order.status === "cancelled" && (
+                  <OrderDeleteButton orderId={order.id} />
+                )}
+
                 <div className="flex gap-4">
                   <div className="relative w-20 h-24 shrink-0 rounded-md overflow-hidden bg-muted">
                     <Image
@@ -94,7 +101,13 @@ export default async function OrdersPage() {
                       className="object-cover"
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
+                  {/* Ruang di kanan hanya saat tombol hapus ada, supaya nama
+                      produk yang panjang tidak berjalan di bawah ikonnya. */}
+                  <div
+                    className={`flex-1 min-w-0 ${
+                      order.status === "cancelled" ? "pr-8" : ""
+                    }`}
+                  >
                     <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
                       {order.product?.brand ?? "—"}
                     </p>

@@ -7,6 +7,7 @@ import {
 } from "next/font/google";
 
 import { Toaster } from "@/components/ui/toaster";
+import { Splash } from "@/components/splash";
 
 import "./globals.css";
 
@@ -100,6 +101,9 @@ export default function RootLayout({
       className={`${playfair.variable} ${dmSans.variable} ${notoSerifJP.variable} ${notoSansJP.variable}`}
     >
       <body>
+        {/* Sebelum {children}: overlay ini harus sudah ada di HTML pertama yang
+            dikirim server, bukan disisipkan belakangan oleh JavaScript. */}
+        <Splash />
         {children}
         <Toaster />
       </body>

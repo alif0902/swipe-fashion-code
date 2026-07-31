@@ -30,7 +30,7 @@ export default async function ObsessedPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-full bg-background">
+      <div className="min-h-full bg-background pb-28">
         <PageHeader
           icon={Star}
           eyebrow="SUPER LIKE"

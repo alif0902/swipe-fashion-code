@@ -20,7 +20,7 @@ export default async function FootprintsPage() {
 
   return (
     <AppLayout>
-      <div className="min-h-full bg-background">
+      <div className="min-h-full bg-background pb-28">
         <PageHeader
           icon={Footprints}
           eyebrow="HISTORY"

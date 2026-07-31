@@ -71,15 +71,24 @@ export async function getTasteProfile(
   }
 }
 
-export type ProductSort = "recommended" | "price-asc" | "price-desc" | "new";
+/**
+ * Pilihan 並び替え di 探す.
+ *
+ * "recommended" dihapus. Sebagai pilihan dalam daftar urutan ia menyesatkan:
+ * pengurutan menurut selera bukan salah satu cara mengurutkan katalog,
+ * melainkan cara kerja FEED — dan feed tidak punya menu urutan sama sekali.
+ * Menaruhnya di sini membuat dua hal berbeda tampak setara.
+ */
+export type ProductSort = "price-asc" | "price-desc" | "new";
 
 export async function listProducts({
   category,
   gender,
-  sort = "recommended",
+  sort = "new",
   inStockOnly = false,
   limit = 10,
   sessionId,
+  rankByTaste = false,
 }: {
   category?: string;
   gender?: "women" | "men";
@@ -87,6 +96,18 @@ export async function listProducts({
   inStockOnly?: boolean;
   limit?: number;
   sessionId?: string;
+  /**
+   * Mengurutkan menurut profil selera dan menyembunyikan yang sudah di-swipe.
+   *
+   * HANYA untuk feed. Dipisah jadi bendera tersendiri, bukan disimpulkan dari
+   * adanya `sessionId`, karena keduanya hal berbeda: 探す juga butuh sessionId
+   * di masa depan, tapi tidak boleh ikut menyembunyikan barang yang sudah
+   * di-swipe — halamannya akan mengosong justru bagi pengguna paling aktif.
+   *
+   * Sebelumnya kedua perilaku ini menempel pada `sessionId`, dan akibatnya
+   * pilihan 並び替え diam-diam DIABAIKAN begitu sesi ada.
+   */
+  rankByTaste?: boolean;
 } = {}): Promise<AppProduct[]> {
   // and() mengabaikan undefined, jadi filter yang tidak dipakai tidak perlu
   // percabangan sendiri.
@@ -129,19 +150,18 @@ export async function listProducts({
     return list;
   };
 
-  // Tanpa sesi (lookbook, landing): urut id lalu diurutkan sesuai pilihan.
-  if (!sessionId) {
+  // Katalog biasa (探す): pilihan 並び替え yang menentukan, titik.
+  //
+  // Ini juga jalan yang dipakai kalau tabel swipes belum di-push.
+  if (!rankByTaste || !swipeState) {
     return sortProducts(rows.map(formatProduct)).slice(0, limit);
   }
 
-  // Tabel swipes mungkin belum di-push — feed tetap jalan tanpa personalisasi.
-  if (!swipeState) {
-    return sortProducts(rows.map(formatProduct)).slice(0, limit);
-  }
-
-  // Produk yang sudah diputuskan (suka, super, atau lewat) tidak diulang.
-  // Sebelumnya hanya yang di-super-like yang disembunyikan, sehingga barang
-  // yang baru saja ditolak bisa muncul lagi di sesi yang sama.
+  // Mulai dari sini khusus FEED.
+  //
+  // Produk yang sudah diputuskan (suka atau lewat) tidak diulang. Sebelumnya
+  // hanya yang di-super-like yang disembunyikan, sehingga barang yang baru
+  // saja ditolak bisa muncul lagi di sesi yang sama.
   const { signals, decidedIds } = swipeState;
 
   const undecided = rows

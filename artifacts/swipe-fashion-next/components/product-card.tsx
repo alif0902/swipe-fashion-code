@@ -274,8 +274,16 @@ export function ProductCard({
           // memengaruhi tata letak, jadi ring + scale pada thumbnail aktif
           // sebelumnya menimpa thumbnail di sebelahnya. Ring dikecilkan ke
           // 3px dan jaraknya dilebarkan supaya tiap preview bernapas.
+          // justify-center: strip diletakkan di tengah, sejajar dengan foto
+          // besar dan gelembung bahan di atasnya. Rata kiri membuatnya
+          // terlihat seperti sisa tata letak, bukan bagian dari kartu.
+          //
+          // Aman dipadukan dengan overflow-x-auto di sini karena jumlah foto
+          // dibatasi enam — pada lebar ponsel pun barisnya tidak sampai
+          // melampaui layar, jadi tidak ada thumbnail yang terdorong keluar
+          // jangkauan gulir.
           <div
-            className="shrink-0 flex gap-4 px-6 py-3.5 overflow-x-auto"
+            className="shrink-0 flex justify-center gap-4 px-6 py-3.5 overflow-x-auto"
             onPointerDown={(e) => e.stopPropagation()}
           >
             {images.map((src, i) => (
@@ -408,7 +416,7 @@ export function ProductCard({
              itulah inti dari antarmuka swipe. ---- */}
         {isFront && (
           <div
-            className="absolute bottom-4 left-4 right-4 z-30 flex justify-center"
+            className="absolute bottom-24 left-4 right-4 z-30 flex justify-center"
             onPointerDown={(e) => e.stopPropagation()}
           >
             {/* Dibatasi max-w supaya tidak membentang penuh di layar lebar. */}

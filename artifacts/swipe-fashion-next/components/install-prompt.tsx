@@ -87,7 +87,7 @@ export function InstallPrompt() {
   // tombol dan justru membuat orang mencoba menekannya.
   if (isIos) {
     return (
-      <div className="absolute bottom-3 left-3 right-3 z-50 rounded-2xl bg-foreground text-background shadow-2xl p-4">
+      <div className="absolute bottom-24 left-3 right-3 z-50 rounded-2xl bg-foreground text-background shadow-2xl p-4">
         <div className="flex items-start gap-3">
           <span className="w-10 h-10 shrink-0 rounded-xl bg-primary flex items-center justify-center">
             <Download className="w-5 h-5 text-primary-foreground" />
@@ -136,7 +136,7 @@ export function InstallPrompt() {
 
   // Android/Chrome: ada API-nya, jadi pemasangan bisa satu ketuk di sini.
   return (
-    <div className="absolute bottom-3 left-3 right-3 z-50 rounded-2xl bg-foreground text-background shadow-2xl px-4 py-3 flex items-center gap-3">
+    <div className="absolute bottom-24 left-3 right-3 z-50 rounded-2xl bg-foreground text-background shadow-2xl px-4 py-3 flex items-center gap-3">
       <span className="w-10 h-10 shrink-0 rounded-xl bg-primary flex items-center justify-center">
         <Download className="w-5 h-5 text-primary-foreground" />
       </span>

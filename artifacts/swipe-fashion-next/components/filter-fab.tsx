@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { Check, SlidersHorizontal } from "lucide-react";
 
 import {
@@ -13,11 +14,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+// おすすめ順 dihapus. Sebagai pilihan dalam daftar urutan ia menyesatkan:
+// pengurutan menurut selera adalah cara kerja FEED, bukan salah satu cara
+// mengurutkan katalog — dan feed tidak punya menu urutan sama sekali.
+//
+// 新着順 jadi bawaan. Bukan pilihan netral, tapi paling jujur: ia menyatakan
+// apa yang dilakukannya, dan katalog fashion memang wajar dibuka dari yang
+// terbaru.
+const DEFAULT_SORT = "new";
+
 const SORTS = [
-  { value: "recommended", label: "おすすめ順" },
+  { value: "new", label: "新着順" },
   { value: "price-asc", label: "価格が安い順" },
   { value: "price-desc", label: "価格が高い順" },
-  { value: "new", label: "新着順" },
 ] as const;
 
 /**
@@ -44,13 +53,19 @@ export function FilterFab({
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
-  const sort = params.sort ?? "recommended";
+  const boundsRef = useRef<HTMLDivElement>(null);
+  // useRef, bukan useState: nilainya dibaca di dalam handler click yang
+  // berjalan sesaat setelah drag selesai. State akan memicu render ulang dan
+  // nilai barunya belum tentu terbaca tepat waktu di gilirannya.
+  const wasDragged = useRef(false);
+
+  const sort = params.sort ?? DEFAULT_SORT;
   const inStock = params.stock === "1";
 
   // Hanya filter yang mengubah hasil yang dihitung sebagai "aktif". Gender dan
   // kategori punya kontrolnya sendiri di header, jadi tidak ikut dihitung —
   // kalau ikut, lencananya akan menyala terus dan kehilangan arti.
-  const activeCount = (sort !== "recommended" ? 1 : 0) + (inStock ? 1 : 0);
+  const activeCount = (sort !== DEFAULT_SORT ? 1 : 0) + (inStock ? 1 : 0);
 
   const update = (patch: Record<string, string | null>) => {
     const next = new URLSearchParams();
@@ -65,23 +80,56 @@ export function FilterFab({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setIsOpen(true)}
-        data-testid="button-filter"
-        aria-label="絞り込む"
-        className="absolute bottom-5 right-5 z-30 h-14 pl-4 pr-5 rounded-full bg-foreground text-background shadow-xl flex items-center gap-2 transition hover:scale-[1.03]"
+      {/* Wadah pembatas geser.
+          inset-0 pointer-events-none: ia menutupi seluruh area halaman hanya
+          untuk dijadikan patokan batas, tanpa pernah menangkap sentuhan.
+          Tanpa wadah bersukuran nyata, dragConstraints tidak punya acuan dan
+          tombolnya akan bisa diseret keluar layar sampai hilang. */}
+      <div
+        ref={boundsRef}
+        className="absolute inset-0 z-30 pointer-events-none"
+        aria-hidden="true"
       >
-        <span className="relative">
-          <SlidersHorizontal className="w-5 h-5" />
-          {activeCount > 0 && (
-            <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-              {activeCount}
-            </span>
-          )}
-        </span>
-        <span className="text-sm font-bold">絞り込む</span>
-      </button>
+        <motion.button
+          type="button"
+          drag
+          dragConstraints={boundsRef}
+          // Tanpa momentum: tombol berhenti persis di tempat jari diangkat.
+          // Inersia cocok untuk daftar yang digulir, bukan untuk benda yang
+          // sedang diletakkan seseorang di posisi tertentu.
+          dragMomentum={false}
+          // Sedikit elastis di tepi supaya terasa hidup saat membentur batas,
+          // tapi kecil — kalau terlalu besar ia terasa lepas kendali.
+          dragElastic={0.08}
+          whileDrag={{ scale: 1.06 }}
+          onDragStart={() => {
+            wasDragged.current = true;
+          }}
+          onClick={() => {
+            // Menyeret lalu melepas juga memicu click di sebagian browser.
+            // Tanpa penjaga ini, memindahkan tombol akan sekaligus membuka
+            // panel filter — dan itu terasa seperti salah tekan.
+            if (wasDragged.current) {
+              wasDragged.current = false;
+              return;
+            }
+            setIsOpen(true);
+          }}
+          data-testid="button-filter"
+          aria-label="絞り込む"
+          className="pointer-events-auto absolute bottom-24 right-5 h-14 pl-4 pr-5 rounded-full bg-foreground text-background shadow-xl flex items-center gap-2 cursor-grab active:cursor-grabbing touch-none"
+        >
+          <span className="relative">
+            <SlidersHorizontal className="w-5 h-5" />
+            {activeCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                {activeCount}
+              </span>
+            )}
+          </span>
+          <span className="text-sm font-bold">絞り込む</span>
+        </motion.button>
+      </div>
 
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerContent>
@@ -103,7 +151,9 @@ export function FilterFab({
                     type="button"
                     onClick={() =>
                       update({
-                        sort: s.value === "recommended" ? null : s.value,
+                        // Nilai bawaan dihapus dari URL, bukan ditulis — URL tetap
+                        // pendek dan bisa dibagikan.
+                        sort: s.value === DEFAULT_SORT ? null : s.value,
                       })
                     }
                     className={cn(

@@ -165,3 +165,56 @@
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }
+
+/* ---------------------------------------------------------------------------
+   Layar pembuka (components/splash.tsx)
+
+   Murni CSS supaya sudah tampil pada cat pertama dan tetap menghilang meski
+   JavaScript gagal dimuat. `forwards` wajib: tanpa itu overlay kembali ke
+   opacity 1 setelah animasi selesai dan layar terkunci selamanya.
+
+   visibility ikut dianimasikan, bukan hanya opacity. Elemen ber-opacity 0
+   masih menangkap sentuhan di sebagian browser lama; visibility:hidden
+   memastikan ia benar-benar keluar dari jalur.
+--------------------------------------------------------------------------- */
+@keyframes splash-out {
+  0%, 55% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@keyframes splash-mark-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.splash {
+  animation: splash-out 1.1s ease-in forwards;
+}
+
+.splash-mark {
+  animation: splash-mark-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Sebagian orang menyetel sistemnya mengurangi animasi karena gerakan memicu
+   pusing atau mual. Logonya tetap muncul, hanya tanpa gerak — dan menghilang
+   lebih cepat. */
+@media (prefers-reduced-motion: reduce) {
+  .splash {
+    animation-duration: 0.6s;
+  }
+  .splash-mark {
+    animation: none;
+  }
+}
