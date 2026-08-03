@@ -12,7 +12,7 @@ import { hasCompleteAddress } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "マイページ｜SwipeFash",
+  title: "マイページ｜HITOME",
   robots: { index: false, follow: false },
 };
 

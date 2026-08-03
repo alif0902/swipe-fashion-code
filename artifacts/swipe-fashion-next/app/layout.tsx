@@ -51,11 +51,11 @@ const notoSansJP = Noto_Sans_JP({
 });
 
 export const metadata: Metadata = {
-  title: "SwipeFash｜スワイプで出会う、次の一着",
+  title: "HITOME｜スワイプで出会う、次の一着",
   description:
     "選ぶのではなく、感じる。スワイプするだけで、あなたの好みに近づいていくファッションストア。",
   openGraph: {
-    title: "SwipeFash｜スワイプで出会う、次の一着",
+    title: "HITOME｜スワイプで出会う、次の一着",
     description:
       "選ぶのではなく、感じる。スワイプするだけで、あなたの好みに近づいていくファッションストア。",
     type: "website",
@@ -72,7 +72,7 @@ export const metadata: Metadata = {
     // Setara display:standalone untuk iOS, yang juga tidak membaca manifest
     // untuk hal ini.
     capable: true,
-    title: "SwipeFash",
+    title: "HITOME",
     // "default" menjaga teks bilah status tetap gelap di atas latar pink.
     statusBarStyle: "default",
   },

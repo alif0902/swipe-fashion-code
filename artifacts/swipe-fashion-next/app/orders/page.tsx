@@ -13,7 +13,7 @@ import { getUserProfile } from "@/lib/profile";
 import { formatAddress, formatPrice, safeImage } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "バッグ｜SwipeFash",
+  title: "バッグ｜HITOME",
   // Halaman personal — tidak ada gunanya di hasil pencarian.
   robots: { index: false, follow: false },
 };

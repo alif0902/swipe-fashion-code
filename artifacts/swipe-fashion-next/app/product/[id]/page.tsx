@@ -20,10 +20,10 @@ export async function generateMetadata({
   const product = await loadProduct(id);
 
   if (!product) {
-    return { title: "商品が見つかりません｜SwipeFash" };
+    return { title: "商品が見つかりません｜HITOME" };
   }
 
-  const title = `${product.name} by ${product.brand} | SwipeFash`;
+  const title = `${product.name} by ${product.brand} | HITOME`;
 
   return {
     title,

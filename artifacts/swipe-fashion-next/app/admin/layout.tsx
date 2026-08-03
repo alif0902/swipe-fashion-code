@@ -6,7 +6,7 @@ import { AdminNav } from "@/components/admin/admin-nav";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: "管理画面｜SwipeFash",
+  title: "管理画面｜HITOME",
   robots: { index: false, follow: false },
 };
 
@@ -37,8 +37,12 @@ export default async function AdminLayout({
     <div className="min-h-[100dvh] bg-muted/30">
       <header className="border-b border-border bg-background">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center gap-6">
-          <Link href="/admin" className="font-sans font-bold text-lg shrink-0">
-            SwipeFash <span className="text-primary">管理</span>
+          <Link
+            href="/admin"
+            className="shrink-0 flex items-baseline gap-2 font-sans font-bold"
+          >
+            <span className="text-lg tracking-[0.2em]">HITOME</span>
+            <span className="text-sm text-primary">管理</span>
           </Link>
 
           <AdminNav />

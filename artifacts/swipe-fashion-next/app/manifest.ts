@@ -14,8 +14,8 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "SwipeFash — スワイプで出会う、次の一着",
-    short_name: "SwipeFash",
+    name: "HITOME — スワイプで出会う、次の一着",
+    short_name: "HITOME",
     description:
       "選ぶのではなく、感じる。スワイプするだけで、あなたの好みに近づいていくファッションストア。",
     lang: "ja",

@@ -393,6 +393,33 @@ export async function updateAvatarAction(
 }
 
 /**
+ * Mengembalikan foto profil ke avatar bawaan.
+ *
+ * Sebelumnya foto hanya bisa DIGANTI — sekali seseorang mengunggah, tidak ada
+ * jalan kembali. Menyetel `image` ke null membuat komponen avatar jatuh ke
+ * inisial namanya, sama seperti akun yang belum pernah mengunggah apa pun.
+ *
+ * Berkasnya sendiri sengaja TIDAK dihapus dari Vercel Blob. Menghapusnya butuh
+ * pelacakan blob mana milik siapa, dan satu kesalahan di sana akan menghapus
+ * foto orang lain. Blob yatim jauh lebih murah daripada risiko itu — foto
+ * profil berukuran 256px, dan kuota gratisnya 1 GB.
+ */
+export async function removeAvatarAction(): Promise<ActionResult> {
+  const user = await getCurrentUser();
+  if (!user) {
+    return { ok: false, error: "ログインが必要です。" };
+  }
+
+  await db
+    .update(userTable)
+    .set({ image: null, updatedAt: new Date() })
+    .where(eq(userTable.id, user.id));
+
+  revalidatePath("/account");
+  return { ok: true };
+}
+
+/**
  * Menghapus pesanan yang sudah dibatalkan dari daftar.
  *
  * Hanya berlaku untuk status `cancelled`, dan itu batasan yang disengaja:

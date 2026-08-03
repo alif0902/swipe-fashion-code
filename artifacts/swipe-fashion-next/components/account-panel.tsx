@@ -267,7 +267,7 @@ export function AccountPanel({
     <>
       <div className="px-6 pt-2">
         <div className="flex items-center gap-4">
-          <AvatarUploader>
+          <AvatarUploader hasImage={Boolean(user.image)}>
             <span className="relative block w-20 h-20 rounded-full overflow-hidden bg-primary/15">
               {user.image ? (
                 <Image

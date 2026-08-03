@@ -11,7 +11,7 @@ import { getUserProfile } from "@/lib/profile";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "プロフィール編集｜SwipeFash",
+  title: "プロフィール編集｜HITOME",
   robots: { index: false, follow: false },
 };
 

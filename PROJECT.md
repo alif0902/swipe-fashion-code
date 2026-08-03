@@ -1,4 +1,4 @@
-# SwipeFash
+# HITOME
 
 Aplikasi belanja fashion mobile-first: pengguna men-*swipe* katalog produk seperti aplikasi kencan — geser kanan untuk suka, geser kiri untuk lewat — lalu memesan langsung dari kartu yang cocok.
 

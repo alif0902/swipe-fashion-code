@@ -2,9 +2,9 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader2 } from "lucide-react";
+import { Camera, Loader2, X } from "lucide-react";
 
-import { updateAvatarAction } from "@/app/actions";
+import { removeAvatarAction, updateAvatarAction } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 
 const SIZE = 256;
@@ -58,7 +58,16 @@ function shrinkToSquare(file: File): Promise<string> {
   });
 }
 
-export function AvatarUploader({ children }: { children: React.ReactNode }) {
+export function AvatarUploader({
+  children,
+  // Tombol hapus hanya masuk akal kalau memang ada foto yang bisa dihapus.
+  // Kalau avatarnya masih inisial nama, tombol itu tidak melakukan apa-apa dan
+  // hanya menambah satu hal untuk dipahami.
+  hasImage = false,
+}: {
+  children: React.ReactNode;
+  hasImage?: boolean;
+}) {
   const router = useRouter();
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -93,6 +102,22 @@ export function AvatarUploader({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const onRemove = async () => {
+    if (!confirm("プロフィール写真を削除しますか？")) return;
+
+    setIsBusy(true);
+    const result = await removeAvatarAction();
+    setIsBusy(false);
+
+    if (!result.ok) {
+      toast({ title: result.error, variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "プロフィール写真を削除しました" });
+    router.refresh();
+  };
+
   return (
     <div className="relative">
       <button
@@ -116,10 +141,28 @@ export function AvatarUploader({ children }: { children: React.ReactNode }) {
         )}
       </span>
 
+      {/* Tombol hapus di sudut berseberangan dengan lencana kamera, supaya
+          keduanya tidak pernah bertabrakan dan artinya mudah dibedakan:
+          kanan-bawah mengganti, kiri-bawah menghapus. */}
+      {hasImage && (
+        <button
+          type="button"
+          onClick={onRemove}
+          disabled={isBusy}
+          data-testid="button-avatar-remove"
+          aria-label="プロフィール写真を削除"
+          className="absolute bottom-0 left-0 w-8 h-8 rounded-full bg-background border-[3px] border-background shadow-sm flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
+
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        // Dibatasi ke format yang pasti bisa di-decode browser. "image/*"
+        // mengizinkan .heic dari aplikasi Foto macOS terpilih, lalu gagal.
+        accept="image/jpeg,image/png,image/webp"
         onChange={onPick}
         className="hidden"
       />

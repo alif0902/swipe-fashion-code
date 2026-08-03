@@ -1,4 +1,4 @@
-// Mesin selera SwipeFash.
+// Mesin selera HITOME.
 //
 // Modul ini sengaja MURNI — tidak menyentuh database, tidak async, tidak
 // membaca cookie. Semua yang dibutuhkan masuk lewat argumen. Konsekuensinya

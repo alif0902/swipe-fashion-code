@@ -10,7 +10,7 @@ import { getOwnerId } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "足あと｜SwipeFash",
+  title: "足あと｜HITOME",
   robots: { index: false, follow: false },
 };
 

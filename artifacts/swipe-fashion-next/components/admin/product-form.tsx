@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageCropper } from "@/components/admin/image-cropper";
 import { ProductCard } from "@/components/product-card";
 import { useToast } from "@/hooks/use-toast";
 import { PLACEHOLDER_IMAGE, type AppProduct } from "@/lib/format";
@@ -32,44 +33,10 @@ const CATEGORIES = [
   { value: "dresses", label: "ワンピース" },
 ];
 
-const FEED_WIDTH = 1080;
-
 // Pratinjau memakai gambar pengganti yang sama dengan sisa aplikasi, bukan
 // jalur yang ditulis ulang di sini. Versi sebelumnya menunjuk foto produk
 // katalog, lalu produk itu dihapus dan pratinjaunya jadi kotak kosong.
 const PREVIEW_FALLBACK_IMAGE = PLACEHOLDER_IMAGE;
-
-// Foto dikecilkan di browser, sama seperti avatar — hanya targetnya lebar feed,
-// bukan 256px persegi. Rasio aslinya dipertahankan: memaksa foto produk jadi
-// persegi memotong sepatu atau kepala model.
-function shrinkToWidth(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const image = new window.Image();
-
-    image.onload = () => {
-      URL.revokeObjectURL(url);
-
-      const scale = Math.min(1, FEED_WIDTH / image.width);
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.round(image.width * scale);
-      canvas.height = Math.round(image.height * scale);
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("canvas unavailable"));
-
-      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/jpeg", 0.85));
-    };
-
-    image.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("decode failed"));
-    };
-
-    image.src = url;
-  });
-}
 
 type FormState = {
   name: string;
@@ -142,6 +109,8 @@ export function ProductForm({
 
   const [form, setForm] = useState<FormState>(initial ?? EMPTY);
   const [uploading, setUploading] = useState(false);
+  // Berkas yang menunggu dipotong. Diproses satu per satu dari indeks 0.
+  const [cropQueue, setCropQueue] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -172,46 +141,36 @@ export function ProductForm({
     event.target.value = "";
     if (files.length === 0) return;
 
+    // Berkas TIDAK langsung diunggah. Masing-masing masuk antrean untuk
+    // dipotong dulu — lihat cropQueue di bawah.
+    setCropQueue(files.slice(0, 6 - form.images.length));
+  };
+
+  // Mengunggah satu foto yang sudah dipotong, lalu melanjutkan ke berkas
+  // berikutnya di antrean.
+  const uploadCropped = async (dataUrl: string) => {
     setUploading(true);
     try {
-      for (const file of files.slice(0, 6 - form.images.length)) {
-        // Decode dan unggah ditangkap TERPISAH.
-        //
-        // Dulu keduanya dibungkus satu try, jadi kegagalan unggah di server
-        // ikut memunculkan「画像を読み込めませんでした」— pesan yang
-        // menyalahkan berkasnya padahal berkasnya baik-baik saja. Memisahkan
-        // keduanya membuat pesan yang muncul menunjuk langkah yang benar.
-        let dataUrl: string;
-        try {
-          dataUrl = await shrinkToWidth(file);
-        } catch {
-          // Penyebab paling umum di macOS: berkas .heic dari aplikasi Foto.
-          // accept="image/*" mengizinkannya dipilih, tapi browser tidak bisa
-          // men-decode-nya lewat <img>.
-          toast({
-            title: `${file.name} を読み込めませんでした`,
-            description: "JPEG・PNG・WebP を選んでください。（HEIC は非対応です）",
-            variant: "destructive",
-          });
-          continue;
-        }
+      const result = await uploadProductImageAction(dataUrl);
 
-        const result = await uploadProductImageAction(dataUrl);
-
-        if (!result.ok) {
-          toast({ title: result.error, variant: "destructive" });
-          break;
-        }
-        setForm((prev) => ({ ...prev, images: [...prev.images, result.data!] }));
+      if (!result.ok) {
+        // Kegagalan unggah menghentikan seluruh antrean: kalau tokennya salah
+        // atau store-nya bermasalah, berkas berikutnya akan gagal dengan cara
+        // yang sama dan hanya menumpuk pesan error yang sama berulang kali.
+        toast({ title: result.error, variant: "destructive" });
+        setCropQueue([]);
+        return;
       }
+
+      setForm((prev) => ({ ...prev, images: [...prev.images, result.data!] }));
+      setCropQueue((prev) => prev.slice(1));
     } catch (error) {
-      // Sisa error tak terduga — jaringan putus, server action gagal. Pesannya
-      // ikut ditampilkan supaya tidak berakhir jadi kegagalan senyap.
       toast({
         title: "アップロードに失敗しました",
         description: error instanceof Error ? error.message : undefined,
         variant: "destructive",
       });
+      setCropQueue([]);
     } finally {
       setUploading(false);
     }
@@ -310,13 +269,26 @@ export function ProductForm({
 
   return (
     <div className="grid lg:grid-cols-[1fr_400px] gap-8 items-start">
+      {/* Cropper muncul selama masih ada berkas di antrean. `key` dipatok ke
+          nama + ukuran berkas supaya komponennya benar-benar di-mount ulang
+          saat lanjut ke foto berikutnya — tanpa itu, posisi dan zoom dari
+          foto sebelumnya terbawa. */}
+      {cropQueue.length > 0 && (
+        <ImageCropper
+          key={`${cropQueue[0].name}-${cropQueue[0].size}`}
+          file={cropQueue[0]}
+          onCancel={() => setCropQueue([])}
+          onDone={uploadCropped}
+        />
+      )}
+
       <form onSubmit={submit} className="space-y-8">
         {/* ---- Foto ---- */}
         <section className="rounded-2xl border border-border bg-background p-5 space-y-4">
           <div>
             <h2 className="font-sans font-bold">写真</h2>
             <p className="text-xs text-muted-foreground mt-1">
-              1枚目がフィードのメイン写真になります。最大6枚。
+              1枚目がフィードのメイン写真になります。最大6枚。追加するときに表示範囲を調整できます。
             </p>
           </div>
 

@@ -1,4 +1,4 @@
-# SwipeFash
+# HITOME
 
 **スワイプで出会う、次の一着。** — aplikasi belanja fashion yang mengganti pencarian dengan insting.
 
@@ -30,7 +30,7 @@ Kartu produk bergaya profil: carousel foto, deskripsi, dan tabel 基本情報 le
 
 Inti pembeda aplikasi ini. **Setiap swipe direkam, termasuk swipe kiri.**
 
-Kebanyakan aplikasi serupa hanya belajar dari apa yang disukai. SwipeFash memberi bobot pada penolakan juga:
+Kebanyakan aplikasi serupa hanya belajar dari apa yang disukai. HITOME memberi bobot pada penolakan juga:
 
 | Aksi | Bobot |
 |---|---|
@@ -48,7 +48,7 @@ Koleksi 一目惚れ dirakit otomatis jadi coordinate: atasan + bawahan, atau dr
 
 ### 4. Terpasang seperti aplikasi (PWA)
 
-Buka dari ponsel, ketuk **ホーム画面に追加**, dan SwipeFash muncul sebagai ikon di layar utama — terbuka **layar penuh tanpa address bar**, dengan splash screen dan bilah status berwarna coral.
+Buka dari ponsel, ketuk **ホーム画面に追加**, dan HITOME muncul sebagai ikon di layar utama — terbuka **layar penuh tanpa address bar**, dengan splash screen dan bilah status berwarna coral.
 
 Inilah bukti dari klaim *mobile-only* di atas: bukan sekadar pernyataan, tapi sesuatu yang bisa dirasakan juri di ponsel mereka sendiri dalam sepuluh detik.
 

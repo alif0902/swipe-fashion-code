@@ -44,8 +44,8 @@ export function Splash() {
           </span>
         </span>
 
-        <p className="font-sans font-bold text-2xl tracking-tight">
-          SwipeFash
+        <p className="font-sans font-bold text-2xl tracking-[0.25em]">
+          HITOME
         </p>
         <p className="text-xs text-muted-foreground mt-1.5 tracking-wide">
           スワイプで出会う、次の一着。

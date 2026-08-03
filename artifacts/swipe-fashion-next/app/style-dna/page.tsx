@@ -12,7 +12,7 @@ import { describeTaste, type Affinity } from "@/lib/taste";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "スタイルDNA｜SwipeFash",
+  title: "スタイルDNA｜HITOME",
   description: "スワイプが語る、あなたの好み。",
 };
 

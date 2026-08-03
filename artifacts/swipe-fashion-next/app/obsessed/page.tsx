@@ -11,7 +11,7 @@ import { getOwnerId } from "@/lib/session";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "一目惚れ｜SwipeFash",
+  title: "一目惚れ｜HITOME",
   description: "「いいね！」した一着を、いつでも見返せます。",
 };
 

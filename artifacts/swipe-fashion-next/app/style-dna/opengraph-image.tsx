@@ -7,7 +7,7 @@ import { ImageResponse } from "next/og";
 // selera tidak ikut menyeberang. Jadi yang ditampilkan adalah kartu bermerek
 // yang mengajak orang membuat DNA-nya sendiri.
 
-export const alt = "SwipeFash Style DNA";
+export const alt = "HITOME Style DNA";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -51,7 +51,7 @@ export default function Image() {
               opacity: 0.6,
             }}
           >
-            SWIPEFASH
+            HITOME
           </div>
         </div>
 

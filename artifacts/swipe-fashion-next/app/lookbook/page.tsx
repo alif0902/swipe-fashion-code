@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { categoryLabel, formatPrice } from "@/lib/format";
 
 export const metadata: Metadata = {
-  title: "探す｜SwipeFash",
+  title: "探す｜HITOME",
   description: "カテゴリーごとに、コレクション全体を。",
 };
 
