@@ -11,11 +11,14 @@ export type AppProduct = {
   description: string;
   imageUrl: string;
   images: string[];
-  // Dipakai perakit outfit (lib/outfit.ts) dan mesin selera (lib/taste.ts).
+  // Dipakai mesin selera (lib/taste.ts) untuk mengukur kecocokan kategori.
   category: string;
   gender: "women" | "men";
   // Komposisi bahan dan ukuran detail, dirender di blok 基本情報 kartu feed.
   material: string | null;
+  // Satu kalimat soal rasa memakainya. Dirender di gelembung caption kartu
+  // feed; material dipakai sebagai cadangan kalau ini kosong.
+  feel: string | null;
   dimensions: Record<string, string>;
   sizes: string[];
   colors: string[];
@@ -143,6 +146,7 @@ export function formatProduct(row: Product): AppProduct {
     category: row.category,
     gender: row.gender,
     material: row.material,
+    feel: row.feel,
     dimensions: row.dimensions ?? {},
     sizes: row.sizes ?? [],
     colors: row.colors ?? [],

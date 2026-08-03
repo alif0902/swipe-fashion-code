@@ -49,11 +49,16 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "/assets/jeans-wide-denim.webp",
     ],
     material: "コットン100%",
+    feel: "歩くと裾がふわりと遅れてついてくる。",
     dimensions: {
       "ウエスト": "68cm",
       "股上": "30cm",
       "股下": "72cm",
       "わたり幅": "33cm",
+      // Untuk celana yang namanya sendiri "ワイド", 裾幅 adalah angka yang
+      // menentukan siluetnya. Tanpa ini pembeli tidak tahu seberapa lebar
+      // kaki bawahnya, padahal itu justru yang dilihat orang.
+      "裾幅": "28cm",
     },
     stock: 21,
     rating: "4.50",
@@ -77,12 +82,16 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "/assets/trousers-tan-pleated-model.webp",
       "/assets/trousers-tan-pleated.webp",
     ],
-    material: "コットン98% / ポリウレタン2%",
+    material: "コットン100%",
+    feel: "腰まわりが窮屈にならない、一日ぶんの余裕。",
     dimensions: {
       "ウエスト": "76cm",
       "股上": "32cm",
+      // 70cm untuk celana pria memang pendek — dan itu disengaja: fotonya
+      // memperlihatkan potongan ankle yang berhenti di atas sepatu.
       "股下": "70cm",
       "わたり幅": "35cm",
+      "裾幅": "24cm",
     },
     stock: 16,
     rating: "4.40",
@@ -106,7 +115,8 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "/assets/dress-maroon-midi-model.webp",
       "/assets/dress-maroon-midi.webp",
     ],
-    material: "レーヨン70% / ポリエステル30%",
+    material: "ポリエステル65% / レーヨン30% / ポリウレタン5%",
+    feel: "体の線を拾わないから、座っても気にならない。",
     dimensions: {
       "着丈": "118cm",
       "身幅": "46cm",
@@ -124,7 +134,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     price: "12900.00",
     originalPrice: "18900.00",
     description:
-      "たっぷりとしたティアード。歩くたびに柄が静かに動きます。",
+      "透ける総柄を、無地のインナードレスに重ねた二枚仕立て。歩くたびに柄が静かに動きます。",
     imageUrl: "/assets/dress-red-floral-model.webp",
     category: "dresses",
     gender: "women",
@@ -134,11 +144,14 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "/assets/dress-red-floral-model.webp",
       "/assets/dress-red-floral.webp",
     ],
-    material: "レーヨン100%",
+    material: "ポリエステル100%",
+    feel: "風が通るたび、柄がゆっくり動く。",
+    // Kamisol bertali tipis: tidak ada bahu untuk diukur, jadi 肩幅 dilepas.
+    // Diganti 裾回り, yang justru jadi daya tarik potongan tiered ini.
     dimensions: {
       "着丈": "124cm",
       "身幅": "48cm",
-      "肩幅": "33cm",
+      "裾回り": "210cm",
     },
     stock: 8,
     rating: "4.70",
@@ -152,7 +165,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     price: "15900.00",
     originalPrice: null,
     description:
-      "軽く張りのあるナイロン。袖と裾のリブで風を通しません。",
+      "起毛感のある厚手のスウェット地。袖と裾のリブで裾がもたつきません。",
     imageUrl: "/assets/jacket-coral-bomber-model.webp",
     category: "outerwear",
     gender: "men",
@@ -162,7 +175,8 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "/assets/jacket-coral-bomber-model.webp",
       "/assets/jacket-coral-bomber.webp",
     ],
-    material: "ナイロン100%",
+    material: "コットン65% / ポリエステル35%",
+    feel: "羽織った瞬間、肩の力が抜ける厚み。",
     dimensions: {
       "着丈": "66cm",
       "身幅": "56cm",
@@ -189,6 +203,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Black"],
     images: ["/assets/hoodie-black-model.webp", "/assets/hoodie-black.webp"],
     material: "コットン100%",
+    feel: "洗うほど身体になじんで、へたらない。",
     dimensions: {
       "着丈": "70cm",
       "身幅": "58cm",
@@ -202,12 +217,15 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     isSale: false,
   },
   {
-    name: "ネイビーテーラードスーツ",
+    // Dulu bernama "ネイビーテーラードスーツ", tapi yang dijual — dan yang
+    // diukur di dimensions — hanya jaketnya. Foto model memakai celana serasi
+    // sebagai penataan gaya, bukan sebagai bagian dari produk.
+    name: "ネイビーテーラードジャケット",
     brand: "CORSO",
     price: "19900.00",
     originalPrice: null,
     description:
-      "きちんと見えるのに肩は柔らかく。ウールのしなやかさを生かした一着。",
+      "きちんと見えるのに肩は柔らかく。ウールのしなやかさを生かした一着。単品でも、同系色のボトムスと合わせても。",
     imageUrl: "/assets/suit-navy-tailored-model.webp",
     category: "outerwear",
     gender: "women",
@@ -218,6 +236,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "/assets/suit-navy-tailored.webp",
     ],
     material: "ウール95% / ポリウレタン5%",
+    feel: "肩に置くだけで、背筋が伸びる。",
     dimensions: {
       "着丈": "70cm",
       "身幅": "50cm",
@@ -251,6 +270,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "/assets/polo-cotton.webp",
     ],
     material: "コットン100%",
+    feel: "一日着ても、襟が最後まで立っている。",
     dimensions: {
       "着丈": "62cm",
       "身幅": "48cm",
@@ -277,11 +297,15 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     colors: ["Red"],
     images: ["/assets/tee-raglan-red-model.webp", "/assets/tee-raglan-red.webp"],
     material: "コットン90% / ポリエステル10%",
+    feel: "腕を上げても、肩が突っぱらない。",
+    // Raglan tidak punya jahitan bahu, jadi 肩幅 tidak bisa diukur — patokan
+    // yang dipakai toko Jepang untuk potongan ini adalah 裄丈, diukur dari
+    // tengah belakang leher sampai ujung manset. Ia menggantikan 肩幅 DAN
+    // 袖丈 sekaligus; mencantumkan ketiganya berarti menghitung ganda.
     dimensions: {
       "着丈": "60cm",
       "身幅": "46cm",
-      "肩幅": "37cm",
-      "袖丈": "42cm",
+      "裄丈": "62cm",
     },
     stock: 19,
     rating: "4.30",

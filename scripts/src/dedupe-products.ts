@@ -10,143 +10,86 @@ import {
 } from "@workspace/db";
 
 /**
- * Menyingkirkan produk duplikat yang bernama sama.
+ * Menghapus produk duplikat yang bernama sama.
  *
  *   npm run dedupe-products
  *
- * Kenapa duplikatnya ada: sync-products dulu mengimpor `products` dari seed.ts,
- * sedangkan seed.ts memanggil seed() di level teratas. Sekadar mengimpornya
- * menjalankan seeding, sehingga katalog masuk dua kali. Akarnya sudah
- * diperbaiki — data pindah ke catalog.ts yang bebas efek samping — tapi
- * database yang terlanjur kotor tetap perlu dibersihkan.
+ * Untuk tiap nama, SATU baris dipertahankan — yang id-nya terkecil, karena itu
+ * yang paling lama ada dan paling mungkin sudah dirujuk sesuatu. Salinannya
+ * dihapus permanen beserta swipe dan 一目惚れ yang menunjuk ke sana.
  *
- * Aturannya:
+ * SALINAN YANG PUNYA PESANAN TIDAK DIHAPUS, dan itu bukan kelalaian: `orders`
+ * menyimpan foreign key ke produk, dan menghapusnya berarti riwayat pembelian
+ * orang kehilangan nama barangnya. Baris seperti itu dilaporkan di akhir
+ * supaya kamu bisa memutuskan sendiri.
  *
- * 1. Untuk tiap nama, SATU baris dipertahankan. Yang dipilih adalah id
- *    terkecil di antara yang belum diarsipkan — bukan sekadar id terkecil.
- *    Kalau baris tertua kebetulan sudah diarsipkan, mempertahankannya berarti
- *    produk itu lenyap dari feed padahal masih ada salinan yang sehat.
- *
- * 2. Sisanya dihapus bila belum pernah disentuh, atau DIARSIPKAN bila sudah
- *    ada swipe/pesanan yang menunjuk ke sana.
- *
- * Poin kedua itu perbaikan atas versi sebelumnya, yang hanya MELEWATI duplikat
- * yang sudah dirujuk. Akibatnya duplikat tetap tampil di feed dan 探す, dan
- * skripnya terasa berhasil padahal masalahnya masih ada di layar.
+ * Versi sebelumnya MENGARSIPKAN baris semacam itu — barisnya tetap ada tapi
+ * hilang dari feed. Fitur arsip sudah dibuang dari aplikasi ini, jadi yang
+ * tersisa adalah melaporkannya dengan jujur.
  *
  * Aman dijalankan berulang.
  */
 async function main() {
   const rows = await db
-    .select({
-      id: productsTable.id,
-      name: productsTable.name,
-      isArchived: productsTable.isArchived,
-    })
+    .select({ id: productsTable.id, name: productsTable.name })
     .from(productsTable);
 
-  const byName = new Map<string, typeof rows>();
+  const byName = new Map<string, number[]>();
   for (const row of rows) {
-    byName.set(row.name, [...(byName.get(row.name) ?? []), row]);
+    byName.set(row.name, [...(byName.get(row.name) ?? []), row.id]);
   }
 
   const extras: number[] = [];
   const keptLog: string[] = [];
 
-  for (const [name, group] of byName) {
-    if (group.length < 2) continue;
-
-    const sorted = [...group].sort((a, b) => a.id - b.id);
-    const keeper = sorted.find((r) => !r.isArchived) ?? sorted[0];
-
-    extras.push(...sorted.filter((r) => r.id !== keeper.id).map((r) => r.id));
-    keptLog.push(
-      `  ${name}: simpan #${keeper.id}, singkirkan ${group.length - 1} salinan`,
-    );
+  for (const [name, ids] of byName) {
+    if (ids.length < 2) continue;
+    const [keeper, ...rest] = [...ids].sort((a, b) => a - b);
+    extras.push(...rest);
+    keptLog.push(`  ${name}: simpan #${keeper}, singkirkan ${rest.length} salinan`);
   }
 
   if (extras.length === 0) {
     console.log(`Tidak ada duplikat. Total ${rows.length} produk.`);
-    await report();
     process.exit(0);
   }
 
   console.log(`Ditemukan ${extras.length} baris duplikat:`);
   console.log(keptLog.join("\n"));
 
-  const referenced = new Set<number>();
-  for (const [label, table, column] of [
-    ["orders", ordersTable, ordersTable.productId],
-    ["swipes", swipesTable, swipesTable.productId],
-    ["super_likes", superLikesTable, superLikesTable.productId],
-  ] as const) {
-    const hits = await db
-      .select({ productId: column })
-      .from(table)
-      .where(inArray(column, extras));
-    for (const hit of hits) referenced.add(hit.productId);
-    if (hits.length > 0) console.log(`  dirujuk ${label}: ${hits.length} baris`);
-  }
+  const ordered = await db
+    .select({ productId: ordersTable.productId })
+    .from(ordersTable)
+    .where(inArray(ordersTable.productId, extras));
 
-  const deletable = extras.filter((id) => !referenced.has(id));
-  const archivable = extras.filter((id) => referenced.has(id));
+  const blocked = new Set(ordered.map((o) => o.productId));
+  const deletable = extras.filter((id) => !blocked.has(id));
 
   if (deletable.length > 0) {
-    await db.delete(productsTable).where(inArray(productsTable.id, deletable));
-    console.log(`\nDihapus: ${deletable.length} baris (belum pernah disentuh).`);
+    await db.transaction(async (tx) => {
+      await tx.delete(swipesTable).where(inArray(swipesTable.productId, deletable));
+      await tx
+        .delete(superLikesTable)
+        .where(inArray(superLikesTable.productId, deletable));
+      await tx.delete(productsTable).where(inArray(productsTable.id, deletable));
+    });
+    console.log(`\nDihapus: ${deletable.length} baris.`);
   }
 
-  if (archivable.length > 0) {
-    await db
-      .update(productsTable)
-      .set({ isArchived: true })
-      .where(inArray(productsTable.id, archivable));
+  if (blocked.size > 0) {
     console.log(
-      `Diarsipkan: ${archivable.length} baris (punya riwayat swipe atau pesanan).`,
+      `\nTIDAK dihapus karena punya pesanan: ${[...blocked].map((id) => `#${id}`).join(", ")}` +
+        `\nMenghapusnya akan memutus riwayat pembelian. Kalau memang ingin` +
+        `\ndisingkirkan dari feed, set stoknya ke 0 lewat panel admin.`,
     );
   }
-
-  await report();
-  process.exit(0);
-}
-
-async function report() {
-  const rows = await db
-    .select({
-      id: productsTable.id,
-      name: productsTable.name,
-      isArchived: productsTable.isArchived,
-    })
-    .from(productsTable)
-    .orderBy(productsTable.name, productsTable.id);
-
-  const active = rows.filter((r) => !r.isArchived);
-
-  console.log(
-    `\nSisa ${rows.length} baris, ${active.length} tampil di feed dan 探す:`,
-  );
-  for (const row of active) {
-    console.log(`  #${row.id} ${row.name}`);
-  }
-
-  // Pemeriksaan akhir: kalau masih ada nama kembar di antara yang aktif,
-  // berarti ada yang meleset dan lebih baik ketahuan di sini.
-  const seen = new Map<string, number>();
-  for (const row of active) {
-    seen.set(row.name, (seen.get(row.name) ?? 0) + 1);
-  }
-  const still = [...seen.entries()].filter(([, n]) => n > 1);
-
-  console.log(
-    still.length === 0
-      ? "\nTidak ada nama kembar yang tersisa di feed."
-      : `\nMASIH KEMBAR: ${still.map(([n, c]) => `${n} (${c}x)`).join(", ")}`,
-  );
 
   const [{ total }] = await db
     .select({ total: sql<number>`count(*)::int` })
     .from(productsTable);
-  console.log(`count(*) = ${total}`);
+  console.log(`\nSisa ${total} baris produk.`);
+
+  process.exit(0);
 }
 
 main().catch((error) => {

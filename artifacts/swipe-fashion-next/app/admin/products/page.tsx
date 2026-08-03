@@ -46,10 +46,21 @@ export default async function AdminProductsPage() {
               <th className="text-left font-medium px-3 py-3">カテゴリー</th>
               <th className="text-right font-medium px-3 py-3">価格</th>
               <th className="text-right font-medium px-3 py-3">在庫</th>
-              <th className="text-right font-medium px-5 py-3">状態</th>
             </tr>
           </thead>
           <tbody>
+            {products.length === 0 && (
+              // Tabel tanpa baris hanya menampilkan header, dan itu terbaca
+              // seperti data yang gagal dimuat.
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-5 py-14 text-center text-sm text-muted-foreground"
+                >
+                  商品がありません。「商品を追加」から登録してください。
+                </td>
+              </tr>
+            )}
             {products.map((product) => (
               <tr
                 key={product.id}
@@ -87,17 +98,6 @@ export default async function AdminProductsPage() {
                 </td>
                 <td className="px-3 py-3 text-right tabular-nums">
                   {product.stock}
-                </td>
-                <td className="px-5 py-3 text-right">
-                  {product.isArchived ? (
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
-                      アーカイブ
-                    </span>
-                  ) : (
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-green-500/10 text-green-600">
-                      公開中
-                    </span>
-                  )}
                 </td>
               </tr>
             ))}

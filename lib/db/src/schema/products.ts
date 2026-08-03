@@ -23,8 +23,19 @@ export const productsTable = pgTable("products", {
   gender: genderEnum("gender").notNull().default("women"),
   sizes: text("sizes").array().notNull().default([]),
   colors: text("colors").array().notNull().default([]),
-  // Komposisi bahan, mis. "ウール80% / カシミヤ20%".
+  // Komposisi bahan, mis. "ウール80% / カシミヤ20%". Dirender di blok 基本情報.
   material: text("material"),
+  // Satu kalimat pendek tentang RASA MEMAKAINYA, bukan spesifikasinya —
+  // mis. "肩に置くだけで、背筋が伸びる".
+  //
+  // Kolom sendiri, bukan potongan dari description: gelembung caption di kartu
+  // feed hanya muat satu baris, dan sebelumnya diisi `material` karena itu
+  // satu-satunya kolom yang cukup pendek. Akibatnya kartu menyapa orang dengan
+  // "ウール95% / ポリウレタン5%" — akurat, tapi tidak memberi tahu apa pun soal
+  // bagaimana rasanya dipakai.
+  //
+  // Nullable: kalau kosong, kartu jatuh kembali ke material seperti dulu.
+  feel: text("feel"),
   // Ukuran detail, ditampilkan di blok 基本情報.
   //
   // Sengaja jsonb dan bukan kolom terpisah: tiap kategori punya set ukuran yang
@@ -43,11 +54,6 @@ export const productsTable = pgTable("products", {
   reviewCount: integer("review_count").notNull().default(0),
   isNew: boolean("is_new").notNull().default(false),
   isSale: boolean("is_sale").notNull().default(false),
-  // Produk tidak pernah benar-benar dihapus. `swipes`, `super_likes`, dan
-  // `orders` semuanya menunjuk ke id ini — menghapus barisnya akan membuat
-  // riwayat pesanan orang kehilangan nama barangnya. Diarsipkan berarti hilang
-  // dari feed dan katalog, tapi pesanan lama tetap utuh.
-  isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => [
   // Jaring pengaman terakhir untuk stok.

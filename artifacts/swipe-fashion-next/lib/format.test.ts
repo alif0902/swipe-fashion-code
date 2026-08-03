@@ -21,15 +21,13 @@ const row = {
   sizes: ["S", "M"],
   colors: ["Beige"],
   material: "ウール100%",
+  feel: "肩に置くだけで、背筋が伸びる。",
   dimensions: { "着丈": "110cm" },
   stock: 5,
   rating: "4.90",
   reviewCount: 87,
   isNew: true,
   isSale: false,
-  // Produk diarsipkan disaring di lapisan kueri, bukan di formatProduct —
-  // fixture ini hanya perlu memenuhi bentuk baris yang benar.
-  isArchived: false,
   createdAt: new Date("2026-01-01"),
 };
 

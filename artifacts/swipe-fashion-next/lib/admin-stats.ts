@@ -25,7 +25,6 @@ import {
 
 export type AdminSummary = {
   products: number;
-  archived: number;
   users: number;
   swipes: number;
   orders: number;
@@ -37,7 +36,6 @@ export type ProductPerformance = {
   name: string;
   brand: string;
   imageUrl: string;
-  isArchived: boolean;
   stock: number;
   likes: number;
   passes: number;
@@ -50,12 +48,8 @@ export type ProductPerformance = {
 export async function getAdminSummary(): Promise<AdminSummary> {
   // Semua dijalankan bersamaan. Berurutan berarti enam perjalanan ke Sydney
   // satu per satu, dan dashboard akan terasa menggantung.
-  const [products, archived, users, swipes, orders, revenue] = await Promise.all([
+  const [products, users, swipes, orders, revenue] = await Promise.all([
     db.select({ n: count() }).from(productsTable),
-    db
-      .select({ n: count() })
-      .from(productsTable)
-      .where(eq(productsTable.isArchived, true)),
     db.select({ n: count() }).from(userTable),
     db.select({ n: count() }).from(swipesTable),
     db.select({ n: count() }).from(ordersTable),
@@ -67,7 +61,6 @@ export async function getAdminSummary(): Promise<AdminSummary> {
 
   return {
     products: Number(products[0]?.n ?? 0),
-    archived: Number(archived[0]?.n ?? 0),
     users: Number(users[0]?.n ?? 0),
     swipes: Number(swipes[0]?.n ?? 0),
     orders: Number(orders[0]?.n ?? 0),
@@ -87,7 +80,6 @@ export async function getProductPerformance(): Promise<ProductPerformance[]> {
         name: productsTable.name,
         brand: productsTable.brand,
         imageUrl: productsTable.imageUrl,
-        isArchived: productsTable.isArchived,
         stock: productsTable.stock,
         likes: sql<number>`count(*) filter (where ${swipesTable.direction} = 'like')`,
         passes: sql<number>`count(*) filter (where ${swipesTable.direction} = 'pass')`,
@@ -124,7 +116,6 @@ export async function getProductPerformance(): Promise<ProductPerformance[]> {
       name: row.name,
       brand: row.brand,
       imageUrl: row.imageUrl,
-      isArchived: row.isArchived,
       stock: row.stock,
       likes,
       passes,

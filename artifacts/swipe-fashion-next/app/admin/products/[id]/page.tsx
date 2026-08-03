@@ -42,16 +42,10 @@ export default async function EditProductPage({
 
       <div className="flex items-center gap-3">
         <h1 className="font-sans font-bold text-2xl">{product.name}</h1>
-        {product.isArchived && (
-          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
-            アーカイブ
-          </span>
-        )}
       </div>
 
       <ProductForm
         productId={product.id}
-        isArchived={product.isArchived}
         orderCount={Number(orderRow?.n ?? 0)}
         initial={{
           name: product.name,
@@ -68,6 +62,7 @@ export default async function EditProductPage({
           sizes: product.sizes.join(", "),
           colors: product.colors.join(", "),
           material: product.material ?? "",
+          feel: product.feel ?? "",
           // jsonb → daftar pasangan, karena formulir mengeditnya sebagai baris
           // yang bisa ditambah dan dihapus, bukan sebagai kolom tetap.
           dimensions: Object.entries(product.dimensions ?? {}).map(

@@ -311,15 +311,27 @@ export function ProductCard({
         </motion.div>
 
         {/* ---- Gelembung ucapan dengan ekor segitiga, seperti caption foto di
-             aplikasi rujukan. Diisi material karena itu satu-satunya fakta
-             produk yang cukup pendek untuk jadi caption. ---- */}
-        {product.material && (
+             aplikasi rujukan.
+
+             Diisi `feel` — satu kalimat tentang rasa memakainya. Dulu diisi
+             `material`, karena saat itu itulah satu-satunya kolom yang cukup
+             pendek untuk jadi caption. Tapi gelembung ini yang menyapa orang
+             lebih dulu di feed, dan「ウール95% / ポリウレタン5%」tidak
+             memberi tahu apa pun soal bagaimana rasanya dipakai. Komposisi
+             bahannya tetap ada di blok 基本情報 di bawah, tempat orang
+             mencarinya saat memang ingin tahu.
+
+             Jatuh kembali ke material kalau feel kosong, supaya produk lama
+             yang belum diisi tidak kehilangan captionnya sama sekali. ---- */}
+        {(product.feel || product.material) && (
           // flex justify-center membuat lebar gelembung mengikuti teksnya,
           // bukan membentang selebar layar untuk isi sependek「シルク100%」.
           <div className="relative z-10 mt-2 flex justify-center pointer-events-none">
-            <div className="relative bg-pink-50/95 rounded-full px-7 py-2.5 shadow-sm">
+            <div className="relative bg-pink-50/95 rounded-full px-7 py-2.5 shadow-sm max-w-[88%]">
               <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-pink-50/95 rotate-45" />
-              <span className="text-sm text-foreground/80">{product.material}</span>
+              <span className="block text-sm text-foreground/80 text-center leading-snug">
+                {product.feel ?? product.material}
+              </span>
             </div>
           </div>
         )}

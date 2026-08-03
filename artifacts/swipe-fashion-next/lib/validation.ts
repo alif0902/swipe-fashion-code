@@ -191,6 +191,10 @@ export const productSchema = z
     sizes: z.array(z.string()).max(12),
     colors: z.array(z.string()).max(12),
     material: z.string().max(120).nullable(),
+    // Dibatasi 60 karakter: gelembung caption di kartu feed hanya muat sekitar
+    // dua baris pendek. Lebih dari itu akan terpotong atau mendorong tata
+    // letak kartu.
+    feel: z.string().max(60).nullable(),
     dimensions: z.record(z.string(), z.string()),
     stock: z.number().int().min(0, "在庫は0以上で入力してください").max(9999),
     isNew: z.boolean(),

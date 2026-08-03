@@ -7,6 +7,8 @@ import {
   db,
   ordersTable,
   productsTable,
+  superLikesTable,
+  swipesTable,
 } from "@workspace/db";
 
 import { requireAdmin } from "@/lib/session";
@@ -77,6 +79,7 @@ function toRow(input: ProductInput) {
     sizes: input.sizes,
     colors: input.colors,
     material: input.material?.trim() || null,
+    feel: input.feel?.trim() || null,
     dimensions: input.dimensions,
     stock: input.stock,
     isNew: input.isNew,
@@ -152,10 +155,7 @@ export async function updateProductAction(
  *
  * Diarsipkan berarti hilang dari feed dan katalog, tapi seluruh riwayat utuh.
  */
-export async function setProductArchivedAction(
-  id: number,
-  archived: boolean,
-): Promise<AdminResult> {
+export async function deleteProductAction(id: number): Promise<AdminResult> {
   const admin = await requireAdmin();
 
   const [product] = await db
@@ -165,14 +165,39 @@ export async function setProductArchivedAction(
 
   if (!product) return { ok: false, error: "商品が見つかりません。" };
 
-  await db
-    .update(productsTable)
-    .set({ isArchived: archived })
-    .where(eq(productsTable.id, id));
+  // Pesanan menahan penghapusan. `orders` menyimpan foreign key ke produk ini,
+  // dan menghapusnya akan membuat riwayat pembelian orang kehilangan nama
+  // barangnya — kalau constraint-nya tidak lebih dulu menolak.
+  //
+  // Dulu keadaan ini ditangani dengan mengarsipkan: barisnya tetap ada tapi
+  // hilang dari feed. Fitur itu sudah dibuang, jadi yang tersisa adalah
+  // menolak dengan jujur. Menghapus pesanannya diam-diam demi meloloskan
+  // penghapusan produk akan menukar sampah katalog dengan kehilangan data
+  // yang jauh lebih mahal.
+  const [orders] = await db
+    .select({ n: count() })
+    .from(ordersTable)
+    .where(eq(ordersTable.productId, id));
+
+  const orderCount = Number(orders?.n ?? 0);
+  if (orderCount > 0) {
+    return {
+      ok: false,
+      error: `この商品には${orderCount}件の注文があります。注文履歴が残るため削除できません。在庫を0にして販売を止めてください。`,
+    };
+  }
+
+  // Swipe dan 一目惚れ hanya data sesi — hilangnya tidak berarti apa-apa, dan
+  // membiarkannya akan membuat foreign key menolak penghapusan.
+  await db.transaction(async (tx) => {
+    await tx.delete(swipesTable).where(eq(swipesTable.productId, id));
+    await tx.delete(superLikesTable).where(eq(superLikesTable.productId, id));
+    await tx.delete(productsTable).where(eq(productsTable.id, id));
+  });
 
   await writeAudit(
     { id: admin.id, email: admin.email },
-    archived ? "product.archive" : "product.restore",
+    "product.delete",
     id,
     `${product.brand} ${product.name}`,
   );

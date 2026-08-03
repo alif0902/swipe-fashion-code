@@ -53,23 +53,45 @@ export async function putDataUrl(
     return { ok: false, error: "画像のサイズが大きすぎます。" };
   }
 
+  // Diperiksa SEBELUM put(), supaya kegagalannya berupa kalimat yang bisa
+  // ditindaklanjuti — bukan error dari dalam SDK yang tidak menyebut nama
+  // variabelnya. Nama variabelnya ikut disebut karena itulah satu-satunya
+  // informasi yang benar-benar dibutuhkan untuk memperbaikinya.
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     return {
       ok: false,
       error:
-        "画像の保存先が未設定です。（Vercel の Blob ストアを作成してください）",
+        "画像の保存先が未設定です。BLOB_READ_WRITE_TOKEN を .env.local に追加してください。（Vercel の Storage タブで Blob ストアを作成すると取得できます）",
     };
   }
 
   const extension = mime === "image/png" ? "png" : mime === "image/webp" ? "webp" : "jpg";
 
-  const blob = await put(`${prefix}/${crypto.randomUUID()}.${extension}`, bytes, {
-    access: "public",
-    contentType: mime,
-    // Nama berkas sudah memakai UUID, jadi tidak perlu akhiran acak dari Vercel
-    // — URL-nya jadi lebih mudah dibaca saat menelusuri masalah.
-    addRandomSuffix: false,
-  });
+  // put() MELEMPAR, tidak mengembalikan hasil bertanda, saat token tidak valid
+  // atau tipe store-nya salah — dan tanpa try/catch di sini, error itu terus
+  // terlempar melewati server action sampai ke catch di klien, yang lalu
+  // menampilkan「画像を読み込めませんでした」. Pesan itu menyalahkan berkasnya
+  // padahal masalahnya ada di konfigurasi, dan penelusurannya jadi jauh lebih
+  // lama daripada seharusnya.
+  try {
+    const blob = await put(`${prefix}/${crypto.randomUUID()}.${extension}`, bytes, {
+      access: "public",
+      contentType: mime,
+      // Nama berkas sudah memakai UUID, jadi tidak perlu akhiran acak dari
+      // Vercel — URL-nya jadi lebih mudah dibaca saat menelusuri masalah.
+      addRandomSuffix: false,
+    });
 
-  return { ok: true, url: blob.url };
+    return { ok: true, url: blob.url };
+  } catch (error) {
+    // Pesan asli dari SDK ikut dibawa. Ia menyebut hal-hal seperti token tidak
+    // valid atau store bertipe private — justru itulah yang perlu dibaca.
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error("[storage] gagal mengunggah ke Vercel Blob:", detail);
+
+    return {
+      ok: false,
+      error: `画像をアップロードできませんでした: ${detail}`,
+    };
+  }
 }

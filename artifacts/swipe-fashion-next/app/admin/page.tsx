@@ -64,8 +64,7 @@ export default async function AdminDashboardPage() {
         <SummaryCard
           icon={Package}
           label="商品"
-          value={String(summary.products - summary.archived)}
-          hint={summary.archived > 0 ? `アーカイブ ${summary.archived}点` : undefined}
+          value={String(summary.products)}
         />
         <SummaryCard icon={Users} label="登録ユーザー" value={String(summary.users)} />
         <SummaryCard
@@ -131,11 +130,6 @@ export default async function AdminDashboardPage() {
                         {row.name}
                         <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-60 transition" />
                       </span>
-                      {row.isArchived && (
-                        <span className="text-[10px] text-muted-foreground">
-                          アーカイブ済み
-                        </span>
-                      )}
                     </span>
                   </Link>
                 </td>

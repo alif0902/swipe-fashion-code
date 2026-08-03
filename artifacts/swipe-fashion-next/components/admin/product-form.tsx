@@ -7,7 +7,7 @@ import { Loader2, Plus, Star, Trash2, X } from "lucide-react";
 
 import {
   createProductAction,
-  setProductArchivedAction,
+  deleteProductAction,
   updateProductAction,
   uploadProductImageAction,
 } from "@/app/admin/actions";
@@ -83,6 +83,7 @@ type FormState = {
   sizes: string;
   colors: string;
   material: string;
+  feel: string;
   dimensions: { key: string; value: string }[];
   stock: string;
   isNew: boolean;
@@ -101,6 +102,7 @@ const EMPTY: FormState = {
   sizes: "",
   colors: "",
   material: "",
+  feel: "",
   dimensions: [],
   stock: "10",
   isNew: true,
@@ -128,12 +130,10 @@ function Field({
 export function ProductForm({
   productId,
   initial,
-  isArchived = false,
   orderCount = 0,
 }: {
   productId?: number;
   initial?: FormState;
-  isArchived?: boolean;
   orderCount?: number;
 }) {
   const router = useRouter();
@@ -175,7 +175,27 @@ export function ProductForm({
     setUploading(true);
     try {
       for (const file of files.slice(0, 6 - form.images.length)) {
-        const dataUrl = await shrinkToWidth(file);
+        // Decode dan unggah ditangkap TERPISAH.
+        //
+        // Dulu keduanya dibungkus satu try, jadi kegagalan unggah di server
+        // ikut memunculkan「画像を読み込めませんでした」— pesan yang
+        // menyalahkan berkasnya padahal berkasnya baik-baik saja. Memisahkan
+        // keduanya membuat pesan yang muncul menunjuk langkah yang benar.
+        let dataUrl: string;
+        try {
+          dataUrl = await shrinkToWidth(file);
+        } catch {
+          // Penyebab paling umum di macOS: berkas .heic dari aplikasi Foto.
+          // accept="image/*" mengizinkannya dipilih, tapi browser tidak bisa
+          // men-decode-nya lewat <img>.
+          toast({
+            title: `${file.name} を読み込めませんでした`,
+            description: "JPEG・PNG・WebP を選んでください。（HEIC は非対応です）",
+            variant: "destructive",
+          });
+          continue;
+        }
+
         const result = await uploadProductImageAction(dataUrl);
 
         if (!result.ok) {
@@ -184,8 +204,14 @@ export function ProductForm({
         }
         setForm((prev) => ({ ...prev, images: [...prev.images, result.data!] }));
       }
-    } catch {
-      toast({ title: "画像を読み込めませんでした", variant: "destructive" });
+    } catch (error) {
+      // Sisa error tak terduga — jaringan putus, server action gagal. Pesannya
+      // ikut ditampilkan supaya tidak berakhir jadi kegagalan senyap.
+      toast({
+        title: "アップロードに失敗しました",
+        description: error instanceof Error ? error.message : undefined,
+        variant: "destructive",
+      });
     } finally {
       setUploading(false);
     }
@@ -203,6 +229,7 @@ export function ProductForm({
     sizes: form.sizes.split(",").map((s) => s.trim()).filter(Boolean),
     colors: form.colors.split(",").map((s) => s.trim()).filter(Boolean),
     material: form.material.trim() === "" ? null : form.material.trim(),
+    feel: form.feel.trim() === "" ? null : form.feel.trim(),
     dimensions: Object.fromEntries(
       form.dimensions
         .filter((d) => d.key.trim() !== "" && d.value.trim() !== "")
@@ -261,10 +288,14 @@ export function ProductForm({
     router.refresh();
   };
 
-  const toggleArchive = async () => {
+  const remove = async () => {
     if (!productId) return;
+    // Penghapusan permanen dan tidak bisa dibatalkan, jadi ditahan satu
+    // konfirmasi. Aksinya sendiri menolak kalau produk ini punya pesanan.
+    if (!confirm("この商品を完全に削除します。取り消せません。")) return;
+
     setSaving(true);
-    const result = await setProductArchivedAction(productId, !isArchived);
+    const result = await deleteProductAction(productId);
     setSaving(false);
 
     if (!result.ok) {
@@ -272,7 +303,8 @@ export function ProductForm({
       return;
     }
 
-    toast({ title: isArchived ? "公開しました" : "アーカイブしました" });
+    toast({ title: "削除しました" });
+    router.push("/admin/products");
     router.refresh();
   };
 
@@ -350,7 +382,11 @@ export function ProductForm({
           <input
             ref={fileRef}
             type="file"
-            accept="image/*"
+            // Dibatasi ke format yang PASTI bisa di-decode browser lewat
+            // <img>. "image/*" mengizinkan .heic dari aplikasi Foto macOS
+            // dipilih, lalu gagal saat di-decode — kegagalan yang baru
+            // ketahuan setelah berkasnya terpilih.
+            accept="image/jpeg,image/png,image/webp"
             multiple
             onChange={addPhotos}
             className="hidden"
@@ -491,6 +527,19 @@ export function ProductForm({
             />
           </Field>
 
+          <Field
+            label="着心地のひとこと"
+            hint="フィードの吹き出しに出ます。素材ではなく、着たときの感じを。"
+          >
+            <Input
+              value={form.feel}
+              onChange={(e) => set({ feel: e.target.value })}
+              placeholder="肩に置くだけで、背筋が伸びる。"
+              maxLength={60}
+              className="h-11 rounded-xl"
+            />
+          </Field>
+
           <Field label="採寸" hint="カテゴリーを選ぶと項目が入ります">
             <div className="space-y-2">
               {form.dimensions.map((row, i) => (
@@ -579,23 +628,23 @@ export function ProductForm({
             {productId ? "保存する" : "商品を追加"}
           </Button>
 
-          {productId && (
+          {productId && orderCount === 0 && (
             <Button
               type="button"
               variant="ghost"
-              onClick={toggleArchive}
+              onClick={remove}
               disabled={saving}
-              className="h-12 px-6 rounded-full text-muted-foreground"
+              className="h-12 px-6 rounded-full text-destructive hover:text-destructive"
             >
-              {isArchived ? "公開に戻す" : "アーカイブ"}
+              削除
             </Button>
           )}
 
-          {productId && orderCount > 0 && !isArchived && (
-            // Alasan tidak ada tombol hapus, dijelaskan di tempat orang
+          {productId && orderCount > 0 && (
+            // Kenapa tombol hapusnya tidak ada, dijelaskan di tempat orang
             // mencarinya — bukan disembunyikan di dokumentasi.
             <p className="text-xs text-muted-foreground">
-              この商品には{orderCount}件の注文があります。削除ではなくアーカイブされます。
+              この商品には{orderCount}件の注文があります。注文履歴が残るため削除できません。販売を止めるには在庫を0にしてください。
             </p>
           )}
         </div>

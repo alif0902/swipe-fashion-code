@@ -30,6 +30,7 @@ async function syncProducts() {
         description: product.description,
         images: product.images,
         material: product.material,
+        feel: product.feel,
         dimensions: product.dimensions,
       })
       .where(eq(productsTable.name, product.name))
