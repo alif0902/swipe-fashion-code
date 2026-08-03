@@ -7,8 +7,10 @@ import { ArrowRight, MoveRight, MoveLeft, Heart, X, Zap, Smartphone, CheckCircle
 
 // Alias @assets tidak ada di Next. Gambar-gambar ini sekarang berada di
 // public/assets, jadi dirujuk lewat path string biasa.
-const heroImg = '/assets/blazer-white-linen.jpg';
-const productImg = '/assets/shirt-white-poplin.jpg';
+// Hero memakai foto model (bukan foto produk) supaya ada sosok manusia di
+// layar pertama; productImg sebaliknya sengaja flat lay.
+const heroImg = '/assets/suit-navy-tailored-model.webp';
+const productImg = '/assets/jacket-coral-bomber.webp';
 
 // Anotasi Variants diperlukan supaya [0.16, 1, 0.3, 1] terbaca sebagai tuple
 // cubic-bezier, bukan number[]. Tanpa ini next build gagal — vite build tidak

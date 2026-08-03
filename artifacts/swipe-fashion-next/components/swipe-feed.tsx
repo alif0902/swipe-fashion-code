@@ -5,23 +5,58 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { PackageSearch, RotateCcw } from "lucide-react";
 
-import { recordSwipeAction, superLikeAction } from "@/app/actions";
-import { MatchOverlay, type MatchType } from "@/components/match-overlay";
+import {
+  recordSwipeAction,
+  superLikeAction,
+  undoSuperLikeAction,
+} from "@/app/actions";
+import { MatchOverlay } from "@/components/match-overlay";
 import { OrderSheet } from "@/components/order-sheet";
 import { ProductCard } from "@/components/product-card";
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 import type { AppProduct } from "@/lib/format";
 
+// Urutan kartu tetap ditentukan mesin selera — listProducts({ rankByTaste })
+// di sisi server yang mengerjakannya. Yang dihapus hanya LABEL penjelasnya,
+// jadi komponen ini tidak lagi perlu TasteProfile.
 export function SwipeFeed({ products }: { products: AppProduct[] }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  /**
+   * Tumpukan DIBEKUKAN saat komponen dipasang, dan sengaja tidak mengikuti
+   * perubahan props sesudahnya.
+   *
+   * Kenapa ini perlu — dan ini bug yang nyata sebelumnya:
+   *
+   * Tiap swipe memanggil Server Action, dan Server Action yang memanggil
+   * revalidatePath membuat Next merender ulang rute yang sedang dibuka lalu
+   * mengirim props baru ke komponen ini. `listProducts` pada render kedua itu
+   * mengembalikan daftar yang BERBEDA — barang yang baru saja diputuskan
+   * hilang, dan sisanya diurutkan ulang oleh profil selera yang baru saja
+   * berubah.
+   *
+   * Sementara itu `currentIndex` adalah state lokal yang tidak ikut berubah.
+   * Jadi products[currentIndex] tiba-tiba menunjuk produk yang sama sekali
+   * lain, dan kartu di layar berganti tanpa sebab yang terlihat — persis
+   * "feed berubah acak" yang dilaporkan.
+   *
+   * Membekukan tumpukan juga membuat feed kebal terhadap refresh dari sumber
+   * lain: login lewat AuthSheet memanggil router.refresh(), dan tanpa ini
+   * kartu yang sedang ditimbang akan ikut melompat.
+   */
+  const [deck, setDeck] = useState(products);
+
   // Dua kasus berbeda di balik satu tombol:
-  // - Tumpukan yang dimuat sudah habis di-swipe → cukup reset lokal.
-  // - props products KOSONG (mis. database belum di-seed, atau halaman dimuat
-  //   sebelum fallback server ada) → reset lokal tidak berbuat apa-apa;
-  //   satu-satunya jalan adalah minta daftar baru ke server.
+  // - Tumpukan yang dimuat sudah habis di-swipe → ambil daftar terbaru yang
+  //   sudah dikirim server lewat props, lalu mulai dari awal.
+  // - props products KOSONG (mis. database belum di-seed) → tidak ada yang
+  //   bisa diputar ulang; satu-satunya jalan adalah minta daftar ke server.
   const handleRestart = () => {
     if (products.length > 0) {
+      setDeck(products);
       setCurrentIndex(0);
     } else {
       router.refresh();
@@ -32,9 +67,9 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
   );
   const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false);
 
-  // Produk yang sedang ditampilkan di overlay "It's a Match!".
+  // Produk yang sedang ditampilkan di overlay マッチ. Hanya dipakai geser
+  // kanan — いいね tidak lagi memunculkan overlay.
   const [matchedProduct, setMatchedProduct] = useState<AppProduct | null>(null);
-  const [matchType, setMatchType] = useState<MatchType>("match");
 
   const advance = () =>
     setTimeout(() => setCurrentIndex((prev) => prev + 1), 200);
@@ -48,19 +83,45 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
 
   const handleSwipeRight = (product: AppProduct) => {
     setMatchedProduct(product);
-    setMatchType("match");
     record(product, "like");
     advance();
   };
 
+  /**
+   * いいね: TANPA overlay.
+   *
+   * Menyimpan ke 一目惚れ adalah tindakan ringan yang diulang berkali-kali.
+   * Layar penuh selama dua detik terasa menyenangkan di kali pertama,
+   * mengganggu di kali keempat, dan jadi penghalang di kali kesepuluh.
+   *
+   * Toast kecil menyampaikan hal yang sama tanpa menahan siapa pun, dan
+   * kartunya langsung berganti.
+   */
   const handleSuperLike = (product: AppProduct) => {
-    setMatchedProduct(product);
-    setMatchType("super");
-    // Simpan ke koleksi Obsessed (dan boost feed). Fire-and-forget: kalau
-    // gagal, momen "Super Match" tetap jalan.
     void superLikeAction({ productId: product.id }).catch(() => {});
     record(product, "super");
     advance();
+
+    toast({
+      title: "一目惚れに保存しました",
+      description: product.name,
+      // 取り消す ADALAH inti perubahan ini, bukan pelengkap.
+      //
+      // Overlay dulu memberi jeda untuk sadar salah tekan. Tanpa overlay,
+      // jeda itu hilang — dan satu-satunya jalan membatalkan tinggal pergi ke
+      // 一目惚れ lalu menghapusnya di sana. Tindakan yang ringan dilakukan
+      // harus sama ringannya untuk dibatalkan.
+      action: (
+        <ToastAction
+          altText="取り消す"
+          onClick={() => {
+            void undoSuperLikeAction(product.id).catch(() => {});
+          }}
+        >
+          取り消す
+        </ToastAction>
+      ),
+    });
   };
 
   const handleSwipeLeft = (product: AppProduct) => {
@@ -81,7 +142,9 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
     setMatchedProduct(null);
   };
 
-  const hasMoreProducts = currentIndex < products.length;
+  // Dibaca dari `deck` yang beku, BUKAN dari props — kalau dari props,
+  // seluruh perbaikan di atas tidak ada gunanya.
+  const hasMoreProducts = currentIndex < deck.length;
 
   return (
     // Gradasi biru → ungu → pink pekat ala aplikasi rujukan, hanya di feed —
@@ -107,8 +170,8 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
             // Efek tumpukan tidak bisa dipertahankan tanpa mengembalikan latar
             // penuh pada kartu, jadi dilepas.
             <ProductCard
-              key={`${products[currentIndex].id}-${currentIndex}`}
-              product={products[currentIndex]}
+              key={`${deck[currentIndex].id}-${currentIndex}`}
+              product={deck[currentIndex]}
               isFront
               onSwipeRight={handleSwipeRight}
               onSwipeLeft={handleSwipeLeft}
@@ -145,7 +208,6 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
 
       <MatchOverlay
         product={matchedProduct}
-        type={matchType}
         onAddToBag={handleAddToBag}
         onKeepSwiping={handleKeepSwiping}
       />

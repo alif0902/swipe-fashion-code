@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { requireAdmin } from "@/lib/session";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "管理画面｜SwipeFash",
@@ -57,6 +58,10 @@ export default async function AdminLayout({
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8">{children}</main>
+
+      {/* Panel admin adalah alat desktop biasa, jadi posisi bawaan pojok
+          kanan bawah memang yang benar di sini. */}
+      <Toaster />
     </div>
   );
 }

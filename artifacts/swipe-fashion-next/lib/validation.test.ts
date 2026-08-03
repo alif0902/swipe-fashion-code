@@ -46,6 +46,42 @@ describe("createOrderSchema", () => {
 
     expect(result.success).toBe(false);
   });
+
+  // Batas atas ditambahkan setelah audit. Sebelumnya satu-satunya penahan
+  // adalah pemeriksaan stok di createOrderAction — kalau jalur itu berubah,
+  // tidak ada lapis kedua yang menolak angka yang tidak masuk akal.
+  it("rejects a quantity above the per-order maximum", () => {
+    const result = createOrderSchema.safeParse({
+      productId: 3,
+      selectedSize: "M",
+      selectedColor: "Black",
+      quantity: 100,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts the maximum quantity itself", () => {
+    const result = createOrderSchema.safeParse({
+      productId: 3,
+      selectedSize: "M",
+      selectedColor: "Black",
+      quantity: 99,
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a fractional quantity", () => {
+    const result = createOrderSchema.safeParse({
+      productId: 3,
+      selectedSize: "M",
+      selectedColor: "Black",
+      quantity: 1.5,
+    });
+
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("emailSchema", () => {

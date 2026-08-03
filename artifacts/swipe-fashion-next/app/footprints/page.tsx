@@ -25,7 +25,7 @@ export default async function FootprintsPage() {
           icon={Footprints}
           eyebrow="HISTORY"
           title="足あと"
-          subtitle="フィードで判断した一着が、新しい順に並びます。"
+          subtitle="判断した一着が、新しい順に。"
           count={entries.length}
           countLabel="点"
         />

@@ -214,3 +214,63 @@ export function describeTaste(profile: TasteProfile): string | null {
 
   return topBrand ? `${base}（${topBrand}）` : base;
 }
+
+/**
+ * Menjelaskan KENAPA sebuah produk berada di posisinya pada feed.
+ *
+ * Ini yang menyambungkan スタイルDNA dengan feed secara terlihat. Keduanya
+ * sudah memakai profil yang sama sejak awal — tapi tanpa penjelasan di layar,
+ * tidak ada cara bagi siapa pun untuk mengetahuinya. Rekomendasi yang tidak
+ * bisa dijelaskan tidak bisa dibedakan dari urutan acak.
+ *
+ * Caranya: hitung ulang sumbangan tiap dimensi terhadap skor produk, lalu
+ * sebutkan yang paling besar. Angkanya tidak ditampilkan — yang berguna bagi
+ * pembaca adalah alasannya, bukan bobotnya.
+ *
+ * Murni, seperti sisa modul ini, jadi bisa dipanggil dari server maupun klien
+ * dan tetap bisa diuji unit.
+ */
+export function explainRanking(
+  profile: TasteProfile,
+  product: ScorableProduct,
+): string | null {
+  // Belum ada satu pun swipe: tidak ada yang bisa dijelaskan, dan mengarang
+  // alasan justru merusak kepercayaan pada seluruh fiturnya.
+  if (profile.totalSwipes === 0) return null;
+
+  const categoryScore =
+    DIMENSION_WEIGHT.category * affinityOf(profile.categories, product.category);
+  const brandScore =
+    DIMENSION_WEIGHT.brand * affinityOf(profile.brands, product.brand);
+
+  const colorAffinity =
+    product.colors.length > 0
+      ? product.colors.reduce((sum, c) => sum + affinityOf(profile.colors, c), 0) /
+        product.colors.length
+      : 0;
+  const colorScore = DIMENSION_WEIGHT.color * colorAffinity;
+
+  let priceScore = 0;
+  if (profile.priceBand) {
+    const { min, max, mid } = profile.priceBand;
+    const spread = Math.max(max - min, mid * 0.5, 1);
+    const distance = Math.abs(product.price - mid) / spread;
+    priceScore = DIMENSION_WEIGHT.price * (1 - Math.min(distance, 2));
+  }
+
+  const reasons: { score: number; text: string }[] = [
+    { score: categoryScore, text: `${categoryLabel(product.category)}をよく選ぶから` },
+    { score: brandScore, text: `${product.brand}が好みだから` },
+    { score: colorScore, text: `${product.colors[0] ?? ""}系が好みだから` },
+    { score: priceScore, text: "好みの価格帯だから" },
+  ];
+
+  const best = reasons.reduce((a, b) => (b.score > a.score ? b : a));
+
+  // Sumbangan negatif atau nol berarti produk ini justru MELAWAN selera yang
+  // terekam. Menyebutnya "karena kamu suka" akan berbohong; lebih jujur
+  // menyatakan ia sengaja ditaruh di belakang.
+  if (best.score <= 0) return "好みからは少し外れています";
+
+  return best.text;
+}

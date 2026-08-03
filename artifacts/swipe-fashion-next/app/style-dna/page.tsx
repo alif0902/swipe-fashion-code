@@ -117,6 +117,15 @@ export default async function StyleDnaPage() {
               <span className="text-foreground">{summary}</span>。
             </p>
           )}
+
+          {/* Menyatakan hubungannya secara eksplisit.
+              Halaman ini dan feed memakai profil yang sama sejak awal, tapi
+              tanpa kalimat ini ia terbaca sebagai visualisasi yang berdiri
+              sendiri — semacam hiasan. Padahal justru inilah yang menentukan
+              apa yang muncul lebih dulu di kartu. */}
+          <p className="text-xs text-primary/90 mt-3 leading-relaxed">
+            この結果が、フィードに出る順番を決めています。
+          </p>
         </header>
 
         <div className="px-6 pb-10">

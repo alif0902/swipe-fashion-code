@@ -9,8 +9,14 @@ export const dynamic = "force-dynamic";
 
 export default async function FeedPage() {
   const sessionId = await getOwnerId();
-  // rankByTaste: inilah satu-satunya tempat mesin selera menentukan urutan.
-  // 探す memakai pilihan 並び替え biasa.
+
+  // getTasteProfile dulu diambil paralel di sini untuk memasok label penjelas
+  // di atas kartu ("◯◯をよく選ぶから"). Label itu sudah dihapus, jadi query
+  // keduanya ikut dilepas — satu perjalanan bolak-balik ke Sydney lebih sedikit
+  // untuk tiap kali feed dibuka.
+  //
+  // Pengurutannya sendiri TIDAK berubah: rankByTaste di bawah tetap membaca
+  // profil yang sama di sisi server. Yang hilang cuma penjelasannya di layar.
   const products = await listProducts({
     limit: 10,
     sessionId,

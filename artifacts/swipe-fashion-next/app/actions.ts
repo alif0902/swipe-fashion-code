@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, gte, ne, sql } from "drizzle-orm";
 import {
   db,
   ordersTable,
@@ -28,6 +28,21 @@ import {
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
+/**
+ * Penanda bahwa stok keburu diambil request lain di tengah transaksi.
+ *
+ * Dibuat sebagai kelas sendiri, bukan string atau null, supaya `catch` di
+ * createOrderAction bisa membedakannya dari kegagalan database sungguhan.
+ * Menelan semua error di sana akan menyembunyikan koneksi putus sebagai
+ * "stok habis".
+ */
+class OutOfStockError extends Error {
+  constructor() {
+    super("out of stock");
+    this.name = "OutOfStockError";
+  }
+}
+
 export async function createOrderAction(
   input: CreateOrderInput,
 ): Promise<ActionResult> {
@@ -52,27 +67,66 @@ export async function createOrderAction(
     return { ok: false, error: "商品が見つかりません。" };
   }
 
-  if (product.stock < quantity) {
-    return { ok: false, error: "在庫が足りません。" };
+  // Ukuran dan warna divalidasi terhadap produknya, bukan sekadar "string tidak
+  // kosong". Tanpa ini pesanan untuk ukuran yang tidak diproduksi bisa masuk ke
+  // database dan baru ketahuan saat barangnya hendak dikirim.
+  if (!product.sizes.includes(selectedSize)) {
+    return { ok: false, error: "選択されたサイズは取り扱いがありません。" };
+  }
+  if (!product.colors.includes(selectedColor)) {
+    return { ok: false, error: "選択されたカラーは取り扱いがありません。" };
   }
 
+  // Harga diambil dari baris produk, TIDAK PERNAH dari input klien.
   const totalPrice = (parseFloat(product.price) * quantity).toFixed(2);
 
-  await db.insert(ordersTable).values({
-    sessionId,
-    productId,
-    selectedSize,
-    selectedColor,
-    quantity,
-    totalPrice,
-    status: "pending",
-    paymentStatus: "unpaid",
-  });
+  // Stok dipotong dan pesanan dibuat dalam SATU transaksi.
+  //
+  // Versi sebelumnya membaca stok, memeriksanya, lalu menulis nilai mutlak
+  // `product.stock - quantity`. Dua request bersamaan sama-sama membaca stock=1,
+  // sama-sama lolos pemeriksaan, lalu sama-sama menulis 0 — satu barang terjual
+  // dua kali. Pembacaan di atas kini hanya untuk harga dan validasi varian;
+  // yang menentukan boleh-tidaknya adalah UPDATE di bawah.
+  //
+  // Syarat `stock >= quantity` sengaja ikut ke dalam WHERE, bukan diperiksa
+  // lebih dulu di JavaScript. Postgres mengunci baris saat UPDATE, jadi request
+  // kedua menunggu, membaca nilai yang sudah diperbarui, tidak cocok lagi, dan
+  // `returning` kembali kosong.
+  try {
+    await db.transaction(async (tx) => {
+      const claimed = await tx
+        .update(productsTable)
+        .set({ stock: sql`${productsTable.stock} - ${quantity}` })
+        .where(
+          and(
+            eq(productsTable.id, productId),
+            gte(productsTable.stock, quantity),
+          ),
+        )
+        .returning({ id: productsTable.id });
 
-  await db
-    .update(productsTable)
-    .set({ stock: product.stock - quantity })
-    .where(eq(productsTable.id, productId));
+      // Tidak ada baris yang cocok = stok keburu habis diambil request lain.
+      // Melempar di dalam callback membatalkan seluruh transaksi, jadi pesanan
+      // tidak pernah tercatat.
+      if (claimed.length === 0) throw new OutOfStockError();
+
+      await tx.insert(ordersTable).values({
+        sessionId,
+        productId,
+        selectedSize,
+        selectedColor,
+        quantity,
+        totalPrice,
+        status: "pending",
+        paymentStatus: "unpaid",
+      });
+    });
+  } catch (error) {
+    if (error instanceof OutOfStockError) {
+      return { ok: false, error: "在庫が足りません。" };
+    }
+    throw error;
+  }
 
   revalidatePath("/orders");
   return { ok: true };
@@ -109,8 +163,16 @@ export async function recordSwipeAction(
         set: { direction: parsed.data.direction },
       });
 
-    // Feed dan Style DNA sama-sama dibangun dari profil ini.
-    revalidatePath("/feed");
+    // HANYA Style DNA. Feed SENGAJA tidak di-revalidate.
+    //
+    // Merevalidasi /feed di sini membuat server mengirim daftar produk baru
+    // ke tengah sesi swipe yang sedang berjalan — barang yang baru diputuskan
+    // hilang dari daftar dan sisanya diurutkan ulang, sementara indeks kartu
+    // di klien tetap. Kartu di layar lalu berganti sendiri.
+    //
+    // Urutan feed memang ditentukan sekali saat halaman dimuat. Itu bukan
+    // keterbatasan: tumpukan kartu yang menyusun ulang dirinya di tengah
+    // permainan justru terasa rusak.
     revalidatePath("/style-dna");
     return { ok: true };
   } catch {
@@ -149,9 +211,9 @@ export async function superLikeAction(
       .values({ sessionId, productId: parsed.data.productId })
       .onConflictDoNothing();
 
-    // Feed di-boost oleh koleksi ini, jadi keduanya perlu di-revalidate.
+    // Sama seperti recordSwipeAction: /feed tidak ikut di-revalidate agar
+    // tumpukan kartu yang sedang berjalan tidak tersusun ulang di tengah sesi.
     revalidatePath("/obsessed");
-    revalidatePath("/feed");
     return { ok: true };
   } catch {
     // Tabel super_likes mungkin belum di-push — jangan bikin UX gagal total.
@@ -170,17 +232,14 @@ export async function confirmOrderAction(
 
   const sessionId = await getOwnerId();
 
-  const [existing] = await db
-    .select()
-    .from(ordersTable)
-    .where(eq(ordersTable.id, orderId));
-
-  // Cek kepemilikan: sesi hanya boleh menyentuh order miliknya sendiri.
-  if (!existing || existing.sessionId !== sessionId) {
-    return { ok: false, error: "注文が見つかりません。" };
-  }
-
-  await db
+  // Kepemilikan DAN status sama-sama diperiksa di dalam WHERE.
+  //
+  // Versi sebelumnya hanya memeriksa kepemilikan, lalu menulis tanpa syarat.
+  // Akibatnya pesanan yang sudah dibatalkan — yang stoknya sudah dikembalikan —
+  // masih bisa dikonfirmasi ulang menjadi confirmed/paid, dan barangnya lolos
+  // tanpa stok terpotong. Menaruh syaratnya di WHERE sekaligus membuat
+  // pemanggilan ganda yang bersamaan hanya berhasil sekali.
+  const confirmed = await db
     .update(ordersTable)
     .set({
       status: "confirmed",
@@ -191,7 +250,21 @@ export async function confirmOrderAction(
       customerEmail: parsed.data.customerEmail,
       updatedAt: new Date(),
     })
-    .where(eq(ordersTable.id, orderId));
+    .where(
+      and(
+        eq(ordersTable.id, orderId),
+        eq(ordersTable.sessionId, sessionId),
+        eq(ordersTable.status, "pending"),
+      ),
+    )
+    .returning({ id: ordersTable.id });
+
+  if (confirmed.length === 0) {
+    // Pesan yang sama untuk "bukan milikmu" dan "statusnya sudah bukan
+    // pending" — membedakannya akan memberi tahu orang asing bahwa suatu id
+    // pesanan itu ada.
+    return { ok: false, error: "注文が見つかりません。" };
+  }
 
   revalidatePath("/orders");
   return { ok: true };
@@ -211,25 +284,46 @@ export async function cancelOrderAction(
     return { ok: false, error: "注文が見つかりません。" };
   }
 
-  if (existing.status !== "cancelled") {
-    // Versi Express memakai db.sql yang bukan API Drizzle yang valid,
-    // sehingga pengembalian stok melempar error. sql di-import dari drizzle-orm.
-    await db
+  // Pembatalan dan pengembalian stok dijadikan satu transaksi.
+  //
+  // Versi sebelumnya memeriksa `existing.status !== "cancelled"` dari hasil
+  // SELECT di atas, lalu mengembalikan stok. Increment-nya memang sudah atomik,
+  // tapi penjaganya tidak: dua pembatalan bersamaan atas pesanan yang sama
+  // sama-sama lolos pemeriksaan dan stok bertambah dua kali lipat.
+  //
+  // Sekarang syarat "belum dibatalkan" ikut ke dalam WHERE. Hanya pemanggilan
+  // yang benar-benar MENGUBAH barisnya yang berhak mengembalikan stok — yang
+  // kedua mendapat `returning` kosong dan tidak menyentuh apa pun.
+  const restored = await db.transaction(async (tx) => {
+    const cancelled = await tx
+      .update(ordersTable)
+      .set({
+        status: "cancelled",
+        paymentStatus: existing.paymentStatus === "paid" ? "refunded" : "unpaid",
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(ordersTable.id, orderId),
+          eq(ordersTable.sessionId, sessionId),
+          ne(ordersTable.status, "cancelled"),
+        ),
+      )
+      .returning({ quantity: ordersTable.quantity });
+
+    if (cancelled.length === 0) return false;
+
+    await tx
       .update(productsTable)
-      .set({ stock: sql`${productsTable.stock} + ${existing.quantity}` })
+      .set({ stock: sql`${productsTable.stock} + ${cancelled[0].quantity}` })
       .where(eq(productsTable.id, existing.productId));
-  }
 
-  await db
-    .update(ordersTable)
-    .set({
-      status: "cancelled",
-      paymentStatus: existing.paymentStatus === "paid" ? "refunded" : "unpaid",
-      updatedAt: new Date(),
-    })
-    .where(eq(ordersTable.id, orderId));
+    return true;
+  });
 
-  revalidatePath("/orders");
+  // Sudah dibatalkan sebelumnya bukan kegagalan — hasil akhirnya sama dengan
+  // yang diminta pengguna, jadi tidak perlu memunculkan pesan error.
+  if (restored) revalidatePath("/orders");
   return { ok: true };
 }
 
@@ -334,4 +428,50 @@ export async function deleteOrderAction(
 
   revalidatePath("/orders");
   return { ok: true };
+}
+
+/**
+ * Membatalkan いいね yang baru saja ditekan.
+ *
+ * Menghapus DUA hal, bukan satu: baris di `super_likes` dan baris keputusan di
+ * `swipes`. Kalau swipe-nya dibiarkan, produk itu tetap dianggap "sudah
+ * diputuskan" dan tidak akan pernah muncul lagi di feed — jadi pembatalannya
+ * hanya setengah jalan, dan barangnya lenyap tanpa masuk ke mana pun.
+ *
+ * Mesin selera juga ikut bersih: sinyal +3 dari super like itu hilang, seolah
+ * ketukan tadi memang tidak pernah terjadi.
+ */
+export async function undoSuperLikeAction(
+  productId: number,
+): Promise<ActionResult> {
+  const sessionId = await getOwnerId();
+  if (!sessionId) {
+    return { ok: false, error: "セッションが見つかりません。" };
+  }
+
+  try {
+    await db
+      .delete(superLikesTable)
+      .where(
+        and(
+          eq(superLikesTable.sessionId, sessionId),
+          eq(superLikesTable.productId, productId),
+        ),
+      );
+
+    await db
+      .delete(swipesTable)
+      .where(
+        and(
+          eq(swipesTable.sessionId, sessionId),
+          eq(swipesTable.productId, productId),
+        ),
+      );
+
+    revalidatePath("/obsessed");
+    revalidatePath("/style-dna");
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "取り消せませんでした。" };
+  }
 }

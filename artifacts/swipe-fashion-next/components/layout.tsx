@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { InstallPrompt } from "@/components/install-prompt";
+import { Toaster } from "@/components/ui/toaster";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -161,6 +162,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
       {/* Di dalam bingkai, bukan di luar: ajakan harus menempel pada aplikasi,
           bukan melayang di latar desktop. */}
+      {/* Di dalam bingkai, dan DI ATAS bilah navigasi (bottom-24) supaya
+          notifikasi tidak menutupi tab. Lebar mengikuti bingkai, bukan layar. */}
+      <Toaster viewportClassName="absolute inset-x-0 bottom-24 top-auto p-3 w-full max-w-none flex-col" />
       <InstallPrompt />
       <BottomNav />
     </PhoneFrame>

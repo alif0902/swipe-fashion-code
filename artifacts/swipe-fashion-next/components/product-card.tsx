@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, ThumbsUp } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingBag, ThumbsUp, X } from 'lucide-react';
 
 interface ProductCardProps {
   product: AppProduct;
@@ -51,6 +51,11 @@ export function ProductCard({
   const rotate = useTransform(x, [-200, 200], [-8, 8]);
   const likeOpacity = useTransform(x, [0, 50, 100], [0, 0, 1]);
   const nopeOpacity = useTransform(x, [0, -50, -100], [0, 0, 1]);
+  // Membesar seiring geseran, jadi petunjuknya terasa MENGUAT saat kamu makin
+  // yakin — bukan sekadar muncul lalu diam. Berhenti di 1 supaya tidak ada
+  // lonjakan tepat sebelum kartu terlempar.
+  const likeScale = useTransform(x, [0, 50, 100], [0.7, 0.8, 1]);
+  const nopeScale = useTransform(x, [0, -50, -100], [0.7, 0.8, 1]);
 
   // Seluruh kartu kini satu wadah scroll: foto, gelembung, thumbnail, dan
   // panel teks berada di dalamnya. Menggulir dari mana pun — termasuk dari
@@ -133,8 +138,21 @@ export function ProductCard({
   // Tidak ada padanan tombol untuk geser kanan, dan itu disengaja: tombol
   // besar sekarang milik 一目惚れ. Membeli menuntut gestur — keputusan yang
   // paling berkonsekuensi jadi yang paling disengaja.
+  //
+  // Kartunya MENGECIL dan memudar, bukan melesat ke atas seperti sebelumnya.
+  // Animasi terbang itu peninggalan saat 一目惚れ dilakukan dengan menggeser
+  // kartu ke atas — gesturnya sudah lama hilang, dan kartu yang menembak ke
+  // luar layar setelah tombol ditekan terbaca seperti sesuatu yang dibuang,
+  // padahal artinya justru disimpan.
+  //
+  // Durasinya 0,2 detik, lebih pendek dari swipe (0,3), karena menekan tombol
+  // tidak punya momentum yang perlu diselesaikan.
   const forceSuperLike = async () => {
-    await controls.start({ y: -700, transition: { duration: 0.3 } });
+    await controls.start({
+      scale: 0.88,
+      opacity: 0,
+      transition: { duration: 0.2, ease: "easeIn" },
+    });
     onSuperLike(product);
   };
 
@@ -156,19 +174,57 @@ export function ProductCard({
           jadi tiga blok terpisah yang mengambang di atas latar pink — bukan
           satu kotak putih penuh seperti sebelumnya. */}
       <div className="relative w-full h-full flex flex-col">
-        {/* Stempel arah swipe */}
-        <motion.div
-          className="absolute top-8 left-8 z-40 border-4 border-green-500 rounded-lg px-4 py-1.5 rotate-[-15deg] pointer-events-none"
-          style={{ opacity: likeOpacity }}
-        >
-          <span className="text-green-500 font-black text-3xl tracking-widest">買う</span>
-        </motion.div>
-        <motion.div
-          className="absolute top-8 right-8 z-40 border-4 border-red-500 rounded-lg px-4 py-1.5 rotate-[15deg] pointer-events-none"
-          style={{ opacity: nopeOpacity }}
-        >
-          <span className="text-red-500 font-black text-3xl tracking-widest">パス</span>
-        </motion.div>
+        {/* ---- Petunjuk arah swipe ----
+             Dulu berupa stempel bertulisan 買う dan パス dengan bingkai tebal
+             hijau/merah dan miring. Tiga hal salah di sana:
+
+             - Hijau dan merah menjerit di atas palet coral aplikasi ini, dan
+               merah membuat "lewati" terasa seperti kesalahan padahal ia
+               keputusan yang wajar.
+             - Teks harus dibaca. Petunjuk yang muncul di tengah gestur perlu
+               dikenali dalam sekejap, dan ikon lebih cepat daripada kata.
+             - Stempel miring itu bahasa visual aplikasi kencan, sedangkan
+               kartu ini sudah bergerak menjauh dari sana.
+
+             Sekarang: lingkaran kaca dengan ikon, muncul di sisi yang sedang
+             kamu tuju. Bahasa yang sama dengan bilah navigasi mengambang. */}
+        {/* Pemosisian dipisah ke elemen luar, animasi ke elemen dalam.
+            Keduanya tidak boleh disatukan: `-translate-y-1/2` dari Tailwind dan
+            `scale` dari framer-motion sama-sama menulis properti `transform`,
+            dan yang belakangan menimpa yang pertama — lingkarannya akan
+            melompat ke bawah begitu mulai membesar. */}
+        {/* Label memakai 見送る, BUKAN パス — kata itu sudah dipakai di
+            スタイルDNA (「見送るもの」) dan di lencana 足あと. Dua nama untuk
+            satu tindakan membuat aplikasi terbaca tidak rapi.
+
+            購入へ, bukan 買う: geser kanan tidak langsung membeli, ia MENUJU
+            pembelian lewat pemilihan ukuran. Partikel へ menyampaikan itu. */}
+        <div className="absolute top-1/2 -translate-y-1/2 right-6 z-40 pointer-events-none">
+          <motion.div
+            className="flex flex-col items-center gap-2"
+            style={{ opacity: likeOpacity, scale: likeScale }}
+          >
+            <span className="w-16 h-16 rounded-full bg-white/85 backdrop-blur-md border border-white/70 shadow-lg flex items-center justify-center">
+              <ShoppingBag className="w-7 h-7 text-primary" />
+            </span>
+            <span className="px-3 py-1 rounded-full bg-white/85 backdrop-blur-md text-primary text-xs font-bold shadow-sm">
+              購入へ
+            </span>
+          </motion.div>
+        </div>
+        <div className="absolute top-1/2 -translate-y-1/2 left-6 z-40 pointer-events-none">
+          <motion.div
+            className="flex flex-col items-center gap-2"
+            style={{ opacity: nopeOpacity, scale: nopeScale }}
+          >
+            <span className="w-16 h-16 rounded-full bg-white/85 backdrop-blur-md border border-white/70 shadow-lg flex items-center justify-center">
+              <X className="w-7 h-7 text-muted-foreground" />
+            </span>
+            <span className="px-3 py-1 rounded-full bg-white/85 backdrop-blur-md text-muted-foreground text-xs font-bold shadow-sm">
+              見送る
+            </span>
+          </motion.div>
+        </div>
         {/* ---- Wadah scroll tunggal: foto, gelembung, thumbnail, panel ---- */}
         {/* overflow-x-hidden WAJIB, bukan sekadar rapi. Menyetel overflow-y
             saja membuat overflow-x ikut jadi `auto` menurut spesifikasi CSS —
@@ -321,7 +377,20 @@ export function ProductCard({
              meski isi 基本情報 pendek. Tanpa itu, produk dengan sedikit baris
              ukuran tidak akan pernah bisa menutupi fotonya. */}
         <div
-          className="relative min-h-full bg-card rounded-t-[2rem] px-6 pt-7 pb-32"
+          // pb-44 (176px) bukan angka sembarangan — ia dihitung dari apa yang
+          // mengambang di atasnya:
+          //
+          //   tombol いいね！ : bottom-24 (96px) + tinggi h-12 (48px) = 144px
+          //   jarak napas     : 32px
+          //                     ------------------------------------------
+          //                                                        176px
+          //
+          // Sebelumnya pb-32 (128px), lebih pendek dari tombolnya sendiri,
+          // sehingga baris terakhir tabel 基本情報 selalu tertutup saat
+          // digulir sampai bawah.
+          //
+          // Kalau tinggi atau posisi tombol diubah, angka ini harus ikut.
+          className="relative min-h-full bg-card rounded-t-[2rem] px-6 pt-7 pb-44"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-3">

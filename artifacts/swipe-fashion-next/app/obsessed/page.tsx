@@ -35,7 +35,7 @@ export default async function ObsessedPage() {
           icon={Star}
           eyebrow="SUPER LIKE"
           title="一目惚れ"
-          subtitle="スクロールの手が止まった一着。フィードはこの好みに寄っていきます。"
+          subtitle="フィードはこの好みに寄っていきます。"
           count={products.length}
           countLabel="点"
         />

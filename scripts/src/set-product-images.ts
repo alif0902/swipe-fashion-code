@@ -6,52 +6,67 @@ import path from "node:path";
 import { eq } from "drizzle-orm";
 import { db, productsTable } from "@workspace/db";
 
-// Folder public tempat aset gambar berada.
+import { products } from "./catalog";
+
+// Menyalin images[] dari catalog.ts ke database, apa adanya.
+//
+// Versi lama skrip ini MENEBAK foto kedua: ia memakai p.imageUrl sebagai
+// images[0] lalu mencari file bersufiks "-flat" di public/. Tebakan itu tidak
+// lagi berlaku. Sejak katalog memakai pasangan "foto model + foto produk",
+// urutan yang benar ditulis eksplisit di catalog.ts (images[0] foto model,
+// foto produk terakhir) — membiarkan logika lama berjalan justru MENIMPA
+// urutan itu dan membuang salah satu foto, karena tidak ada satu pun file
+// bersufiks "-flat".
+//
+// Skrip ini juga memvalidasi setiap path ada di public/, karena next/image
+// pada file yang hilang baru gagal saat render, bukan saat build.
+
 const PUBLIC_DIR = path.resolve(
   process.cwd(),
   "../artifacts/swipe-fashion-next/public",
 );
-
-const FLAT_EXTS = [".jpg", ".jpeg", ".png", ".webp"];
-
-// Dari "/assets/blazer-white-linen.jpg" hasilkan kandidat
-// "/assets/blazer-white-linen-flat.jpg" (dan ekstensi lain).
-function flatCandidates(imageUrl: string): string[] {
-  const dot = imageUrl.lastIndexOf(".");
-  const base = dot === -1 ? imageUrl : imageUrl.slice(0, dot);
-  return FLAT_EXTS.map((ext) => `${base}-flat${ext}`);
-}
 
 function existsInPublic(urlPath: string): boolean {
   return fs.existsSync(path.join(PUBLIC_DIR, urlPath.replace(/^\//, "")));
 }
 
 async function main() {
-  const products = await db.select().from(productsTable);
-  let withFlat = 0;
+  let updated = 0;
+  let missingProduct = 0;
+  const missingFiles: string[] = [];
 
-  for (const p of products) {
-    const images = [p.imageUrl];
+  for (const product of products) {
+    const images = product.images ?? [];
 
-    const flat = flatCandidates(p.imageUrl).find(existsInPublic);
-    if (flat) {
-      images.push(flat);
-      withFlat++;
+    for (const src of images) {
+      if (!existsInPublic(src)) missingFiles.push(`${product.name}: ${src}`);
     }
 
-    await db
+    const result = await db
       .update(productsTable)
-      .set({ images })
-      .where(eq(productsTable.id, p.id));
+      .set({ images, imageUrl: images[0] ?? product.imageUrl })
+      .where(eq(productsTable.name, product.name))
+      .returning({ id: productsTable.id });
 
-    console.log(
-      `${p.name}: ${images.length} foto${flat ? " (model + flat)" : " (hanya model — belum ada file -flat)"}`,
-    );
+    if (result.length === 0) {
+      console.warn(`  tidak ada di database: ${product.name}`);
+      missingProduct += 1;
+    } else {
+      updated += result.length;
+      console.log(`  ${product.name}: ${images.length} foto`);
+    }
   }
 
   console.log(
-    `\nSelesai. ${products.length} produk diperbarui, ${withFlat} punya foto flat.`,
+    `\nSelesai: ${updated} produk diperbarui, ${missingProduct} tidak ditemukan.`,
   );
+
+  if (missingFiles.length > 0) {
+    console.error(`\nFile tidak ada di public/ (${missingFiles.length}):`);
+    for (const m of missingFiles) console.error(`  ${m}`);
+    process.exit(1);
+  }
+
   process.exit(0);
 }
 

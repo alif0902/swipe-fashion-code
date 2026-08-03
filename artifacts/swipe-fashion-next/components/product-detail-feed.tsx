@@ -6,10 +6,16 @@ import Link from "next/link";
 import { AnimatePresence } from "framer-motion";
 import { ChevronLeft } from "lucide-react";
 
-import { recordSwipeAction, superLikeAction } from "@/app/actions";
-import { MatchOverlay, type MatchType } from "@/components/match-overlay";
+import {
+  recordSwipeAction,
+  superLikeAction,
+  undoSuperLikeAction,
+} from "@/app/actions";
+import { MatchOverlay } from "@/components/match-overlay";
 import { OrderSheet } from "@/components/order-sheet";
 import { ProductCard } from "@/components/product-card";
+import { ToastAction } from "@/components/ui/toast";
+import { useToast } from "@/hooks/use-toast";
 import type { AppProduct } from "@/lib/format";
 
 /**
@@ -30,8 +36,8 @@ import type { AppProduct } from "@/lib/format";
  */
 export function ProductDetailFeed({ product }: { product: AppProduct }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [matchedProduct, setMatchedProduct] = useState<AppProduct | null>(null);
-  const [matchType, setMatchType] = useState<MatchType>("match");
   const [isOrderSheetOpen, setIsOrderSheetOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<AppProduct | null>(
     null,
@@ -48,15 +54,28 @@ export function ProductDetailFeed({ product }: { product: AppProduct }) {
 
   const handleSwipeRight = () => {
     record("like");
-    setMatchType("match");
     setMatchedProduct(product);
   };
 
+  // Sama seperti di feed: いいね cukup dilaporkan lewat toast, tanpa overlay.
   const handleSuperLike = () => {
     void superLikeAction({ productId: product.id }).catch(() => {});
     record("super");
-    setMatchType("super");
-    setMatchedProduct(product);
+
+    toast({
+      title: "一目惚れに保存しました",
+      description: product.name,
+      action: (
+        <ToastAction
+          altText="取り消す"
+          onClick={() => {
+            void undoSuperLikeAction(product.id).catch(() => {});
+          }}
+        >
+          取り消す
+        </ToastAction>
+      ),
+    });
   };
 
   const handleAddToBag = () => {
@@ -93,7 +112,6 @@ export function ProductDetailFeed({ product }: { product: AppProduct }) {
 
       <MatchOverlay
         product={matchedProduct}
-        type={matchType}
         onAddToBag={handleAddToBag}
         onKeepSwiping={() => setMatchedProduct(null)}
       />

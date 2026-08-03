@@ -6,7 +6,10 @@ export const createOrderSchema = z.object({
   productId: z.number().int().positive(),
   selectedSize: z.string().min(1),
   selectedColor: z.string().min(1),
-  quantity: z.number().int().min(1),
+  // Batas atas bukan sekadar kerapian: tanpa ini satu-satunya penahan adalah
+  // pemeriksaan stok, jadi kalau pemeriksaan itu berubah suatu saat, tidak ada
+  // lapis kedua yang menahan angka yang tidak masuk akal.
+  quantity: z.number().int().min(1).max(99),
 });
 
 export const confirmOrderSchema = z.object({

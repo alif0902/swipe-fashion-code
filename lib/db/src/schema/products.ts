@@ -1,4 +1,5 @@
-import { pgTable, serial, text, integer, numeric, boolean, timestamp, jsonb, pgEnum } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { pgTable, serial, text, integer, numeric, boolean, timestamp, jsonb, pgEnum, check } from "drizzle-orm/pg-core";
 
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -48,7 +49,16 @@ export const productsTable = pgTable("products", {
   // dari feed dan katalog, tapi pesanan lama tetap utuh.
   isArchived: boolean("is_archived").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+}, (t) => [
+  // Jaring pengaman terakhir untuk stok.
+  //
+  // createOrderAction sudah memotong stok lewat satu UPDATE atomik yang
+  // syaratnya ada di WHERE, jadi seharusnya tidak ada jalan menuju angka
+  // negatif. "Seharusnya" itulah alasan constraint ini ada: kalau suatu saat
+  // ada jalur baru yang menulis stok dan lupa penjaganya, database yang
+  // menolak — bukan pelanggannya yang menerima barang yang tidak ada.
+  check("products_stock_non_negative", sql`${t.stock} >= 0`),
+]);
 
 export const insertProductSchema = createInsertSchema(productsTable).omit({ id: true, createdAt: true });
 export type InsertProduct = z.infer<typeof insertProductSchema>;

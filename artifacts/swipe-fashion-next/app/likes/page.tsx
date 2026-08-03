@@ -25,7 +25,7 @@ export default async function LikesPage() {
           icon={ThumbsUp}
           eyebrow="LIKED"
           title="いいね！履歴"
-          subtitle="右にスワイプした一着と、一目惚れした一着。"
+          subtitle="気になった一着の記録。"
           count={entries.length}
           countLabel="点"
         />

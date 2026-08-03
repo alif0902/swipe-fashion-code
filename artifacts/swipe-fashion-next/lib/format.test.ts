@@ -119,8 +119,8 @@ describe("safeImage", () => {
   });
 
   it("passes a real path through untouched", () => {
-    expect(safeImage("/assets/shirt-white-poplin.jpg")).toBe(
-      "/assets/shirt-white-poplin.jpg",
+    expect(safeImage("/assets/polo-cotton.webp")).toBe(
+      "/assets/polo-cotton.webp",
     );
   });
 });

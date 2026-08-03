@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildTasteProfile,
   describeTaste,
+  explainRanking,
   rankProducts,
   scoreProduct,
   type TasteSignal,
@@ -192,5 +193,48 @@ describe("describeTaste", () => {
     ]);
 
     expect(describeTaste(profile)).toBe("アウター");
+  });
+});
+
+describe("explainRanking", () => {
+  const outer = {
+    category: "outerwear",
+    brand: "CORSO",
+    colors: ["White"],
+    price: 59_200,
+  };
+
+  it("says nothing before there is any data to explain", () => {
+    const empty = buildTasteProfile([]);
+    expect(explainRanking(empty, outer)).toBeNull();
+  });
+
+  it("names the category when that is what drives the score", () => {
+    const profile = buildTasteProfile([
+      { direction: "super", category: "outerwear", brand: "NORD", colors: ["Grey"], price: 40_000 },
+      { direction: "like", category: "outerwear", brand: "NORD", colors: ["Grey"], price: 42_000 },
+    ]);
+
+    expect(explainRanking(profile, outer)).toBe("アウターをよく選ぶから");
+  });
+
+  it("names the brand when the brand signal is the strongest", () => {
+    const profile = buildTasteProfile([
+      { direction: "super", category: "tops", brand: "CORSO", colors: ["Black"], price: 20_000 },
+      { direction: "like", category: "tops", brand: "CORSO", colors: ["Black"], price: 21_000 },
+    ]);
+
+    expect(explainRanking(profile, outer)).toBe("CORSOが好みだから");
+  });
+
+  // Kejujuran ini yang menjaga fiturnya berguna: produk yang justru melawan
+  // selera tidak boleh dijelaskan seolah-olah disukai.
+  it("admits when an item runs against the recorded taste", () => {
+    const profile = buildTasteProfile([
+      { direction: "pass", category: "outerwear", brand: "CORSO", colors: ["White"], price: 59_200 },
+      { direction: "pass", category: "outerwear", brand: "CORSO", colors: ["White"], price: 58_000 },
+    ]);
+
+    expect(explainRanking(profile, outer)).toBe("好みからは少し外れています");
   });
 });

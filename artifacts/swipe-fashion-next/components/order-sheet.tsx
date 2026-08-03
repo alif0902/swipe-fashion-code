@@ -59,11 +59,22 @@ export function OrderSheet({
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedColor, setSelectedColor] = useState<string>("");
 
-  if (product && isOpen && !selectedSize && product.sizes.length > 0) {
-    setSelectedSize(product.sizes[0]);
-  }
-  if (product && isOpen && !selectedColor && product.colors.length > 0) {
-    setSelectedColor(product.colors[0]);
+  // Pilihan disetel ulang setiap kali lembar ini dibuka untuk produk BERBEDA.
+  //
+  // Versi sebelumnya hanya mengisi saat pilihannya masih kosong, dan hanya
+  // mengosongkannya setelah pesanan berhasil dibuat. Jadi: buka lembar untuk
+  // produk A, pilih ukuran S, batalkan, lalu buka produk B — "S" masih
+  // terpilih. Kalau B tidak menyediakan S, pesanan tercatat dengan ukuran yang
+  // tidak ada.
+  //
+  // Sangat mudah terjadi di 一目惚れ, tempat orang membuka beberapa produk
+  // berturut-turut dari grid yang sama.
+  const [initializedFor, setInitializedFor] = useState<number | null>(null);
+
+  if (product && isOpen && initializedFor !== product.id) {
+    setInitializedFor(product.id);
+    setSelectedSize(product.sizes[0] ?? "");
+    setSelectedColor(product.colors[0] ?? "");
   }
 
   const handleConfirm = () => {
@@ -100,10 +111,11 @@ export function OrderSheet({
       });
       onOpenChange(false);
       onAdded?.();
-      setTimeout(() => {
-        setSelectedSize("");
-        setSelectedColor("");
-      }, 300);
+      // Menandai belum terinisialisasi, bukan mengosongkan pilihannya —
+      // pengisian ulang dilakukan saat lembar dibuka lagi, dan itu berlaku
+      // untuk produk yang sama maupun berbeda. Tanpa timer, jadi tidak ada
+      // jeda 300ms yang bisa dikalahkan oleh ketukan cepat.
+      setInitializedFor(null);
     });
   };
 

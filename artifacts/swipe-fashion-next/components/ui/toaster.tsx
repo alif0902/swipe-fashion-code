@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import {
   Toast,
   ToastClose,
@@ -10,8 +9,26 @@ import {
   ToastViewport,
 } from "@/components/ui/toast"
 import { useToast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
 
-export function Toaster() {
+/**
+ * Letak notifikasi menentukan apakah ia terbaca sebagai bagian aplikasi.
+ *
+ * Bawaan shadcn memakai `fixed` yang menempel ke JENDELA browser. Di aplikasi
+ * ini itu salah: tokonya hidup di dalam bingkai ponsel selebar 448px, jadi
+ * notifikasinya muncul jauh di pojok layar laptop, terpisah dari aplikasinya —
+ * dan di ponsel ia menempel di tepi paling atas, jauh dari tombol yang baru
+ * saja ditekan.
+ *
+ * `viewportClassName` membuat tiap pemasangan menentukan tempatnya sendiri:
+ * AppLayout menaruhnya di dalam bingkai tepat di atas bilah navigasi, panel
+ * admin membiarkannya di pojok layar seperti aplikasi desktop biasa.
+ */
+export function Toaster({
+  viewportClassName,
+}: {
+  viewportClassName?: string
+}) {
   const { toasts } = useToast()
 
   return (
@@ -30,7 +47,7 @@ export function Toaster() {
           </Toast>
         )
       })}
-      <ToastViewport />
+      <ToastViewport className={cn(viewportClassName)} />
     </ToastProvider>
   )
 }

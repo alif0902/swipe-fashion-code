@@ -6,7 +6,6 @@ import {
   Playfair_Display,
 } from "next/font/google";
 
-import { Toaster } from "@/components/ui/toaster";
 import { Splash } from "@/components/splash";
 
 import "./globals.css";
@@ -105,7 +104,6 @@ export default function RootLayout({
             dikirim server, bukan disisipkan belakangan oleh JavaScript. */}
         <Splash />
         {children}
-        <Toaster />
       </body>
     </html>
   );
