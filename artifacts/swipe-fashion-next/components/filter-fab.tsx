@@ -117,7 +117,7 @@ export function FilterFab({
           }}
           data-testid="button-filter"
           aria-label="絞り込む"
-          className="pointer-events-auto absolute bottom-24 right-5 h-14 pl-4 pr-5 rounded-full bg-foreground text-background shadow-xl flex items-center gap-2 cursor-grab active:cursor-grabbing touch-none"
+          className="pointer-events-auto absolute bottom-[var(--nav-clearance)] right-5 h-14 pl-4 pr-5 rounded-full bg-foreground text-background shadow-xl flex items-center gap-2 cursor-grab active:cursor-grabbing touch-none"
         >
           <span className="relative">
             <SlidersHorizontal className="w-5 h-5" />

@@ -105,6 +105,13 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
     toast({
       title: "一目惚れに保存しました",
       description: product.name,
+      // 2,5 detik — bukan angka bawaan, dan bukan pula 1 detik.
+      //
+      // Bawaan Radix 5 detik terasa menggantung untuk konfirmasi sesederhana
+      // ini. Tapi toast ini membawa 取り消す di bawahnya, dan satu detik tidak
+      // cukup untuk menyadari salah tekan LALU mengarahkan jari ke sana —
+      // tombol yang tidak sempat diraih sama saja dengan tidak ada.
+      duration: 2500,
       // 取り消す ADALAH inti perubahan ini, bukan pelengkap.
       //
       // Overlay dulu memberi jeda untuk sadar salah tekan. Tanpa overlay,

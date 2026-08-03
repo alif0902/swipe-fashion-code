@@ -65,6 +65,9 @@ export function ProductDetailFeed({ product }: { product: AppProduct }) {
     toast({
       title: "一目惚れに保存しました",
       description: product.name,
+      // Disamakan dengan toast yang sama di swipe-feed.tsx — alasan angkanya
+      // dijelaskan di sana.
+      duration: 2500,
       action: (
         <ToastAction
           altText="取り消す"

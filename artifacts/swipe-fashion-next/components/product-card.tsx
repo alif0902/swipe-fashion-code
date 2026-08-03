@@ -389,20 +389,16 @@ export function ProductCard({
              meski isi 基本情報 pendek. Tanpa itu, produk dengan sedikit baris
              ukuran tidak akan pernah bisa menutupi fotonya. */}
         <div
-          // pb-44 (176px) bukan angka sembarangan — ia dihitung dari apa yang
-          // mengambang di atasnya:
+          // Padding bawah diturunkan dari apa yang mengambang di atasnya:
           //
-          //   tombol いいね！ : bottom-24 (96px) + tinggi h-12 (48px) = 144px
-          //   jarak napas     : 32px
-          //                     ------------------------------------------
-          //                                                        176px
+          //   tombol いいね！ : --nav-clearance + tinggi h-12 (3rem)
+          //   jarak napas     : 2rem
           //
-          // Sebelumnya pb-32 (128px), lebih pendek dari tombolnya sendiri,
-          // sehingga baris terakhir tabel 基本情報 selalu tertutup saat
-          // digulir sampai bawah.
-          //
-          // Kalau tinggi atau posisi tombol diubah, angka ini harus ikut.
-          className="relative min-h-full bg-card rounded-t-[2rem] px-6 pt-7 pb-44"
+          // Ikut env(safe-area-inset-bottom) lewat --nav-clearance, sama
+          // seperti tombolnya. Sebelumnya pb-44 (176px) tetap, dihitung
+          // dengan asumsi safe-area = 0 — di iPhone dengan home indicator
+          // baris terakhir 基本情報 tetap tertutup tombol saat digulir habis.
+          className="relative min-h-full bg-card rounded-t-[2rem] px-6 pt-7 pb-[calc(var(--nav-clearance)+5rem)]"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-start justify-between gap-3">
@@ -497,7 +493,7 @@ export function ProductCard({
              itulah inti dari antarmuka swipe. ---- */}
         {isFront && (
           <div
-            className="absolute bottom-24 left-4 right-4 z-30 flex justify-center"
+            className="absolute bottom-[var(--nav-clearance)] left-4 right-4 z-30 flex justify-center"
             onPointerDown={(e) => e.stopPropagation()}
           >
             {/* Dibatasi max-w supaya tidak membentang penuh di layar lebar. */}

@@ -162,9 +162,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </main>
       {/* Di dalam bingkai, bukan di luar: ajakan harus menempel pada aplikasi,
           bukan melayang di latar desktop. */}
-      {/* Di dalam bingkai, dan DI ATAS bilah navigasi (bottom-24) supaya
-          notifikasi tidak menutupi tab. Lebar mengikuti bingkai, bukan layar. */}
-      <Toaster viewportClassName="absolute inset-x-0 bottom-24 top-auto p-3 w-full max-w-none flex-col" />
+      {/* Notifikasi muncul di ATAS, bukan di bawah.
+
+          Sebelumnya ia duduk tepat di atas bilah navigasi — tapi separuh
+          bawah layar sudah padat: bilah navigasi, tombol いいね！, dan FAB
+          filter semuanya di sana. Notifikasi yang menumpang di antaranya
+          menutupi hal yang baru saja ditekan orang.
+
+          Bagian atas kartu justru kosong, dan mata sudah ada di sana karena
+          fotonya. top mengikuti safe-area supaya tidak tertimpa notch. */}
+      {/* absolute, bukan fixed: notifikasi harus tinggal DI DALAM bingkai
+          ponsel, bukan melayang di pojok layar laptop. inset-x-0 + max-w-none
+          membuat lebarnya mengikuti bingkai, bukan 420px bawaan desktop. */}
+      <Toaster viewportClassName="absolute inset-x-0 top-[calc(env(safe-area-inset-top)+0.75rem)] bottom-auto right-auto p-3 w-full max-w-none sm:max-w-none" />
       <InstallPrompt />
       <BottomNav />
     </PhoneFrame>

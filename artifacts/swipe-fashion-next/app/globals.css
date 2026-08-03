@@ -44,6 +44,21 @@
 }
 
 :root {
+  /* Jarak aman di atas bilah navigasi bawah.
+
+     Bilah itu duduk di bottom-0 dengan padding-bawah 0.5rem + safe-area, dan
+     batangnya sendiri setinggi h-16 (4rem). Jadi tepi ATASNYA berada di
+     4.5rem + safe-area dari dasar layar — bukan angka tetap.
+
+     Semua yang mengambang di atasnya dulu memakai bottom-24 (6rem), yang
+     benar HANYA di perangkat tanpa home indicator. Di iPhone modern
+     safe-area ≈ 34px, sehingga tepi atas bilah naik ke ~106px dan menabrak
+     tombol yang berhenti di 96px.
+
+     6rem = 4.5rem tinggi bilah + 1.5rem napas. Ubah di sini saja kalau tinggi
+     bilahnya berubah; jangan menaruh angka tetap di komponen lagi. */
+  --nav-clearance: calc(6rem + env(safe-area-inset-bottom));
+
   /* Tema ala with.is — latar pink lembut, aksen coral #fe6970, ramah & rounded.
      Latar sengaja dibedakan jelas dari --card yang tetap putih: kartu produk
      jadi terangkat di atas halaman, dan bilah navigasi bawah yang memakai
