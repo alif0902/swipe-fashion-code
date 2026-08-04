@@ -27,6 +27,34 @@ export function BottomNav() {
     // dan bawah pil tidak menghalangi sentuhan ke konten di baliknya. Hanya
     // pilnya sendiri yang menerima sentuhan.
     <div className="absolute bottom-0 inset-x-0 z-40 px-4 pb-[var(--nav-bottom-gap)] pointer-events-none">
+      {/* Kabut penutup di balik bilah.
+
+          Bilahnya pil melayang: ada celah transparan di kiri, kanan, dan
+          BAWAHNYA. Area gulir memanjang sampai dasar bingkai, jadi teks yang
+          lewat di belakang bilah muncul lagi di celah bawah itu — terbaca
+          seperti konten yang bocor keluar.
+
+          Menurunkan bilahnya tidak menyelesaikan ini, hanya mempersempit
+          celahnya. Yang perlu ada adalah lapisan yang mengaburkan apa pun
+          yang lewat.
+
+          Sengaja blur MURNI tanpa warna: latar di belakangnya bisa gradasi
+          pink feed atau panel produk yang putih, dan warna apa pun yang
+          kupilih akan salah di salah satunya. mask-image membuat kabutnya
+          menghilang ke atas, jadi tidak ada garis batas yang kelihatan. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[calc(var(--nav-clearance)+1rem)] backdrop-blur-xl"
+        // -webkit-mask-image WAJIB ikut: Safari — termasuk seluruh iOS —
+        // masih butuh versi berprefiks. Tanpa itu mask-nya diabaikan dan
+        // kabutnya berhenti mendadak sebagai kotak bergaris tegas, persis di
+        // perangkat yang paling sering dipakai membuka aplikasi ini.
+        style={{
+          maskImage: "linear-gradient(to top, black 60%, transparent)",
+          WebkitMaskImage: "linear-gradient(to top, black 60%, transparent)",
+        }}
+      />
+
       {/*
         Efek kaca.
         - backdrop-blur-2xl mengaburkan apa pun yang lewat di belakangnya.
