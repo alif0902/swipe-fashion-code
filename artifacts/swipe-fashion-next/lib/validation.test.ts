@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createOrderSchema,
+  reviewSchema,
   emailSchema,
   passwordSchema,
   passwordStrength,
@@ -156,5 +157,64 @@ describe("passwordStrength", () => {
 
   it("never exceeds three", () => {
     expect(passwordStrength(`${"swipefash123!".repeat(4)}`)).toBe(3);
+  });
+});
+
+// --- Ulasan produk ---------------------------------------------------------
+
+describe("reviewSchema", () => {
+  const valid = {
+    productId: 1,
+    rating: 5,
+    authorName: "みなみ",
+    body: "サイズ感がちょうどよかったです。",
+  };
+
+  it("menerima ulasan yang wajar", () => {
+    expect(reviewSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("menolak rating di luar 1–5", () => {
+    expect(reviewSchema.safeParse({ ...valid, rating: 0 }).success).toBe(false);
+    expect(reviewSchema.safeParse({ ...valid, rating: 6 }).success).toBe(false);
+  });
+
+  it("menolak rating pecahan", () => {
+    expect(reviewSchema.safeParse({ ...valid, rating: 4.5 }).success).toBe(false);
+  });
+
+  it("menolak isi yang terlalu pendek", () => {
+    expect(reviewSchema.safeParse({ ...valid, body: "いいね" }).success).toBe(false);
+  });
+
+  it("menolak isi yang hanya spasi", () => {
+    // Ini yang menentukan apakah .trim() benar-benar berlaku SEBELUM .min().
+    // Kalau tidak, 20 spasi lolos batas 10 karakter dan daftar ulasan bisa
+    // diisi baris kosong.
+    expect(
+      reviewSchema.safeParse({ ...valid, body: " ".repeat(20) }).success,
+    ).toBe(false);
+  });
+
+  it("menolak nama yang hanya spasi", () => {
+    expect(
+      reviewSchema.safeParse({ ...valid, authorName: "   " }).success,
+    ).toBe(false);
+  });
+
+  it("menolak isi melebihi 500 karakter", () => {
+    expect(
+      reviewSchema.safeParse({ ...valid, body: "あ".repeat(501) }).success,
+    ).toBe(false);
+  });
+
+  it("membuang spasi di tepi nama dan isi", () => {
+    const parsed = reviewSchema.parse({
+      ...valid,
+      authorName: "  みなみ  ",
+      body: "  サイズ感がちょうどよかったです。  ",
+    });
+    expect(parsed.authorName).toBe("みなみ");
+    expect(parsed.body).toBe("サイズ感がちょうどよかったです。");
   });
 });

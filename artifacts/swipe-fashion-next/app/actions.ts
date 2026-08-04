@@ -6,11 +6,13 @@ import {
   db,
   ordersTable,
   productsTable,
+  reviewsTable,
   superLikesTable,
   swipesTable,
   userTable,
 } from "@workspace/db";
 
+import { listReviews, type AppReview } from "@/lib/data";
 import { getCurrentUser, getOwnerId } from "@/lib/session";
 import { putDataUrl } from "@/lib/storage";
 import {
@@ -18,11 +20,13 @@ import {
   createOrderSchema,
   profileSchema,
   recordSwipeSchema,
+  reviewSchema,
   superLikeSchema,
   type ConfirmOrderInput,
   type CreateOrderInput,
   type ProfileInput,
   type RecordSwipeInput,
+  type ReviewInput,
   type SuperLikeInput,
 } from "@/lib/validation";
 
@@ -132,6 +136,96 @@ export async function createOrderAction(
   return { ok: true };
 }
 
+/**
+ * Ulasan sebuah produk, diambil SAAT panelnya dibuka.
+ *
+ * Sengaja tidak ikut dimuat bersama produk di feed: sepuluh kartu berarti
+ * sepuluh kali membaca tabel ulasan padahal kemungkinan besar tidak ada satu
+ * pun yang dibuka. Database ada di Sydney — pembacaan yang tidak terpakai itu
+ * mahal.
+ */
+export async function listReviewsAction(
+  productId: number,
+): Promise<AppReview[]> {
+  const sessionId = await getOwnerId();
+  return listReviews(productId, sessionId);
+}
+
+/**
+ * Menambahkan ulasan, lalu memperbarui agregat produknya.
+ *
+ * Terbuka untuk tamu — nama diisi manual. Aplikasi ini memang bisa dipakai
+ * tanpa mendaftar, dan menutup ulasan di balik pendaftaran akan membuat
+ * bagian ini kosong bagi hampir semua pengunjung.
+ *
+ * rating dan reviewCount diperbarui dengan RATA-RATA BERJALAN, bukan dihitung
+ * ulang dari tabel reviews:
+ *
+ *   rataBaru = (rataLama × jumlahLama + nilaiBaru) ÷ (jumlahLama + 1)
+ *
+ * Katalog menyatakan 61件 sementara tabel ini hanya menyimpan segelintir yang
+ * bisa dibaca. Menghitung ulang dari tabel akan menjatuhkan angkanya ke 5 dan
+ * membuang riwayat penilaian yang sudah ada. Rumus di atas menjaga ulasan baru
+ * berbobot wajar — satu bintang 1 di antara 61 hanya menggeser rata-rata
+ * sedikit, persis seperti yang seharusnya.
+ */
+export async function createReviewAction(
+  input: ReviewInput,
+): Promise<ActionResult> {
+  const parsed = reviewSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0].message };
+  }
+
+  const sessionId = await getOwnerId();
+  const { productId, rating, authorName, body } = parsed.data;
+
+  try {
+    await db.transaction(async (tx) => {
+      const [product] = await tx
+        .select({
+          rating: productsTable.rating,
+          reviewCount: productsTable.reviewCount,
+        })
+        .from(productsTable)
+        .where(eq(productsTable.id, productId));
+
+      if (!product) throw new Error("product not found");
+
+      await tx.insert(reviewsTable).values({
+        productId,
+        // Kosong untuk tamu tanpa cookie sesi; baris tetap tersimpan, hanya
+        // tidak bisa dikenali sebagai miliknya nanti.
+        sessionId: sessionId || null,
+        authorName,
+        rating,
+        body,
+      });
+
+      const oldCount = product.reviewCount;
+      const oldRating = product.rating ? parseFloat(product.rating) : 0;
+      const nextCount = oldCount + 1;
+      const nextRating = (oldRating * oldCount + rating) / nextCount;
+
+      await tx
+        .update(productsTable)
+        .set({
+          // numeric Postgres menerima string; dua desimal disamakan dengan
+          // data seed.
+          rating: nextRating.toFixed(2),
+          reviewCount: nextCount,
+        })
+        .where(eq(productsTable.id, productId));
+    });
+  } catch {
+    return { ok: false, error: "レビューを投稿できませんでした。" };
+  }
+
+  revalidatePath(`/product/${productId}`);
+  revalidatePath("/feed");
+  return { ok: true };
+}
+
 // Merekam SATU keputusan swipe, termasuk swipe kiri. Ini bahan bakar mesin
 // selera di lib/taste.ts — tanpa sinyal negatif, profil hanya tahu apa yang
 // disukai dan tidak pernah belajar apa yang harus dihindari.
@@ -160,10 +254,16 @@ export async function recordSwipeAction(
       })
       .onConflictDoUpdate({
         target: [swipesTable.sessionId, swipesTable.productId],
-        set: { direction: parsed.data.direction },
+        // createdAt ikut diperbarui, bukan hanya arahnya.
+        //
+        // Profil selera kini hanya membaca beberapa swipe TERBARU, dan
+        // urutannya ditentukan kolom ini. Tanpa baris ini, mengubah keputusan
+        // atas produk lama tetap memakai stempel waktu lamanya — keputusan
+        // yang baru saja diambil tidak akan terhitung sebagai yang terbaru.
+        set: { direction: parsed.data.direction, createdAt: new Date() },
       });
 
-    // HANYA Style DNA. Feed SENGAJA tidak di-revalidate.
+    // Feed SENGAJA tidak di-revalidate.
     //
     // Merevalidasi /feed di sini membuat server mengirim daftar produk baru
     // ke tengah sesi swipe yang sedang berjalan — barang yang baru diputuskan
@@ -173,7 +273,6 @@ export async function recordSwipeAction(
     // Urutan feed memang ditentukan sekali saat halaman dimuat. Itu bukan
     // keterbatasan: tumpukan kartu yang menyusun ulang dirinya di tengah
     // permainan justru terasa rusak.
-    revalidatePath("/style-dna");
     return { ok: true };
   } catch {
     // Tabel swipes mungkin belum di-push. Swipe tetap terasa mulus; yang
@@ -496,7 +595,6 @@ export async function undoSuperLikeAction(
       );
 
     revalidatePath("/obsessed");
-    revalidatePath("/style-dna");
     return { ok: true };
   } catch {
     return { ok: false, error: "取り消せませんでした。" };

@@ -19,6 +19,7 @@
     "typecheck:libs": "tsc --build",
     "typecheck": "npm run typecheck:libs && npm run typecheck --workspaces --if-present",
     "db:push": "npm run push -w @workspace/db",
+    "seed-reviews": "npm run seed-reviews -w @workspace/scripts",
     "seed": "npm run seed -w @workspace/scripts",
     "set-images": "npm run set-images -w @workspace/scripts",
     "verify-stock": "npm run verify-stock -w @workspace/scripts",

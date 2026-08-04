@@ -6,6 +6,7 @@ import {
   db,
   ordersTable,
   productsTable,
+  reviewsTable,
   superLikesTable,
   swipesTable,
 } from "@workspace/db";
@@ -41,7 +42,13 @@ async function loadSwipeState(sessionId: string): Promise<{
     })
     .from(swipesTable)
     .innerJoin(productsTable, eq(productsTable.id, swipesTable.productId))
-    .where(eq(swipesTable.sessionId, sessionId));
+    .where(eq(swipesTable.sessionId, sessionId))
+    // TERBARU DULU. Kueri ini dulu tanpa ORDER BY sama sekali, dan Postgres
+    // memang tidak menjanjikan urutan apa pun tanpanya. Itu tidak jadi soal
+    // selama profil membaca seluruh riwayat — tapi sejak ia hanya membaca
+    // beberapa swipe terakhir, urutan inilah yang menentukan mana yang
+    // terbaca. Tanpa ORDER BY, "5 terakhir" berarti 5 baris sembarang.
+    .orderBy(desc(swipesTable.createdAt));
 
   return {
     signals: rows.map((row) => ({
@@ -259,6 +266,52 @@ export async function getProduct(id: number): Promise<AppProduct | null> {
     .where(eq(productsTable.id, id));
 
   return row ? formatProduct(row) : null;
+}
+
+export type AppReview = {
+  id: number;
+  authorName: string;
+  rating: number;
+  body: string;
+  createdAt: Date;
+  /** Ditulis dari sesi ini — dipakai untuk menandai「あなたの投稿」. */
+  isMine: boolean;
+};
+
+/**
+ * Ulasan sebuah produk, terbaru dulu.
+ *
+ * Diurutkan menurut WAKTU, bukan rating. Mengurutkan dari bintang tertinggi
+ * akan mendorong semua keluhan ke dasar daftar — tabel ulasan yang tidak
+ * pernah menunjukkan keberatan tidak bisa dipercaya siapa pun.
+ */
+export async function listReviews(
+  productId: number,
+  sessionId: string,
+  limit?: number,
+): Promise<AppReview[]> {
+  try {
+    const rows = await db
+      .select()
+      .from(reviewsTable)
+      .where(eq(reviewsTable.productId, productId))
+      .orderBy(desc(reviewsTable.createdAt));
+
+    const mapped = rows.map((r) => ({
+      id: r.id,
+      authorName: r.authorName,
+      rating: r.rating,
+      body: r.body,
+      createdAt: r.createdAt,
+      isMine: Boolean(sessionId) && r.sessionId === sessionId,
+    }));
+
+    return limit ? mapped.slice(0, limit) : mapped;
+  } catch {
+    // Tabel reviews mungkin belum di-push. Kartu produk tetap tampil; yang
+    // hilang hanya daftar ulasannya.
+    return [];
+  }
 }
 
 export async function listCategories(): Promise<

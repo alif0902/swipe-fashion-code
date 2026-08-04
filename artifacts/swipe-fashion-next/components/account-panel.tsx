@@ -161,13 +161,6 @@ export function AccountPanel({
         }
       />
       <MenuRow
-        href="/style-dna"
-        icon={Sparkles}
-        tone="bg-amber-500/12 text-amber-500"
-        label="スタイルDNA"
-        hint="スワイプから学習した好み"
-      />
-      <MenuRow
         href="/orders"
         icon={ShoppingBag}
         tone="bg-sky-500/12 text-sky-500"

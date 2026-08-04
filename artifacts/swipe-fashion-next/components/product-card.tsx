@@ -14,6 +14,7 @@ import { categoryLabel, formatPrice, type AppProduct } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
+import { ReviewSheet } from '@/components/review-sheet';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, ShoppingBag, ThumbsUp, X } from 'lucide-react';
 
@@ -106,6 +107,7 @@ export function ProductCard({
 
   const images = product.images.length > 0 ? product.images : [product.imageUrl];
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
   const currentImage = images[photoIndex] ?? images[0];
 
   const goTo = (i: number) =>
@@ -468,12 +470,31 @@ export function ProductCard({
             {dimensionEntries.map(([label, value]) => (
               <InfoRow key={label} label={label} value={value} />
             ))}
-            {product.rating !== null && (
-              <InfoRow
-                label="評価"
-                value={`${product.rating.toFixed(1)}（${product.reviewCount}件）`}
-              />
-            )}
+            {/* SELALU dirender, termasuk saat rating masih null.
+                //
+                // Sebelumnya baris ini dijaga `product.rating !== null`, dan
+                // produk yang dibuat lewat panel admin tidak pernah diberi
+                // rating — jadi barisnya hilang, dan tidak ada pintu masuk
+                // untuk ulasan PERTAMA. Produk baru terkunci tanpa ulasan
+                // selamanya.
+                //
+                // Satu-satunya baris 基本情報 yang bisa diketuk. */}
+            <button
+              type="button"
+              onClick={() => setIsReviewOpen(true)}
+              data-testid="button-open-reviews"
+              className="w-full flex items-start gap-4 py-3 border-b border-border/60 text-left group"
+            >
+              <span className="w-28 shrink-0 text-sm text-muted-foreground">
+                評価
+              </span>
+              <span className="flex-1 text-sm text-primary inline-flex items-center gap-1.5">
+                {product.rating !== null
+                  ? `${product.rating.toFixed(1)}（${product.reviewCount}件）`
+                  : "レビューはまだありません"}
+                <ChevronRight className="w-3.5 h-3.5 opacity-50 group-hover:translate-x-0.5 transition-transform" />
+              </span>
+            </button>
             <InfoRow
               label="在庫"
               value={product.stock > 0 ? `残り${product.stock}点` : '在庫切れ'}
@@ -511,6 +532,18 @@ export function ProductCard({
           </div>
         )}
       </div>
+
+      {/* Di luar wadah kartu supaya rotasi dan geseran kartu tidak ikut
+          menyeret panelnya. Drawer sendiri merender ke portal, tapi state-nya
+          tetap milik kartu ini. */}
+      <ReviewSheet
+        productId={product.id}
+        productName={product.name}
+        rating={product.rating}
+        reviewCount={product.reviewCount}
+        isOpen={isReviewOpen}
+        onOpenChange={setIsReviewOpen}
+      />
     </motion.div>
   );
 }

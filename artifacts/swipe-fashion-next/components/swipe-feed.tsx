@@ -10,6 +10,7 @@ import {
   superLikeAction,
   undoSuperLikeAction,
 } from "@/app/actions";
+import { FeedCoach } from "@/components/feed-coach";
 import { MatchOverlay } from "@/components/match-overlay";
 import { OrderSheet } from "@/components/order-sheet";
 import { ProductCard } from "@/components/product-card";
@@ -159,6 +160,16 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
     // tenang. overflow-hidden di sini juga yang memotong panah navigasi foto
     // jadi setengah lingkaran di tepi layar.
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-sky-200 via-purple-200 to-pink-400">
+      {/* Panduan gestur kunjungan pertama.
+
+          Dipasang HANYA saat masih ada kartu. Kalau dek sudah habis, tidak ada
+          apa pun untuk dipraktikkan dan panduannya cuma menghalangi keadaan
+          kosong. Foto kartu terdepan dipinjam sebagai peraga supaya yang
+          diperagakan adalah barang sungguhan, bukan kotak abu-abu. */}
+      {hasMoreProducts && (
+        <FeedCoach previewImage={deck[currentIndex].imageUrl} />
+      )}
+
       {/* Logo dan tombol undo dihapus atas permintaan: kartu kini memakai
           seluruh tinggi layar, jadi tidak ada lagi offset atas. */}
       <div className="relative w-full h-full pt-[env(safe-area-inset-top)]">

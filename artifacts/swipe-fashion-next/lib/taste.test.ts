@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildTasteProfile,
+  RECENT_WINDOW,
   describeTaste,
   explainRanking,
   rankProducts,
@@ -77,7 +78,10 @@ describe("buildTasteProfile", () => {
   });
 
   it("menaikkan keyakinan seiring jumlah swipe dan berhenti di 1", () => {
-    expect(buildTasteProfile([signal()]).confidence).toBeCloseTo(0.1, 5);
+    // 1 dari RECENT_WINDOW (5) = 0,2. Dulu 0,1 saat ambangnya 10 swipe —
+    // angka yang kini mustahil dicapai, karena profil tidak pernah membaca
+    // lebih dari 5 sinyal.
+    expect(buildTasteProfile([signal()]).confidence).toBeCloseTo(0.2, 5);
     expect(
       buildTasteProfile(Array.from({ length: 25 }, () => signal())).confidence,
     ).toBe(1);
@@ -236,5 +240,90 @@ describe("explainRanking", () => {
     ]);
 
     expect(explainRanking(profile, outer)).toBe("好みからは少し外れています");
+  });
+});
+
+// --- Jendela swipe terbaru -------------------------------------------------
+
+describe("RECENT_WINDOW", () => {
+  it("hanya membaca RECENT_WINDOW sinyal pertama", () => {
+    // Sinyal datang TERBARU DULU. Lima pertama semuanya アウター; sisanya
+    // トップス dan harus diabaikan sepenuhnya.
+    const profile = buildTasteProfile([
+      ...Array.from({ length: RECENT_WINDOW }, () =>
+        signal({ category: "outerwear" }),
+      ),
+      ...Array.from({ length: 20 }, () => signal({ category: "tops" })),
+    ]);
+
+    expect(profile.categories.map((c) => c.key)).toEqual(["outerwear"]);
+  });
+
+  it("melupakan selera lama saat yang baru masuk", () => {
+    const lama = Array.from({ length: 10 }, () =>
+      signal({ category: "dresses" }),
+    );
+    const baru = Array.from({ length: RECENT_WINDOW }, () =>
+      signal({ category: "bottoms" }),
+    );
+
+    const profile = buildTasteProfile([...baru, ...lama]);
+    expect(profile.categories[0].key).toBe("bottoms");
+    expect(profile.categories.some((c) => c.key === "dresses")).toBe(false);
+  });
+
+  it("tetap menghitung SELURUH riwayat untuk angka マイページ", () => {
+    // Jendela hanya membatasi SELERA. Kalau hitungannya ikut dipotong, orang
+    // yang sudah menggeser 30 kali akan melihat "5" di 足あと.
+    const profile = buildTasteProfile([
+      ...Array.from({ length: 20 }, () => signal({ direction: "like" })),
+      ...Array.from({ length: 10 }, () => signal({ direction: "pass" })),
+    ]);
+
+    expect(profile.totalSwipes).toBe(30);
+    expect(profile.likedCount).toBe(20);
+    expect(profile.passedCount).toBe(10);
+  });
+
+  it("likedCount dan passedCount selalu berjumlah totalSwipes", () => {
+    const profile = buildTasteProfile([
+      signal({ direction: "super" }),
+      signal({ direction: "like" }),
+      signal({ direction: "pass" }),
+      signal({ direction: "pass" }),
+      signal({ direction: "like" }),
+      signal({ direction: "pass" }),
+      signal({ direction: "super" }),
+    ]);
+
+    expect(profile.likedCount + profile.passedCount).toBe(profile.totalSwipes);
+  });
+
+  it("rentang harga hanya dari yang disukai DI DALAM jendela", () => {
+    const profile = buildTasteProfile([
+      // Di dalam jendela
+      signal({ direction: "like", price: 100 }),
+      signal({ direction: "like", price: 200 }),
+      signal({ direction: "pass", price: 9999 }),
+      signal({ direction: "like", price: 300 }),
+      signal({ direction: "like", price: 400 }),
+      // Di luar jendela — tidak boleh menggeser rentang
+      signal({ direction: "like", price: 100000 }),
+    ]);
+
+    expect(profile.priceBand).not.toBeNull();
+    expect(profile.priceBand!.max).toBe(400);
+  });
+
+  it("mencapai keyakinan penuh tepat saat jendela terisi", () => {
+    const penuh = buildTasteProfile(
+      Array.from({ length: RECENT_WINDOW }, () => signal()),
+    );
+    expect(penuh.confidence).toBe(1);
+
+    const separuh = buildTasteProfile(
+      Array.from({ length: Math.floor(RECENT_WINDOW / 2) }, () => signal()),
+    );
+    expect(separuh.confidence).toBeLessThan(1);
   });
 });

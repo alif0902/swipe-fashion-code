@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "seed-reviews": "tsx ./src/seed-reviews.ts",
     "seed": "tsx ./src/seed.ts",
     "set-images": "tsx ./src/set-product-images.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",

@@ -260,7 +260,10 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     category: "tops",
     gender: "women",
     sizes: ["XS", "S", "M", "L", "XL"],
-    colors: ["Pink", "Grey", "Blue"],
+    // "Teal", bukan "Blue". Foto flat lay-nya memperlihatkan abu, teal, dan
+    // pink — tidak ada biru di sana. Nama warna yang meleset dari fotonya
+    // membuat swatch di lembar pemesanan menjanjikan barang yang berbeda.
+    colors: ["Pink", "Grey", "Teal"],
     // Tiga foto model lebih dulu, urutannya sama dengan colors di atas, lalu
     // flat lay tiga warna sebagai penutup.
     images: [

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, Star } from "lucide-react";
 
+import { ObsessedDeleteButton } from "@/components/obsessed-delete-button";
 import { OrderSheet } from "@/components/order-sheet";
 import { formatPrice, type AppProduct } from "@/lib/format";
 
@@ -58,6 +59,16 @@ export function ObsessedGrid({ products }: { products: AppProduct[] }) {
                   一目惚れ
                 </span>
               </span>
+
+              {/* Sudut kanan-atas, berseberangan dengan lencana 一目惚れ dan
+                  jauh dari tombol バッグ di kanan-bawah. Menghapus dan
+                  memasukkan ke keranjang adalah dua tindakan yang paling tidak
+                  boleh tertukar, jadi keduanya diberi jarak sejauh mungkin di
+                  dalam kartu.
+
+                  SELALU terlihat, tidak disembunyikan di balik hover — alasan
+                  yang sama dengan tombol バッグ di bawah. */}
+              <ObsessedDeleteButton productId={product.id} />
 
               {/* Satu aksi saja: masuk バッグ.
                   Tombol "beli langsung" dihapus karena keduanya tetap melewati

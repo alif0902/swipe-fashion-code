@@ -12,6 +12,23 @@ export const createOrderSchema = z.object({
   quantity: z.number().int().min(1).max(99),
 });
 
+export const reviewSchema = z.object({
+  productId: z.number().int().positive(),
+  rating: z.number().int().min(1).max(5),
+  authorName: z
+    .string()
+    .trim()
+    .min(1, "お名前を入力してください")
+    .max(20, "お名前は20文字までです"),
+  // Batas bawah 10 karakter: ulasan sependek「いい」tidak membantu siapa pun
+  // dan hanya mengencerkan daftar. Batas atas menjaga panel tetap terbaca.
+  body: z
+    .string()
+    .trim()
+    .min(10, "10文字以上でご記入ください")
+    .max(500, "500文字までです"),
+});
+
 export const confirmOrderSchema = z.object({
   paymentMethod: z.string().min(1),
   shippingAddress: z.string().min(1),
@@ -215,6 +232,7 @@ export type SignInInput = z.infer<typeof signInSchema>;
 export type ProfileInput = z.infer<typeof profileSchema>;
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+export type ReviewInput = z.infer<typeof reviewSchema>;
 export type ConfirmOrderInput = z.infer<typeof confirmOrderSchema>;
 export type SuperLikeInput = z.infer<typeof superLikeSchema>;
 export type RecordSwipeInput = z.infer<typeof recordSwipeSchema>;

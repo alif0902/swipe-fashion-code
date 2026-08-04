@@ -21,6 +21,11 @@ export type TasteSignal = {
 export type Affinity = {
   key: string;
   // -1 (sangat ditolak) sampai +1 (sangat disukai).
+  //
+  // Dinormalisasi terhadap nilai TERKUAT di dimensinya sendiri, jadi yang
+  // teratas selalu 1 secara definisi. Berguna untuk panjang bar, TIDAK boleh
+  // ditampilkan sebagai angka: dua kategori yang seri di puncak sama-sama
+  // menjadi 100, dan angkanya tidak bisa dibandingkan antar dimensi.
   score: number;
 };
 
@@ -47,9 +52,27 @@ const DIRECTION_WEIGHT: Record<SwipeDirection, number> = {
   pass: -1,
 };
 
-// Profil dianggap penuh keyakinan setelah sekian swipe. Katalog demo berisi
-// 12 produk, jadi 10 sudah cukup untuk menyatakan pola.
-const CONFIDENCE_FULL_AT = 10;
+/**
+ * Berapa swipe TERAKHIR yang membentuk profil.
+ *
+ * Sebelumnya seluruh riwayat terhitung, dan bobot swipe pertama sama besar
+ * dengan yang barusan. Akibatnya selera terasa membeku: sepuluh swipe lama
+ * mengunci feed, dan perubahan minat tidak pernah terlihat.
+ *
+ * Jendela pendek membuat feed mengikuti apa yang sedang dilihat orang
+ * SEKARANG. Konsekuensinya disengaja: pola jangka panjang memang dilupakan.
+ * Untuk katalog kecil dan sesi singkat, kelincahan lebih berharga daripada
+ * ingatan.
+ *
+ * PENTING: sinyal harus datang TERBARU DULU. loadSwipeState di lib/data.ts
+ * mengurutkannya dengan ORDER BY created_at DESC.
+ */
+export const RECENT_WINDOW = 5;
+
+// Keyakinan penuh tercapai saat jendelanya terisi. Dulu 10 — angka yang
+// mustahil dicapai sekarang, karena tidak akan pernah ada lebih dari
+// RECENT_WINDOW sinyal yang terhitung, dan 精度 akan mentok di 50%.
+const CONFIDENCE_FULL_AT = RECENT_WINDOW;
 
 // Bobot tiap dimensi saat menilai kandidat produk. Kategori paling menentukan
 // (orang membeli "jenis" barang), brand berikutnya, warna sebagai penyelaras,
@@ -85,14 +108,29 @@ function tally(
     .sort((a, b) => b.score - a.score || a.key.localeCompare(b.key));
 }
 
-export function buildTasteProfile(signals: TasteSignal[]): TasteProfile {
+/**
+ * @param signals Riwayat swipe, TERBARU DULU. Hanya RECENT_WINDOW pertama
+ *   yang dipakai — sisanya diabaikan.
+ */
+export function buildTasteProfile(allSignals: TasteSignal[]): TasteProfile {
+  const signals = allSignals.slice(0, RECENT_WINDOW);
+
   const categoryEntries: Array<{ key: string; weight: number }> = [];
   const brandEntries: Array<{ key: string; weight: number }> = [];
   const colorEntries: Array<{ key: string; weight: number }> = [];
   const likedPrices: number[] = [];
 
+  // Hitungan seumur hidup, dari SELURUH riwayat — bukan dari jendela.
+  //
+  // マイページ menampilkan「◯回スワイプ」dan「◯点いいね」. Kalau angka itu
+  // ikut dipotong jendela, orang yang sudah menggeser 50 kali akan melihat
+  // "5". Selera boleh melupakan masa lalu; hitungannya tidak boleh.
   let likedCount = 0;
   let passedCount = 0;
+  for (const signal of allSignals) {
+    if (DIRECTION_WEIGHT[signal.direction] > 0) likedCount += 1;
+    else passedCount += 1;
+  }
 
   for (const signal of signals) {
     const weight = DIRECTION_WEIGHT[signal.direction];
@@ -105,11 +143,10 @@ export function buildTasteProfile(signals: TasteSignal[]): TasteProfile {
       colorEntries.push({ key: color, weight: weight / signal.colors.length });
     }
 
-    if (weight > 0) {
-      likedCount += 1;
-      if (Number.isFinite(signal.price)) likedPrices.push(signal.price);
-    } else {
-      passedCount += 1;
+    // Rentang harga ikut jendela: anggaran yang relevan adalah anggaran
+    // sekarang, bukan rata-rata sepanjang masa.
+    if (weight > 0 && Number.isFinite(signal.price)) {
+      likedPrices.push(signal.price);
     }
   }
 
@@ -129,7 +166,8 @@ export function buildTasteProfile(signals: TasteSignal[]): TasteProfile {
     brands: tally(brandEntries),
     colors: tally(colorEntries),
     priceBand,
-    totalSwipes: signals.length,
+    // Seumur hidup, bukan jendela — dipakai マイページ.
+    totalSwipes: allSignals.length,
     likedCount,
     passedCount,
     confidence: Math.min(1, signals.length / CONFIDENCE_FULL_AT),
