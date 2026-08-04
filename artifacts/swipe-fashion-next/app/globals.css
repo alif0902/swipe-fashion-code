@@ -44,20 +44,26 @@
 }
 
 :root {
-  /* Jarak aman di atas bilah navigasi bawah.
+  /* Jarak bilah navigasi dari dasar layar.
 
-     Bilah itu duduk di bottom-0 dengan padding-bawah 0.5rem + safe-area, dan
-     batangnya sendiri setinggi h-16 (4rem). Jadi tepi ATASNYA berada di
-     4.5rem + safe-area dari dasar layar — bukan angka tetap.
+     Dulu 0.5rem + safe-area penuh — di iPhone itu 42px, dan bilahnya terlihat
+     mengambang jauh dari tepi bawah. safe-area-inset-bottom (34px) adalah
+     zona home indicator, tapi indikatornya sendiri hanya garis tipis di dasar
+     zona itu; bilah melayang boleh masuk sebagian tanpa tertutup.
 
-     Semua yang mengambang di atasnya dulu memakai bottom-24 (6rem), yang
-     benar HANYA di perangkat tanpa home indicator. Di iPhone modern
-     safe-area ≈ 34px, sehingga tepi atas bilah naik ke ~106px dan menabrak
-     tombol yang berhenti di 96px.
+     Mengurangi 1rem dari inset menyisakan 18px di iPhone — cukup untuk tidak
+     bertabrakan dengan garis indikator, tanpa menyisakan pita pink kosong.
+     max() menjaga perangkat tanpa notch tetap punya 0.5rem, bukan nol. */
+  --nav-bottom-gap: max(0.5rem, calc(env(safe-area-inset-bottom) - 1rem));
 
-     6rem = 4.5rem tinggi bilah + 1.5rem napas. Ubah di sini saja kalau tinggi
-     bilahnya berubah; jangan menaruh angka tetap di komponen lagi. */
-  --nav-clearance: calc(6rem + env(safe-area-inset-bottom));
+  /* Jarak aman DI ATAS bilah navigasi, untuk apa pun yang mengambang di sana.
+
+     Diturunkan dari --nav-bottom-gap, bukan ditulis ulang. Sebelumnya dua
+     angka ini dihitung terpisah, dan begitu posisi bilahnya bergeser yang
+     satu tidak ikut — tombol いいね！ langsung menabrak bilahnya.
+
+     4rem tinggi batang (h-16) + 1.5rem napas. */
+  --nav-clearance: calc(5.5rem + var(--nav-bottom-gap));
 
   /* Tema ala with.is — latar pink lembut, aksen coral #fe6970, ramah & rounded.
      Latar sengaja dibedakan jelas dari --card yang tetap putih: kartu produk

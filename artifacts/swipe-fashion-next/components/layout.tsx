@@ -26,7 +26,7 @@ export function BottomNav() {
     // Wadah luar `pointer-events-none` supaya celah transparan di kiri, kanan,
     // dan bawah pil tidak menghalangi sentuhan ke konten di baliknya. Hanya
     // pilnya sendiri yang menerima sentuhan.
-    <div className="absolute bottom-0 inset-x-0 z-40 px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pointer-events-none">
+    <div className="absolute bottom-0 inset-x-0 z-40 px-4 pb-[var(--nav-bottom-gap)] pointer-events-none">
       {/*
         Efek kaca.
         - backdrop-blur-2xl mengaburkan apa pun yang lewat di belakangnya.
