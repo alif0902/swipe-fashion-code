@@ -55,19 +55,19 @@ export function FilterFabShell({
           data-testid="button-filter"
           aria-label={title}
           className={cn(
-            "pointer-events-auto absolute h-14 pl-4 pr-5 rounded-full bg-foreground text-background shadow-xl flex items-center gap-2 cursor-grab active:cursor-grabbing touch-none",
+            "pointer-events-auto absolute h-11 pl-3.5 pr-4 rounded-full bg-foreground text-background shadow-lg flex items-center gap-1.5 cursor-grab active:cursor-grabbing touch-none",
             positionClassName,
           )}
         >
           <span className="relative">
-            <SlidersHorizontal className="w-5 h-5" />
+            <SlidersHorizontal className="w-4 h-4" />
             {activeCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center">
                 {activeCount}
               </span>
             )}
           </span>
-          <span className="text-sm font-bold">{title}</span>
+          <span className="text-[13px] font-bold">{title}</span>
         </motion.button>
       </div>
 
