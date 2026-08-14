@@ -13,7 +13,7 @@ import {
 import { FeedCoach } from "@/components/feed-coach";
 import { MatchOverlay } from "@/components/match-overlay";
 import { OrderSheet } from "@/components/order-sheet";
-import { ProductCard } from "@/components/product-card";
+import { FEED_BACKDROP, ProductCard } from "@/components/product-card";
 import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
 import type { AppProduct } from "@/lib/format";
@@ -159,7 +159,9 @@ export function SwipeFeed({ products }: { products: AppProduct[] }) {
     // halaman lain tetap memakai --background polos supaya konten panjang
     // tenang. overflow-hidden di sini juga yang memotong panah navigasi foto
     // jadi setengah lingkaran di tepi layar.
-    <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-sky-200 via-purple-200 to-pink-400">
+    <div
+      className={`relative w-full h-full overflow-hidden ${FEED_BACKDROP}`}
+    >
       {/* Panduan gestur kunjungan pertama.
 
           Dipasang HANYA saat masih ada kartu. Kalau dek sudah habis, tidak ada

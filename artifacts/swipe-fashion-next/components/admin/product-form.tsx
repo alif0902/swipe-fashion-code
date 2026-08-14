@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageCropper } from "@/components/admin/image-cropper";
-import { ProductCard } from "@/components/product-card";
+import { FEED_BACKDROP, ProductCard } from "@/components/product-card";
 import { useToast } from "@/hooks/use-toast";
 import { PLACEHOLDER_IMAGE, type AppProduct } from "@/lib/format";
 import {
@@ -37,6 +37,24 @@ const CATEGORIES = [
 // jalur yang ditulis ulang di sini. Versi sebelumnya menunjuk foto produk
 // katalog, lalu produk itu dihapus dan pratinjaunya jadi kotak kosong.
 const PREVIEW_FALLBACK_IMAGE = PLACEHOLDER_IMAGE;
+
+// Ukuran panggung pratinjau — disalin dari PhoneFrame di components/layout.tsx
+// (max-w-md, tinggi min(900px, 94vh)), yaitu bingkai tempat feed sungguhan
+// berjalan.
+//
+// KENAPA DIRENDER BESAR LALU DIPERKECIL. Sebelumnya kartu dijejalkan ke kotak
+// max-w-[400px] aspect-[9/16] (±345×613). Ukuran huruf dan jarak di dalam
+// ProductCard tidak ikut mengecil — semuanya angka tetap yang dirancang untuk
+// layar ponsel penuh — jadi di kotak yang lebih pendek judul dan harga
+// terbaca membesar, dan panel putihnya terpancung di tengah baris. Yang
+// terlihat bukan feed yang lebih kecil, melainkan feed yang di-zoom.
+//
+// transform: scale memperkecil SEMUANYA dengan faktor yang sama, jadi
+// proporsinya identik dengan perangkat sungguhan: bagian yang terlihat di
+// pratinjau persis bagian yang terlihat di ponsel.
+const PREVIEW_STAGE_W = 448;
+const PREVIEW_STAGE_H = 900;
+const PREVIEW_SCALE = 0.7;
 
 type FormState = {
   name: string;
@@ -268,7 +286,10 @@ export function ProductForm({
   };
 
   return (
-    <div className="grid lg:grid-cols-[1fr_400px] gap-8 items-start">
+    // Lebar kolom kanan mengikuti panggung pratinjau (448×0,7 ≈ 314) ditambah
+    // sedikit napas. Dipatok 400 seperti sebelumnya, kolomnya menyisakan pita
+    // kosong selebar 86px di sebelah kartu.
+    <div className="grid lg:grid-cols-[1fr_340px] gap-8 items-start">
       {/* Cropper muncul selama masih ada berkas di antrean. `key` dipatok ke
           nama + ukuran berkas supaya komponennya benar-benar di-mount ulang
           saat lanjut ke foto berikutnya — tanpa itu, posisi dan zoom dari
@@ -627,17 +648,47 @@ export function ProductForm({
         <p className="text-xs font-bold text-muted-foreground">
           フィードでの見え方
         </p>
-        <div className="relative w-full max-w-[400px] aspect-[9/16] rounded-[2rem] overflow-hidden border border-border bg-background shadow-sm">
-          <ProductCard
-            product={preview}
-            onSwipeRight={() => {}}
-            onSwipeLeft={() => {}}
-            onSuperLike={() => {}}
-            isFront={false}
-          />
+        {/* Latarnya gradasi feed, bukan putih. Kartu ini sengaja dirancang
+            sebagai blok-blok yang MENGAMBANG — foto, gelembung, panel — dengan
+            celah transparan di antaranya. Di atas latar putih celah itu hilang
+            dan kartunya terbaca seperti satu kotak, jadi pratinjaunya
+            menunjukkan komposisi yang tidak pernah dilihat siapa pun. */}
+        <div
+          className={cn(
+            "relative overflow-hidden rounded-[2rem] border border-border shadow-sm",
+            FEED_BACKDROP,
+          )}
+          style={{
+            width: Math.round(PREVIEW_STAGE_W * PREVIEW_SCALE),
+            height: Math.round(PREVIEW_STAGE_H * PREVIEW_SCALE),
+          }}
+        >
+          {/* Panggung seukuran perangkat, diperkecil dari sudut kiri-atas.
+              origin-top-left WAJIB: dengan titik asal bawaan (tengah), elemen
+              yang mengecil menyisakan pita kosong di semua sisi dan kartunya
+              melayang di tengah bingkai. */}
+          <div
+            className="absolute left-0 top-0 origin-top-left"
+            style={{
+              width: PREVIEW_STAGE_W,
+              height: PREVIEW_STAGE_H,
+              transform: `scale(${PREVIEW_SCALE})`,
+            }}
+          >
+            <ProductCard
+              product={preview}
+              onSwipeRight={() => {}}
+              onSwipeLeft={() => {}}
+              onSuperLike={() => {}}
+              // isFront=false mematikan drag. Pratinjau yang bisa digeser akan
+              // melempar kartunya keluar bingkai tanpa ada yang mengembalikan
+              // — tidak ada dek di sini, hanya satu kartu.
+              isFront={false}
+            />
+          </div>
         </div>
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          実際のフィードと同じ部品で描画しています。入力するとその場で反映されます。
+          実際のフィードと同じ部品を{Math.round(PREVIEW_SCALE * 100)}%で表示しています。見えている範囲がスマホでの表示範囲です。下の情報は枠内をスクロールすると見られます。
         </p>
       </aside>
     </div>

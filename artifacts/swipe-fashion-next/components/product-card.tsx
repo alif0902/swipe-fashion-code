@@ -18,6 +18,19 @@ import { ReviewSheet } from '@/components/review-sheet';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, ShoppingBag, ThumbsUp, X } from 'lucide-react';
 
+/**
+ * Latar tempat kartu ini dirancang mengambang: gradasi feed.
+ *
+ * Diekspor dari sini, bukan dari swipe-feed, karena pratinjau di panel admin
+ * juga membutuhkannya — dan mengimpornya dari swipe-feed berarti menyeret
+ * seluruh komponen feed (overlay match, order sheet, aksi server) ke dalam
+ * bundel admin hanya untuk satu string kelas. Yang penting: kedua tempat
+ * membaca nilai yang sama, jadi latar pratinjau tidak bisa menyimpang dari
+ * latar aslinya diam-diam.
+ */
+export const FEED_BACKDROP =
+  'bg-gradient-to-b from-sky-200 via-purple-200 to-pink-400';
+
 interface ProductCardProps {
   product: AppProduct;
   /** Geser kanan — memulai pembelian. Hanya lewat gestur, tidak ada tombolnya. */
@@ -245,14 +258,33 @@ export function ProductCard({
              menggulir; tanpa itu browser menahan scroll dan hanya drag yang
              jalan. */}
         <motion.div
-          className="relative h-[42%] shrink-0 touch-pan-y"
+          className="relative shrink-0 touch-pan-y"
           style={{ opacity: photoOpacity, scale: photoScale }}
           onPointerDown={onPhotoPointerDown}
           onPointerMove={onPhotoPointerMove}
           onPointerUp={onPhotoPointerEnd}
           onPointerCancel={onPhotoPointerEnd}
         >
-          <div className="relative h-full mx-6 rounded-[1.75rem] overflow-hidden bg-muted shadow-lg">
+          {/* Rasio 3:4, BUKAN tinggi persentase.
+              //
+              // Sebelumnya h-[42%] dari tinggi kartu, dan lebarnya mengikuti
+              // lebar layar dikurangi margin — di bingkai 448x900 hasilnya
+              // 400x375, nyaris persegi. Padahal yang disimpan pemotong foto
+              // selalu 3:4 (lihat OUT_W/OUT_H di image-cropper), jadi
+              // object-cover memangkas lagi sekitar 27% tingginya: kepala
+              // model atau sepatunya hilang setelah admin susah payah
+              // memilih potongannya, dan「この枠がフィードに出る範囲です」di
+              // layar pemotong jadi janji yang tidak ditepati.
+              //
+              // Menyamakan rasionya membuat rantai itu jujur dari ujung ke
+              // ujung, sekaligus menyamakan kartu feed dengan grid /lookbook
+              // dan 一目惚れ yang memang sudah aspect-[3/4].
+              //
+              // Rasio dipasang pada elemen yang SAMA dengan margin kirinya.
+              // Kalau aspect-nya ditaruh di wadah luar, tingginya dihitung
+              // dari lebar penuh kartu sementara fotonya menyempit sebesar
+              // mx-6 — dan potongannya kembali muncul, hanya lebih halus. */}
+          <div className="relative mx-6 aspect-[3/4] rounded-[1.75rem] overflow-hidden bg-muted shadow-lg">
             {/* next/image, bukan <img>: foto aslinya 1024x1024 dan bisa 276 KB,
                 padahal di ponsel hanya dirender selebar layar. Next mengecilkan
                 dan mengubahnya ke WebP/AVIF sesuai perangkat. priority dipakai
