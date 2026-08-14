@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 import {
   Drawer,
@@ -39,6 +39,7 @@ export function AuthSheet({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -90,11 +91,18 @@ export function AuthSheet({
 
     onOpenChange(false);
     setPassword("");
+    setShowPassword(false);
     router.refresh();
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) setShowPassword(false);
+        onOpenChange(next);
+      }}
+    >
       <DrawerContent className="max-h-[92dvh]">
         <DrawerHeader className="pb-1 shrink-0">
           <DrawerTitle className="font-sans font-bold text-xl tracking-normal text-left">
@@ -172,15 +180,33 @@ export function AuthSheet({
               <Label htmlFor="auth-password" className="text-sm">
                 パスワード
               </Label>
-              <Input
-                id="auth-password"
-                data-testid="input-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={isSignUp ? "new-password" : "current-password"}
-                className="h-12 rounded-xl"
-              />
+              <div className="relative">
+                <Input
+                  id="auth-password"
+                  data-testid="input-password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={isSignUp ? "new-password" : "current-password"}
+                  className="h-12 rounded-xl pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  data-testid="button-toggle-password"
+                  aria-label={
+                    showPassword ? "パスワードを隠す" : "パスワードを表示"
+                  }
+                  aria-pressed={showPassword}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground transition"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-[18px] h-[18px]" />
+                  ) : (
+                    <Eye className="w-[18px] h-[18px]" />
+                  )}
+                </button>
+              </div>
 
               {isSignUp && (
                 <>
