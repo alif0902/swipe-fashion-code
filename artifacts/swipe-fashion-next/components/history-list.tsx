@@ -5,17 +5,12 @@ import { Star, ThumbsDown, ThumbsUp } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 import type { SwipeHistoryEntry } from "@/lib/data";
 
-// Label arah swipe. Dipakai 足あと; di いいね！履歴 lencana "pass" tidak pernah
-// muncul karena datanya sudah disaring lebih dulu.
 const directionBadge = {
   super: {
     label: "一目惚れ",
     icon: Star,
     className: "bg-violet-500/10 text-violet-500",
   },
-  // Arah `like` sekarang berarti "digeser ke kanan", yaitu memulai pembelian —
-  // bukan lagi menekan tombol いいね. Labelnya menyesuaikan supaya lencana ini
-  // tidak menyebut aksi yang sudah berpindah arti.
   like: {
     label: "気になる",
     icon: ThumbsUp,
@@ -28,13 +23,6 @@ const directionBadge = {
   },
 } as const;
 
-/**
- * Daftar bersama untuk 足あと dan いいね！履歴.
- *
- * Baris mendatar dengan foto kecil, bukan kartu besar seperti feed: ini
- * riwayat, dan yang dicari orang di sini adalah "yang mana tadi ya" — bukan
- * pengalaman menimbang satu per satu. Foto 64px sudah cukup untuk dikenali.
- */
 export function HistoryList({
   entries,
   showDirection = true,

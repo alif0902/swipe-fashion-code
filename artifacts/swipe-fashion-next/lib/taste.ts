@@ -1,15 +1,8 @@
-// Mesin selera HITOME.
-//
-// Modul ini sengaja MURNI — tidak menyentuh database, tidak async, tidak
-// membaca cookie. Semua yang dibutuhkan masuk lewat argumen. Konsekuensinya
-// bisa diuji unit dengan mudah (lihat taste.test.ts), dan itu penting karena
-// logika inilah yang menentukan urutan feed.
 
 import { categoryLabel } from "./format";
 
 export type SwipeDirection = "pass" | "like" | "super";
 
-// Satu keputusan swipe, sudah digabung dengan atribut produknya.
 export type TasteSignal = {
   direction: SwipeDirection;
   category: string;
@@ -20,12 +13,6 @@ export type TasteSignal = {
 
 export type Affinity = {
   key: string;
-  // -1 (sangat ditolak) sampai +1 (sangat disukai).
-  //
-  // Dinormalisasi terhadap nilai TERKUAT di dimensinya sendiri, jadi yang
-  // teratas selalu 1 secara definisi. Berguna untuk panjang bar, TIDAK boleh
-  // ditampilkan sebagai angka: dua kategori yang seri di puncak sama-sama
-  // menjadi 100, dan angkanya tidak bisa dibandingkan antar dimensi.
   score: number;
 };
 
@@ -39,44 +26,19 @@ export type TasteProfile = {
   totalSwipes: number;
   likedCount: number;
   passedCount: number;
-  // 0..1 — seberapa jauh profil ini boleh dipercaya.
   confidence: number;
 };
 
-// Bobot tiap arah swipe. Super like bernilai tiga kali suka biasa karena itu
-// gestur sengaja, bukan sekadar "boleh juga". Swipe kiri bernilai negatif —
-// inilah sinyal yang sebelumnya terbuang.
 const DIRECTION_WEIGHT: Record<SwipeDirection, number> = {
   super: 3,
   like: 1,
   pass: -1,
 };
 
-/**
- * Berapa swipe TERAKHIR yang membentuk profil.
- *
- * Sebelumnya seluruh riwayat terhitung, dan bobot swipe pertama sama besar
- * dengan yang barusan. Akibatnya selera terasa membeku: sepuluh swipe lama
- * mengunci feed, dan perubahan minat tidak pernah terlihat.
- *
- * Jendela pendek membuat feed mengikuti apa yang sedang dilihat orang
- * SEKARANG. Konsekuensinya disengaja: pola jangka panjang memang dilupakan.
- * Untuk katalog kecil dan sesi singkat, kelincahan lebih berharga daripada
- * ingatan.
- *
- * PENTING: sinyal harus datang TERBARU DULU. loadSwipeState di lib/data.ts
- * mengurutkannya dengan ORDER BY created_at DESC.
- */
 export const RECENT_WINDOW = 5;
 
-// Keyakinan penuh tercapai saat jendelanya terisi. Dulu 10 — angka yang
-// mustahil dicapai sekarang, karena tidak akan pernah ada lebih dari
-// RECENT_WINDOW sinyal yang terhitung, dan 精度 akan mentok di 50%.
 const CONFIDENCE_FULL_AT = RECENT_WINDOW;
 
-// Bobot tiap dimensi saat menilai kandidat produk. Kategori paling menentukan
-// (orang membeli "jenis" barang), brand berikutnya, warna sebagai penyelaras,
-// harga sebagai penyaring paling lembut.
 const DIMENSION_WEIGHT = {
   category: 3,
   brand: 2,
@@ -95,8 +57,6 @@ function tally(
 
   if (raw.size === 0) return [];
 
-  // Normalisasi ke -1..1 memakai nilai absolut terbesar, supaya sesi dengan
-  // 3 swipe dan sesi dengan 300 swipe menghasilkan skala yang sebanding.
   let peak = 0;
   for (const value of raw.values()) {
     peak = Math.max(peak, Math.abs(value));
@@ -108,10 +68,6 @@ function tally(
     .sort((a, b) => b.score - a.score || a.key.localeCompare(b.key));
 }
 
-/**
- * @param signals Riwayat swipe, TERBARU DULU. Hanya RECENT_WINDOW pertama
- *   yang dipakai — sisanya diabaikan.
- */
 export function buildTasteProfile(allSignals: TasteSignal[]): TasteProfile {
   const signals = allSignals.slice(0, RECENT_WINDOW);
 
@@ -120,11 +76,6 @@ export function buildTasteProfile(allSignals: TasteSignal[]): TasteProfile {
   const colorEntries: Array<{ key: string; weight: number }> = [];
   const likedPrices: number[] = [];
 
-  // Hitungan seumur hidup, dari SELURUH riwayat — bukan dari jendela.
-  //
-  // マイページ menampilkan「◯回スワイプ」dan「◯点いいね」. Kalau angka itu
-  // ikut dipotong jendela, orang yang sudah menggeser 50 kali akan melihat
-  // "5". Selera boleh melupakan masa lalu; hitungannya tidak boleh.
   let likedCount = 0;
   let passedCount = 0;
   for (const signal of allSignals) {
@@ -138,21 +89,14 @@ export function buildTasteProfile(allSignals: TasteSignal[]): TasteProfile {
     categoryEntries.push({ key: signal.category, weight });
     brandEntries.push({ key: signal.brand, weight });
     for (const color of signal.colors) {
-      // Produk dengan banyak warna tidak boleh membanjiri tally, jadi bobotnya
-      // dibagi rata antar warna.
       colorEntries.push({ key: color, weight: weight / signal.colors.length });
     }
 
-    // Rentang harga ikut jendela: anggaran yang relevan adalah anggaran
-    // sekarang, bukan rata-rata sepanjang masa.
     if (weight > 0 && Number.isFinite(signal.price)) {
       likedPrices.push(signal.price);
     }
   }
 
-  // Rentang harga hanya dibangun dari yang DISUKAI. Harga barang yang ditolak
-  // tidak memberi tahu apa pun soal anggaran — bisa jadi ditolak karena
-  // modelnya, bukan harganya.
   let priceBand: PriceBand | null = null;
   if (likedPrices.length > 0) {
     const min = Math.min(...likedPrices);
@@ -166,7 +110,6 @@ export function buildTasteProfile(allSignals: TasteSignal[]): TasteProfile {
     brands: tally(brandEntries),
     colors: tally(colorEntries),
     priceBand,
-    // Seumur hidup, bukan jendela — dipakai マイページ.
     totalSwipes: allSignals.length,
     likedCount,
     passedCount,
@@ -178,8 +121,6 @@ function affinityOf(list: Affinity[], key: string): number {
   return list.find((a) => a.key === key)?.score ?? 0;
 }
 
-// Produk apa pun yang punya atribut yang bisa dinilai. Sengaja longgar supaya
-// modul ini tidak bergantung pada tipe AppProduct.
 export type ScorableProduct = {
   category: string;
   brand: string;
@@ -203,10 +144,6 @@ export function scoreProduct(
     score += DIMENSION_WEIGHT.color * colorAffinity;
   }
 
-  // Kedekatan harga ke titik tengah anggaran yang teramati. Dinormalisasi oleh
-  // lebar rentang supaya selera "semua serba murah" dan "semua serba mahal"
-  // sama-sama tertangani. Rentang selebar 0 (baru satu produk disukai) diberi
-  // toleransi minimum agar tidak membagi dengan nol.
   if (profile.priceBand) {
     const { min, max, mid } = profile.priceBand;
     const spread = Math.max(max - min, mid * 0.5, 1);
@@ -217,9 +154,6 @@ export function scoreProduct(
   return score;
 }
 
-// Urutkan kandidat menurut kecocokan dengan profil. Array.prototype.sort di
-// JS sudah stabil, jadi produk dengan skor sama mempertahankan urutan masuk —
-// membuat feed deterministik dan bisa diuji.
 export function rankProducts<T extends ScorableProduct>(
   profile: TasteProfile,
   products: T[],
@@ -231,13 +165,6 @@ export function rankProducts<T extends ScorableProduct>(
   );
 }
 
-// Ringkasan sependek mungkin untuk ditempel di UI, mis.
-// 「Emeraldのワンピース（MAISON NOIR）」. Mengembalikan null kalau belum ada
-// cukup sinyal.
-//
-// Susunannya mengikuti tata bahasa Jepang, bukan menerjemahkan pola Inggris
-// kata per kata: pewatas mendahului kata benda, dan nama brand masuk kurung
-// karena ditulis huruf Latin di tengah kalimat Jepang.
 export function describeTaste(profile: TasteProfile): string | null {
   if (profile.likedCount === 0) return null;
 
@@ -253,27 +180,10 @@ export function describeTaste(profile: TasteProfile): string | null {
   return topBrand ? `${base}（${topBrand}）` : base;
 }
 
-/**
- * Menjelaskan KENAPA sebuah produk berada di posisinya pada feed.
- *
- * Ini yang menyambungkan スタイルDNA dengan feed secara terlihat. Keduanya
- * sudah memakai profil yang sama sejak awal — tapi tanpa penjelasan di layar,
- * tidak ada cara bagi siapa pun untuk mengetahuinya. Rekomendasi yang tidak
- * bisa dijelaskan tidak bisa dibedakan dari urutan acak.
- *
- * Caranya: hitung ulang sumbangan tiap dimensi terhadap skor produk, lalu
- * sebutkan yang paling besar. Angkanya tidak ditampilkan — yang berguna bagi
- * pembaca adalah alasannya, bukan bobotnya.
- *
- * Murni, seperti sisa modul ini, jadi bisa dipanggil dari server maupun klien
- * dan tetap bisa diuji unit.
- */
 export function explainRanking(
   profile: TasteProfile,
   product: ScorableProduct,
 ): string | null {
-  // Belum ada satu pun swipe: tidak ada yang bisa dijelaskan, dan mengarang
-  // alasan justru merusak kepercayaan pada seluruh fiturnya.
   if (profile.totalSwipes === 0) return null;
 
   const categoryScore =
@@ -305,9 +215,6 @@ export function explainRanking(
 
   const best = reasons.reduce((a, b) => (b.score > a.score ? b : a));
 
-  // Sumbangan negatif atau nol berarti produk ini justru MELAWAN selera yang
-  // terekam. Menyebutnya "karena kamu suka" akan berbohong; lebih jujur
-  // menyatakan ia sengaja ditaruh di belakang.
   if (best.score <= 0) return "好みからは少し外れています";
 
   return best.text;

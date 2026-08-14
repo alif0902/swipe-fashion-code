@@ -6,21 +6,6 @@ import { Loader2, Trash2 } from "lucide-react";
 import { deleteOrderAction } from "@/app/actions";
 import { useToast } from "@/hooks/use-toast";
 
-/**
- * Membuang pesanan yang sudah dibatalkan dari daftar バッグ.
- *
- * Tanpa ini, pesanan yang dibatalkan menumpuk selamanya di halaman バッグ dan
- * mendorong pesanan aktif makin ke bawah — daftar berubah jadi arsip yang
- * tidak bisa dirapikan.
- *
- * Hanya muncul pada baris berstatus キャンセル済み. Pesanan aktif tidak boleh
- * langsung dihapus: ia harus dibatalkan lebih dulu supaya stoknya kembali.
- *
- * Tidak ada dialog konfirmasi, dan itu disengaja — yang dihapus adalah baris
- * yang sudah dibatalkan, jadi tidak ada nilai yang hilang. Menambah dialog
- * untuk tindakan tanpa konsekuensi justru melatih orang menekan「はい」tanpa
- * membaca, dan itu merugikan di tempat yang benar-benar berbahaya nanti.
- */
 export function OrderDeleteButton({ orderId }: { orderId: number }) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();

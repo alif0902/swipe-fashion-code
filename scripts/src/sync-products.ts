@@ -3,20 +3,8 @@ import "./load-env";
 import { eq } from "drizzle-orm";
 import { db, productsTable } from "@workspace/db";
 
-// Diimpor dari catalog, BUKAN dari seed: seed.ts memanggil seed() di level
-// teratas, jadi mengimpornya akan menjalankan seeding dan menggandakan katalog.
 import { products } from "./catalog";
 
-// Menyelaraskan produk yang SUDAH ada di database dengan daftar di seed.ts.
-//
-// Kenapa perlu skrip terpisah: seed.ts memakai plain insert tanpa menghapus
-// lebih dulu, jadi menjalankannya ulang pada database terisi akan menggandakan
-// katalog. Menghapus lebih dulu pun tidak bisa — tabel orders menyimpan foreign
-// key ke products, sehingga baris yang sudah pernah dipesan tidak boleh hilang.
-//
-// Skrip ini hanya meng-UPDATE kolom yang aman ditimpa, dicocokkan lewat nama
-// produk. Stok sengaja TIDAK ikut disentuh: nilainya berubah karena pesanan
-// sungguhan, jadi menimpanya akan menghapus jejak transaksi.
 async function syncProducts() {
   let updated = 0;
   let missing = 0;

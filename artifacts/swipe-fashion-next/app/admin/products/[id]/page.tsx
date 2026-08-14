@@ -63,8 +63,6 @@ export default async function EditProductPage({
           colors: product.colors.join(", "),
           material: product.material ?? "",
           feel: product.feel ?? "",
-          // jsonb → daftar pasangan, karena formulir mengeditnya sebagai baris
-          // yang bisa ditambah dan dihapus, bukan sebagai kolom tetap.
           dimensions: Object.entries(product.dimensions ?? {}).map(
             ([key, value]) => ({ key, value }),
           ),

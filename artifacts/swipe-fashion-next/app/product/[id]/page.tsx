@@ -53,8 +53,6 @@ export default async function ProductPage({
 
   if (!product) notFound();
 
-  // Tampilannya sengaja sama persis dengan kartu di feed — ProductDetailFeed
-  // memakai ulang ProductCard, bukan meniru tata letaknya.
   return (
     <PhoneFrame>
       <ProductDetailFeed product={product} />

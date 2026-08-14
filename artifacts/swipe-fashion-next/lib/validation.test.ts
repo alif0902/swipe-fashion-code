@@ -48,9 +48,6 @@ describe("createOrderSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  // Batas atas ditambahkan setelah audit. Sebelumnya satu-satunya penahan
-  // adalah pemeriksaan stok di createOrderAction — kalau jalur itu berubah,
-  // tidak ada lapis kedua yang menolak angka yang tidak masuk akal.
   it("rejects a quantity above the per-order maximum", () => {
     const result = createOrderSchema.safeParse({
       productId: 3,
@@ -128,8 +125,6 @@ describe("passwordSchema", () => {
 });
 
 describe("signInSchema", () => {
-  // Sengaja longgar: memperketat aturan password nanti tidak boleh mengunci
-  // pemilik akun lama di luar.
   it("accepts a weak password that signUp would reject", () => {
     const weak = { email: "aliff@example.com", password: "old" };
 
@@ -160,8 +155,6 @@ describe("passwordStrength", () => {
   });
 });
 
-// --- Ulasan produk ---------------------------------------------------------
-
 describe("reviewSchema", () => {
   const valid = {
     productId: 1,
@@ -188,9 +181,6 @@ describe("reviewSchema", () => {
   });
 
   it("menolak isi yang hanya spasi", () => {
-    // Ini yang menentukan apakah .trim() benar-benar berlaku SEBELUM .min().
-    // Kalau tidak, 20 spasi lolos batas 10 karakter dan daftar ulasan bisa
-    // diisi baris kosong.
     expect(
       reviewSchema.safeParse({ ...valid, body: " ".repeat(20) }).success,
     ).toBe(false);

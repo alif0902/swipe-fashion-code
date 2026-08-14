@@ -23,31 +23,10 @@ interface OrderSheetProps {
   product: AppProduct | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  /**
-   * Dipanggil setelah pesanan berhasil dibuat.
-   *
-   * Ada supaya pemanggil bisa menentukan apa yang terjadi sesudahnya — tetap
-   * di halaman, atau langsung menuju バッグ untuk membayar. Lembar ini sendiri
-   * tidak tahu (dan tidak perlu tahu) niat penggunanya.
-   */
   onAdded?: () => void;
 }
 
-/**
- * Nama warna katalog → hex untuk swatch.
- *
- * Nilai untuk warna yang benar-benar dipakai katalog DIAMBIL DARI FOTO
- * PRODUKNYA, bukan dikarang. Versi sebelumnya memakai primer mentah
- * (#ff0000, #0000ff) yang tidak pernah menyerupai garmen mana pun — merah
- * murni untuk gaun merah anggur terbaca seperti produk yang berbeda.
- *
- * Peta lama juga TIDAK punya Burgundy dan Camel. Karena fallback-nya
- * `color.toLowerCase()` dan CSS tidak mengenal `burgundy` maupun `camel`,
- * browser mengabaikan nilainya dan swatch-nya jadi kosong — inilah sebabnya
- * gaun cokelat anggur tampil dengan lingkaran putih.
- */
 const colorMap: Record<string, string> = {
-  // --- diambil dari foto produk di katalog ---
   Indigo: "#344e6c", // ワイドデニムパンツ
   Camel: "#98704e", // タックワイドチノ
   Burgundy: "#513232", // ノースリーブミディワンピース
@@ -59,7 +38,6 @@ const colorMap: Record<string, string> = {
   Grey: "#a2afb3", // コットンポロシャツ
   Teal: "#66a1a8", // コットンポロシャツ
 
-  // --- belum dipakai, disiapkan untuk produk yang ditambah lewat admin ---
   White: "#f4f2ee",
   Beige: "#e8dfd0",
   Brown: "#7a5540",
@@ -69,13 +47,6 @@ const colorMap: Record<string, string> = {
   Purple: "#6b4a7a",
 };
 
-// Abu netral untuk nama warna yang belum terdaftar.
-//
-// Sengaja BUKAN `color.toLowerCase()` seperti sebelumnya: nama yang bukan
-// warna CSS menghasilkan nilai tidak sah, browser mengabaikannya, dan
-// swatch-nya jadi putih — persis seperti warna yang benar-benar putih.
-// Salah diam-diam lebih buruk daripada jelas-jelas tak dikenal, dan namanya
-// tetap terbaca lewat atribut title.
 const UNKNOWN_COLOR = "#c9c6c1";
 
 export function OrderSheet({
@@ -91,25 +62,12 @@ export function OrderSheet({
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [showSizeGuide, setShowSizeGuide] = useState(false);
 
-  // Pilihan disetel ulang setiap kali lembar ini dibuka untuk produk BERBEDA.
-  //
-  // Versi sebelumnya hanya mengisi saat pilihannya masih kosong, dan hanya
-  // mengosongkannya setelah pesanan berhasil dibuat. Jadi: buka lembar untuk
-  // produk A, pilih ukuran S, batalkan, lalu buka produk B — "S" masih
-  // terpilih. Kalau B tidak menyediakan S, pesanan tercatat dengan ukuran yang
-  // tidak ada.
-  //
-  // Sangat mudah terjadi di 一目惚れ, tempat orang membuka beberapa produk
-  // berturut-turut dari grid yang sama.
   const [initializedFor, setInitializedFor] = useState<number | null>(null);
 
   if (product && isOpen && initializedFor !== product.id) {
     setInitializedFor(product.id);
     setSelectedSize(product.sizes[0] ?? "");
     setSelectedColor(product.colors[0] ?? "");
-    // Panduan ukuran ikut ditutup. Ukurannya milik produk tertentu — kalau
-    // panelnya tetap terbuka saat produk berganti, angka yang terpampang
-    // sesaat masih milik barang sebelumnya.
     setShowSizeGuide(false);
   }
 
@@ -143,42 +101,20 @@ export function OrderSheet({
 
       toast({
         title: "バッグに追加しました",
-        // Dulu berbunyi `${product.name} is waiting for you.` — satu-satunya
-        // kalimat berbahasa Inggris di antarmuka yang seluruhnya Jepang.
-        // Disamakan dengan toast 一目惚れ: nama produknya saja.
         description: product.name,
-        // Menyalakan bilah waktu di toast. Tanpa durasi eksplisit, Radix
-        // memakai bawaannya dan komponen toast tidak punya angka untuk
-        // digambar — jadi bilahnya tidak pernah muncul.
-        //
-        // 3 detik, sedikit lebih lama dari toast 一目惚れ yang 2,5 detik:
-        // yang ini menandai barang MASUK KERANJANG, langkah terakhir sebelum
-        // membayar, dan layak ditatap sesaat lebih lama.
         duration: 3000,
       });
       onOpenChange(false);
       onAdded?.();
-      // Menandai belum terinisialisasi, bukan mengosongkan pilihannya —
-      // pengisian ulang dilakukan saat lembar dibuka lagi, dan itu berlaku
-      // untuk produk yang sama maupun berbeda. Tanpa timer, jadi tidak ada
-      // jeda 300ms yang bisa dikalahkan oleh ketukan cepat.
       setInitializedFor(null);
     });
   };
 
   if (!product) return null;
 
-  // Dihitung SESUDAH penjaga null di atas, jadi product sudah pasti ada.
-  //
-  // Tabelnya hanya berisi ukuran yang benar-benar dijual produk ini, jadi
-  // bisa saja kosong — misalnya kalau admin mengisi ukuran dengan penamaan
-  // bebas seperti "36" atau "FREE". Dalam kasus itu tombolnya disembunyikan
-  // daripada membuka panel kosong.
   const sizeRows = sizeChartFor(product.gender, product.sizes);
   const hasSizeGuide = sizeRows.length > 0;
 
-  // Bawahan diukur dari pinggang, atasan dari dada. Menampilkan 胸囲 pada
-  // celana akan meminta angka yang tidak ada hubungannya dengan muat-tidaknya.
   const isBottom = product.category === "bottoms";
 
   return (
@@ -212,17 +148,6 @@ export function OrderSheet({
                 <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   サイズを選択
                 </h4>
-                {/* Tombol ini dulu TIDAK punya onClick sama sekali — bisa
-                    diketuk tapi tidak melakukan apa pun.
-
-                    Isinya diambil dari `dimensions` milik produk, tabel
-                    採寸 yang sama dengan blok 基本情報 di kartu feed. Datanya
-                    sudah ada; yang kurang cuma memunculkannya di tempat
-                    keputusan ukuran benar-benar diambil.
-
-                    Disembunyikan kalau produknya belum punya ukuran —
-                    tombol panduan yang membuka panel kosong lebih buruk
-                    daripada tidak ada tombol. */}
                 {hasSizeGuide && (
                   <button
                     type="button"
@@ -263,9 +188,6 @@ export function OrderSheet({
                           key={row.size}
                           className={cn(
                             "border-t border-border/60",
-                            // Baris ukuran yang sedang dipilih ditebalkan.
-                            // Tanpa ini orang harus mencocokkan sendiri antara
-                            // tombol di atas dan baris di tabel.
                             row.size === selectedSize && "font-bold text-primary",
                           )}
                         >

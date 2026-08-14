@@ -1,14 +1,9 @@
 import { z } from "zod";
 
-// sessionId sengaja tidak ada di sini. Server membacanya dari cookie httpOnly,
-// supaya klien tidak bisa membuat order atas nama sesi orang lain.
 export const createOrderSchema = z.object({
   productId: z.number().int().positive(),
   selectedSize: z.string().min(1),
   selectedColor: z.string().min(1),
-  // Batas atas bukan sekadar kerapian: tanpa ini satu-satunya penahan adalah
-  // pemeriksaan stok, jadi kalau pemeriksaan itu berubah suatu saat, tidak ada
-  // lapis kedua yang menahan angka yang tidak masuk akal.
   quantity: z.number().int().min(1).max(99),
 });
 
@@ -20,8 +15,6 @@ export const reviewSchema = z.object({
     .trim()
     .min(1, "お名前を入力してください")
     .max(20, "お名前は20文字までです"),
-  // Batas bawah 10 karakter: ulasan sependek「いい」tidak membantu siapa pun
-  // dan hanya mengencerkan daftar. Batas atas menjaga panel tetap terbaca.
   body: z
     .string()
     .trim()
@@ -45,14 +38,6 @@ export const recordSwipeSchema = z.object({
   direction: z.enum(["pass", "like", "super"]),
 });
 
-// ---------------------------------------------------------------------------
-// Akun
-//
-// Pesan kesalahan ditulis dalam bahasa Jepang karena akan tampil apa adanya di
-// formulir. Aturannya sengaja dipisah dari komponen supaya bisa diuji sebagai
-// fungsi murni, mengikuti pola lib/taste.ts dan lib/payment.ts.
-// ---------------------------------------------------------------------------
-
 export const MIN_PASSWORD_LENGTH = 8;
 
 export const emailSchema = z
@@ -60,9 +45,6 @@ export const emailSchema = z
   .min(1, "メールアドレスを入力してください")
   .email("メールアドレスの形式が正しくありません");
 
-// Panjang minimum 8, dan wajib memuat huruf sekaligus angka. Batas atas 128
-// dipasang bukan demi keamanan melainkan agar hashing Argon2id tidak dipakai
-// menghabiskan CPU server lewat kiriman yang sangat panjang.
 export const passwordSchema = z
   .string()
   .min(MIN_PASSWORD_LENGTH, `パスワードは${MIN_PASSWORD_LENGTH}文字以上にしてください`)
@@ -79,21 +61,11 @@ export const signUpSchema = z.object({
   password: passwordSchema,
 });
 
-// Sengaja TIDAK memakai passwordSchema. Kalau aturan kekuatan password
-// diperketat nanti, pemilik akun lama harus tetap bisa masuk dengan password
-// lamanya — validasi ketat di sini akan mengunci mereka di luar.
 export const signInSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "パスワードを入力してください"),
 });
 
-/**
- * Kekuatan password untuk indikator di formulir, 0–3.
- *
- * Murni kosmetik: yang menentukan boleh-tidaknya mendaftar tetap
- * `passwordSchema`. Dipisah agar tampilan indikator tidak diam-diam menjadi
- * aturan kedua yang berbeda dari validasi sebenarnya.
- */
 export function passwordStrength(password: string): 0 | 1 | 2 | 3 {
   if (password.length < MIN_PASSWORD_LENGTH) return 0;
 
@@ -104,13 +76,6 @@ export function passwordStrength(password: string): 0 | 1 | 2 | 3 {
   return Math.min(score, 3) as 0 | 1 | 2 | 3;
 }
 
-/**
- * 47 prefektur, urutan resmi dari utara ke selatan (kode JIS).
- *
- * Dipakai sebagai daftar pilihan, bukan kolom ketik bebas. Prefektur adalah
- * himpunan tertutup, dan salah ketik satu huruf membuat alamat gagal dipilah
- * kurir — persis alasan setiap toko Jepang memakai dropdown di sini.
- */
 export const PREFECTURES = [
   "北海道", "青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県",
   "茨城県", "栃木県", "群馬県", "埼玉県", "千葉県", "東京都", "神奈川県",
@@ -123,12 +88,6 @@ export const PREFECTURES = [
   "沖縄県",
 ] as const;
 
-// Alamat opsional — orang boleh punya akun tanpa pernah berbelanja. Yang
-// memaksanya terisi adalah checkout, bukan formulir profil.
-//
-// Tapi kalau salah satu bagian alamat diisi, tiga bagian wajibnya harus ikut
-// terisi. Alamat setengah jadi lebih berbahaya daripada alamat kosong: yang
-// kosong meminta diisi saat checkout, yang setengah jadi lolos begitu saja.
 const optionalText = (max: number, message: string) =>
   z.string().trim().max(max, message).optional().or(z.literal(""));
 
@@ -138,7 +97,6 @@ export const profileSchema = z
       .string()
       .min(1, "お名前を入力してください")
       .max(50, "お名前が長すぎます"),
-    // 7 digit, tanda hubung boleh ada boleh tidak — keduanya lazim ditulis.
     postalCode: z
       .string()
       .regex(/^\d{3}-?\d{4}$/, "郵便番号は7桁で入力してください")
@@ -164,21 +122,6 @@ export const profileSchema = z
     },
   );
 
-// ---------------------------------------------------------------------------
-// Produk (admin)
-// ---------------------------------------------------------------------------
-
-/**
- * Kunci ukuran yang diusulkan per kategori.
- *
- * Kolom `dimensions` bertipe jsonb dengan kunci bebas, dan itu disengaja —
- * atasan diukur 着丈/身幅/肩幅, bawahan diukur ウエスト/股上/股下. Tapi kunci
- * bebas berarti admin harus mengarang nama kolomnya sendiri setiap kali, dan
- * satu salah ketik membuat tabel 基本情報 di kartu feed tampil tidak konsisten.
- *
- * Daftar ini yang mengisinya otomatis begitu kategori dipilih. Admin tinggal
- * mengisi angkanya, dan tetap boleh menambah kunci sendiri kalau perlu.
- */
 export const DIMENSION_PRESETS: Record<string, string[]> = {
   tops: ["着丈", "身幅", "肩幅", "袖丈"],
   outerwear: ["着丈", "身幅", "肩幅", "袖丈"],
@@ -200,26 +143,18 @@ export const productSchema = z
     price: z.number().positive("価格を入力してください").max(99_999_999),
     originalPrice: z.number().positive().max(99_999_999).nullable(),
     description: z.string().min(1, "商品説明を入力してください").max(2000),
-    // Minimal satu foto: kartu feed tidak punya keadaan "tanpa gambar", dan
-    // membuatnya hanya untuk kasus yang seharusnya tidak ada itu sia-sia.
     images: z.array(z.string().url()).min(1, "写真を1枚以上追加してください").max(6),
     category: z.string().min(1, "カテゴリーを選んでください"),
     gender: z.enum(["women", "men"]),
     sizes: z.array(z.string()).max(12),
     colors: z.array(z.string()).max(12),
     material: z.string().max(120).nullable(),
-    // Dibatasi 60 karakter: gelembung caption di kartu feed hanya muat sekitar
-    // dua baris pendek. Lebih dari itu akan terpotong atau mendorong tata
-    // letak kartu.
     feel: z.string().max(60).nullable(),
     dimensions: z.record(z.string(), z.string()),
     stock: z.number().int().min(0, "在庫は0以上で入力してください").max(9999),
     isNew: z.boolean(),
     isSale: z.boolean(),
   })
-  // Harga coret yang lebih murah dari harga jual adalah kesalahan ketik yang
-  // tampil sebagai diskon negatif di kartu feed. Ditangkap di sini, bukan
-  // dibiarkan sampai ada yang melihatnya.
   .refine(
     (v) => v.originalPrice === null || v.originalPrice > v.price,
     { message: "参考価格は販売価格より高くしてください", path: ["originalPrice"] },

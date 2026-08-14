@@ -9,26 +9,6 @@ import {
   swipesTable,
 } from "@workspace/db";
 
-/**
- * Menghapus produk duplikat yang bernama sama.
- *
- *   npm run dedupe-products
- *
- * Untuk tiap nama, SATU baris dipertahankan — yang id-nya terkecil, karena itu
- * yang paling lama ada dan paling mungkin sudah dirujuk sesuatu. Salinannya
- * dihapus permanen beserta swipe dan 一目惚れ yang menunjuk ke sana.
- *
- * SALINAN YANG PUNYA PESANAN TIDAK DIHAPUS, dan itu bukan kelalaian: `orders`
- * menyimpan foreign key ke produk, dan menghapusnya berarti riwayat pembelian
- * orang kehilangan nama barangnya. Baris seperti itu dilaporkan di akhir
- * supaya kamu bisa memutuskan sendiri.
- *
- * Versi sebelumnya MENGARSIPKAN baris semacam itu — barisnya tetap ada tapi
- * hilang dari feed. Fitur arsip sudah dibuang dari aplikasi ini, jadi yang
- * tersisa adalah melaporkannya dengan jujur.
- *
- * Aman dijalankan berulang.
- */
 async function main() {
   const rows = await db
     .select({ id: productsTable.id, name: productsTable.name })

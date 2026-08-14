@@ -25,17 +25,6 @@ const dmSans = DM_Sans({
   display: "swap",
 });
 
-// Playfair dan DM Sans tidak punya glif kana maupun kanji sama sekali. Tanpa
-// pasangan Jepang di bawah, setiap karakter Jepang jatuh ke font bawaan sistem
-// dan tampil berbeda-beda di tiap perangkat.
-//
-// Keduanya dipasang sebagai FALLBACK di globals.css, bukan pengganti: huruf
-// Latin (logo, angka harga, nama brand) tetap dirender Playfair/DM Sans, dan
-// hanya karakter Jepang yang jatuh ke Noto. Itu sebabnya karakter tipografi
-// aslinya tetap terjaga.
-//
-// preload: false wajib — subset Jepang berukuran sangat besar dan next/font
-// menolak mem-preload-nya. Font tetap dimuat, hanya tidak di-preload.
 const notoSerifJP = Noto_Serif_JP({
   weight: ["400", "500", "600", "700"],
   variable: "--font-noto-serif-jp",
@@ -63,17 +52,11 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: "/favicon.svg",
-    // iOS TIDAK membaca manifest untuk ikon home screen — ia hanya mencari
-    // tag ini. Tanpa apple-touch-icon, iPhone memakai screenshot halaman
-    // sebagai ikon, dan hasilnya selalu jelek.
     apple: "/apple-touch-icon.png",
   },
   appleWebApp: {
-    // Setara display:standalone untuk iOS, yang juga tidak membaca manifest
-    // untuk hal ini.
     capable: true,
     title: "HITOME",
-    // "default" menjaga teks bilah status tetap gelap di atas latar pink.
     statusBarStyle: "default",
   },
 };
@@ -82,10 +65,7 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  // Mewarnai bilah status ponsel dengan coral aplikasi saat dipasang.
   themeColor: "#fe6970",
-  // Wajib supaya env(safe-area-inset-*) bernilai > 0 di perangkat berponi
-  // (iPhone dsb). Tanpa ini util pb-safe/pt-safe di bawah tak berefek.
   viewportFit: "cover" as const,
 };
 
@@ -100,8 +80,6 @@ export default function RootLayout({
       className={`${playfair.variable} ${dmSans.variable} ${notoSerifJP.variable} ${notoSansJP.variable}`}
     >
       <body>
-        {/* Sebelum {children}: overlay ini harus sudah ada di HTML pertama yang
-            dikirim server, bukan disisipkan belakangan oleh JavaScript. */}
         <Splash />
         {children}
       </body>

@@ -43,11 +43,6 @@ const DrawerContent = React.forwardRef<
     <DrawerPrimitive.Content
       ref={ref}
       className={cn(
-        // max-h-[92dvh] adalah bawaan yang disengaja. Tanpa batas tinggi,
-        // h-auto membiarkan drawer tumbuh melewati layar dan apa pun di
-        // bagian bawahnya — biasanya tombol kirim — tidak bisa dijangkau.
-        // Anak yang isinya panjang tetap perlu overflow-y-auto sendiri;
-        // batas ini yang membuat overflow itu benar-benar aktif.
         "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[92dvh] flex-col rounded-t-[10px] border border-border bg-background",
         className
       )}

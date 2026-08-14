@@ -14,13 +14,11 @@ import { formatAddress, formatPrice, safeImage } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "バッグ｜HITOME",
-  // Halaman personal — tidak ada gunanya di hasil pencarian.
   robots: { index: false, follow: false },
 };
 
 export const dynamic = "force-dynamic";
 
-// Enum database berbahasa Inggris; yang dilihat pengguna tidak boleh begitu.
 const statusLabel: Record<string, string> = {
   pending: "お支払い待ち",
   confirmed: "お支払い済み",
@@ -44,10 +42,6 @@ export default async function OrdersPage() {
     user ? getUserProfile(user.id) : Promise.resolve(null),
   ]);
 
-  // Alamat yang tersimpan mengisi langkah pengiriman di muka. Bagian-bagiannya
-  // dirangkai jadi satu baris karena kolom `orders.shippingAddress` memang satu
-  // teks — pesanan menyimpan alamat sebagaimana tertulis saat itu, dan tidak
-  // boleh ikut berubah kalau profilnya disunting nanti.
   const shippingDefaults = stored
     ? {
         customerName: stored.name,
@@ -85,8 +79,6 @@ export default async function OrdersPage() {
                 key={order.id}
                 className="relative bg-card border border-card-border rounded-2xl p-4 space-y-4"
               >
-                {/* Hanya baris yang sudah dibatalkan yang bisa dibuang. Yang
-                    masih aktif harus dibatalkan dulu agar stoknya kembali. */}
                 {order.status === "cancelled" && (
                   <OrderDeleteButton orderId={order.id} />
                 )}
@@ -101,8 +93,6 @@ export default async function OrdersPage() {
                       className="object-cover"
                     />
                   </div>
-                  {/* Ruang di kanan hanya saat tombol hapus ada, supaya nama
-                      produk yang panjang tidak berjalan di bawah ikonnya. */}
                   <div
                     className={`flex-1 min-w-0 ${
                       order.status === "cancelled" ? "pr-8" : ""
@@ -111,9 +101,6 @@ export default async function OrdersPage() {
                     <p className="text-xs text-muted-foreground uppercase tracking-widest mb-1">
                       {order.product?.brand ?? "—"}
                     </p>
-                    {/* Produk bisa lenyap dari katalog sementara pesanannya
-                        tetap ada. Baris tanpa judul terbaca seperti data yang
-                        gagal dimuat; kalimat ini menjelaskan apa yang terjadi. */}
                     <h3 className="font-sans font-bold text-base leading-snug mb-1 truncate">
                       {order.product?.name ?? "取り扱いが終了した商品"}
                     </h3>

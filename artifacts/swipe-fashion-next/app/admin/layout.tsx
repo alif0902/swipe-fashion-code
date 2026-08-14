@@ -12,20 +12,6 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-/**
- * Kerangka area admin.
- *
- * Sengaja TIDAK memakai AppLayout. Aplikasinya mobile-only karena interaksi
- * intinya adalah swipe — gestur sentuh. Panel admin bukan produk, melainkan
- * alat kerja: formulir produk punya tiga belas kolom dan pratinjaunya duduk
- * di sebelahnya. Itu hanya masuk akal di layar lebar.
- *
- * Persis seperti Shopify: tokonya untuk ponsel, adminnya untuk laptop.
- *
- * requireAdmin() di sini menahan orang membuka halamannya. Ia TIDAK menjaga
- * Server Action — layout tidak pernah berjalan saat aksi dipanggil langsung.
- * Karena itu setiap aksi di app/admin/actions.ts memanggilnya sendiri.
- */
 export default async function AdminLayout({
   children,
 }: {
@@ -63,8 +49,6 @@ export default async function AdminLayout({
 
       <main className="max-w-6xl mx-auto px-6 py-8">{children}</main>
 
-      {/* Panel admin adalah alat desktop biasa, jadi posisi bawaan pojok
-          kanan bawah memang yang benar di sini. */}
       <Toaster />
     </div>
   );

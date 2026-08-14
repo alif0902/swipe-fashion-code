@@ -12,9 +12,6 @@ import {
 
 import { claimAnonymousData } from "./claim";
 
-// Dilempar saat modul di-import, mengikuti pola DATABASE_URL di @workspace/db:
-// lebih baik build gagal dengan pesan jelas daripada deploy sukses lalu setiap
-// percobaan login gagal diam-diam di produksi.
 if (!process.env.BETTER_AUTH_SECRET) {
   throw new Error(
     "BETTER_AUTH_SECRET must be set.\n" +
@@ -27,31 +24,14 @@ if (!process.env.BETTER_AUTH_SECRET) {
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET,
 
-  // Dibiarkan undefined kecuali diset manual, dan itu disengaja.
-  //
-  // Versi sebelumnya jatuh ke `https://${VERCEL_URL}` — dan itu keliru.
-  // VERCEL_URL berisi URL DEPLOYMENT (mis. proyek-abc123.vercel.app), bukan
-  // domain yang dibuka orang. Better Auth membandingkan header Origin
-  // permintaan dengan baseURL untuk menangkal CSRF, jadi permintaan dari
-  // domain produksi ditolak sebagai asal yang tidak dikenal — pendaftaran
-  // gagal di Vercel padahal mulus di localhost.
-  //
-  // Tanpa baseURL, Better Auth menyimpulkannya dari permintaan itu sendiri,
-  // sehingga localhost, preview, dan produksi sama-sama cocok.
   baseURL: process.env.BETTER_AUTH_URL,
 
-  // Domain tambahan yang boleh mengirim permintaan autentikasi, dipisah koma.
-  // Hanya perlu diisi kalau kamu memakai domain kustom yang berbeda dari yang
-  // sedang diakses.
   trustedOrigins: process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),
 
   database: drizzleAdapter(db, {
     provider: "pg",
-    // Skema repo ini memakai akhiran `Table`, sedangkan Better Auth mencari
-    // nama model tanpa akhiran. Pemetaannya dilakukan di sini supaya konvensi
-    // penamaan repo tidak perlu dikorbankan.
     schema: {
       user: userTable,
       session: sessionTable,
@@ -62,15 +42,6 @@ export const auth = betterAuth({
 
   user: {
     additionalFields: {
-      // input: false adalah baris paling penting di berkas ini.
-      //
-      // Tanpa itu, siapa pun bisa mengirim request pendaftaran buatan sendiri
-      // berisi `role: "admin"` — melewati formulir sepenuhnya — dan Better
-      // Auth akan menyimpannya apa adanya. Dengan ini, field tersebut dibuang
-      // dari input klien dan kolomnya selalu memakai nilai bawaan `user`.
-      //
-      // Satu-satunya jalan menjadi admin adalah `npm run make-admin`, yang
-      // menulis langsung ke database dari terminalmu.
       role: {
         type: "string",
         required: false,
@@ -82,19 +53,11 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
-    // Verifikasi email dimatikan: mengirim email butuh layanan terpisah
-    // (Resend dsb.) beserta domainnya. Untuk sekarang email berfungsi sebagai
-    // identitas saja. Menyalakannya nanti cukup mengubah baris ini — tabel
-    // `verification` sudah dibuat.
     requireEmailVerification: false,
     minPasswordLength: 8,
   },
 
   session: {
-    // WAJIB, bukan optimasi opsional. Tanpa cookie cache, setiap render
-    // halaman menambah satu kueri sesi ke database. Database ini di Sydney,
-    // jadi itu berarti satu perjalanan lintas benua tambahan per halaman —
-    // persis masalah lambat yang baru saja diperbaiki.
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60,
@@ -104,13 +67,7 @@ export const auth = betterAuth({
   databaseHooks: {
     session: {
       create: {
-        // Berjalan setelah sesi login dibuat — dan itu terjadi baik saat
-        // mendaftar maupun saat masuk kembali. Inilah satu-satunya tempat
-        // yang menangkap kedua kejadian tanpa menduplikasi kode.
         after: async (session) => {
-          // Sengaja tidak dibiarkan melempar. Kegagalan memindahkan riwayat
-          // swipe tidak boleh membuat login itu sendiri gagal — pengguna
-          // kehilangan personalisasi, bukan kehilangan akses ke akunnya.
           try {
             await claimAnonymousData(session.userId);
           } catch (error) {

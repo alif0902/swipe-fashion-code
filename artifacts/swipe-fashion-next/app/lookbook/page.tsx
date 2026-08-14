@@ -17,24 +17,17 @@ export const metadata: Metadata = {
 
 const tabClass = (active: boolean) =>
   cn(
-    // uppercase & tracking-widest dilepas: keduanya tidak berpengaruh pada
-    // kana/kanji tapi membuat spasi antar karakter Jepang jadi renggang aneh.
     "px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all",
     active
       ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
       : "bg-card text-muted-foreground border border-border hover:border-primary/40",
   );
 
-// Query string jadi satu-satunya sumber kebenaran filter, bukan state React:
-// hasilnya bisa di-bookmark, tombol back bekerja, dan daftarnya tetap dirender
-// di server.
 const GENDERS = [
   { value: "women", label: "レディース", icon: Venus },
   { value: "men", label: "メンズ", icon: Mars },
 ] as const;
 
-// Membangun URL dengan mempertahankan filter lain yang sedang aktif — mengganti
-// gender tidak boleh diam-diam menghapus pilihan 並び替え.
 function buildHref(
   current: Record<string, string | undefined>,
   patch: Record<string, string | null>,
@@ -81,9 +74,6 @@ export default async function LookbookPage({
   ]);
 
   return (
-    // Tombol filter dioper lewat `overlay`, bukan diletakkan di dalam daftar.
-    // Di dalam daftar ia berpatokan pada tinggi seluruh isi halaman, jadi
-    // posisinya jatuh di dasar daftar dan baru terlihat setelah digulir habis.
     <AppLayout
       overlay={<FilterFab params={sp} resultCount={products.length} />}
     >
@@ -96,8 +86,6 @@ export default async function LookbookPage({
           count={products.length}
           countLabel="点"
         >
-          {/* Dua tingkat filter, sesuai urutan cara orang mempersempit
-              pilihan: dulu siapa yang memakainya, baru jenis barangnya. */}
           <div className="mt-5 px-6">
             <div className="flex gap-1 p-1 rounded-full bg-muted/70">
               <Link
@@ -116,9 +104,6 @@ export default async function LookbookPage({
                     href={buildHref(sp, { gender: g.value })}
                     className={segClass(active)}
                   >
-                    {/* Ikon diberi warna khas gendernya hanya saat aktif.
-                        Kalau selalu berwarna, ketiganya bersaing menarik
-                        perhatian dan justru tidak jelas mana yang terpilih. */}
                     <Icon
                       className={cn(
                         "w-4 h-4",

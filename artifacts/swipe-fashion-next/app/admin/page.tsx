@@ -43,8 +43,6 @@ export default async function AdminDashboardPage() {
     getProductPerformance(),
   ]);
 
-  // Diurutkan dari yang paling sering ditolak. Ini urutan yang paling berguna:
-  // produk teratas di daftar ini adalah yang paling perlu diputuskan nasibnya.
   const ranked = [...performance].sort((a, b) => {
     if (a.likeRate === null) return 1;
     if (b.likeRate === null) return -1;
@@ -84,8 +82,6 @@ export default async function AdminDashboardPage() {
       <section className="rounded-2xl border border-border bg-background overflow-hidden">
         <div className="px-5 py-4 border-b border-border">
           <h2 className="font-sans font-bold">商品ごとの反応</h2>
-          {/* Bagian yang paling layak ditunjukkan. Toko biasa hanya tahu apa
-              yang dibeli; ini tahu apa yang dilihat lalu dilewati. */}
           <p className="text-xs text-muted-foreground mt-1">
             見送られた回数が多い順。買われなかった理由は、売上表には出てきません。
           </p>

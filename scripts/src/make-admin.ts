@@ -3,20 +3,7 @@ import "./load-env";
 import { eq } from "drizzle-orm";
 import { db, userTable } from "@workspace/db";
 
-/**
- * Menjadikan satu akun sebagai admin.
- *
- *   npm run make-admin -- email@kamu.com
- *
- * Ini SATU-SATUNYA cara peran admin diberikan. Tidak ada halaman pendaftaran
- * admin, tidak ada tombol, tidak ada undangan — karena halaman semacam itu
- * hanyalah target serangan untuk sesuatu yang cuma perlu dilakukan sekali.
- *
- * Menjalankan skrip ini menuntut akses ke terminal dan ke connection string
- * database, yang keduanya hanya kamu punya.
- */
 async function main() {
-  // process.argv[2] karena npm meneruskan argumen setelah `--`.
   const email = process.argv[2]?.trim().toLowerCase();
 
   if (!email) {

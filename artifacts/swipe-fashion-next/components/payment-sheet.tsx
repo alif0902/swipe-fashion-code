@@ -51,18 +51,6 @@ const METHOD_ICON: Record<PaymentMethodId, React.ElementType> = {
 
 type Step = "method" | "detail" | "shipping" | "processing" | "done";
 
-/**
- * Alur pembayaran demo.
- *
- * Sengaja dibuat berlangkah seperti checkout sungguhan — pilih metode, isi
- * detail, isi pengiriman, proses, selesai — karena satu formulir panjang tidak
- * mencerminkan bagaimana pembayaran benar-benar terasa di ponsel.
- *
- * Tidak ada uang yang berpindah dan tidak ada penyedia pembayaran yang
- * dihubungi. Nomor kartu hidup di state komponen ini saja dan hilang begitu
- * lembarnya ditutup; yang dikirim ke server hanyalah label seperti
- * "クレジットカード（Visa •••• 4242）".
- */
 export type ShippingDefaults = {
   customerName: string;
   customerEmail: string;
@@ -86,9 +74,6 @@ export function PaymentSheet({
   amount: number;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  // Diambil dari profil akun. Kalau alamat sudah terdaftar, langkah pengiriman
-  // sudah terisi begitu dibuka — pembeli tinggal memeriksanya, bukan mengetik
-  // ulang hal yang sama setiap kali membeli.
   shippingDefaults?: ShippingDefaults;
 }) {
   const { toast } = useToast();
@@ -110,7 +95,6 @@ export function PaymentSheet({
   const reset = () => {
     setStep("method");
     setMethod(null);
-    // Nomor kartu dibuang begitu lembar ditutup — tidak ada alasan menyimpannya.
     setCard({ number: "", expiry: "", cvc: "", holder: "" });
     setErrors({});
   };
@@ -140,8 +124,6 @@ export function PaymentSheet({
   const pay = () => {
     setStep("processing");
     startTransition(async () => {
-      // Jeda buatan supaya tahap "memproses" terlihat. Tanpa ini peralihannya
-      // instan dan justru terasa seolah tidak terjadi apa-apa.
       await new Promise((r) => setTimeout(r, 1600));
 
       const result = await confirmOrderAction(orderId, {
@@ -164,8 +146,6 @@ export function PaymentSheet({
 
   return (
     <Drawer open={isOpen} onOpenChange={close}>
-      {/* dvh, bukan vh: di Safari iOS, vh mengabaikan bilah alamat sehingga
-          92vh masih lebih tinggi dari ruang yang benar-benar terlihat. */}
       <DrawerContent className="max-h-[92dvh]">
         <DrawerHeader className="pb-2 shrink-0">
           <div className="flex items-center gap-2">
@@ -187,9 +167,6 @@ export function PaymentSheet({
             </span>
           </div>
 
-          {/* Spanduk demo sengaja menetap di semua langkah. Antarmuka
-              pembayaran yang meyakinkan justru wajib menyatakan dirinya
-              simulasi — jangan sampai ada yang memasukkan kartu asli. */}
           <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2 text-left">
             <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <p className="text-[11px] leading-relaxed text-amber-900">
@@ -198,9 +175,6 @@ export function PaymentSheet({
           </div>
         </DrawerHeader>
 
-        {/* flex-1 min-h-0 wajib menemani overflow-y-auto. Tanpa min-h-0, anak
-            flex menolak menyusut di bawah tinggi kontennya dan overflow tidak
-            pernah aktif — isinya tetap tumbuh melewati layar. */}
         <div className="flex-1 min-h-0 px-4 pb-8 overflow-y-auto">
           {step === "method" && (
             <div className="space-y-2.5 pt-2">
@@ -313,8 +287,6 @@ export function PaymentSheet({
                 )}
               </div>
 
-              {/* Nomor uji ditampilkan agar penguji tidak perlu — dan tidak
-                  tergoda — memakai kartu sungguhan. */}
               <div className="rounded-xl bg-muted/60 p-3">
                 <p className="text-[11px] font-medium mb-1.5">テスト用カード番号</p>
                 <div className="space-y-1">

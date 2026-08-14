@@ -7,13 +7,6 @@ import { FilterFabShell } from "@/components/filter-fab-shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// おすすめ順 dihapus. Sebagai pilihan dalam daftar urutan ia menyesatkan:
-// pengurutan menurut selera adalah cara kerja FEED, bukan salah satu cara
-// mengurutkan katalog — dan feed tidak punya menu urutan sama sekali.
-//
-// 新着順 jadi bawaan. Bukan pilihan netral, tapi paling jujur: ia menyatakan
-// apa yang dilakukannya, dan katalog fashion memang wajar dibuka dari yang
-// terbaru.
 const DEFAULT_SORT = "new";
 
 const SORTS = [
@@ -22,25 +15,10 @@ const SORTS = [
   { value: "price-desc", label: "価格が高い順" },
 ] as const;
 
-/**
- * Isi laci 絞り込む untuk halaman 探す.
- *
- * Mekanika tombolnya — mengambang, bisa digeser, lencana, laci — ada di
- * FilterFabShell dan dipakai bersama halaman feed.
- *
- * Semua pilihan di sini disimpan di query string, bukan di state React.
- * Konsekuensinya hasil filter bisa di-bookmark dan di-share, tombol back
- * browser bekerja seperti yang diharapkan, dan daftarnya tetap dirender di
- * server. Feed memilih cara lain (cookie) karena alasan yang dijelaskan di
- * lib/feed-filter.ts.
- */
 export function FilterFab({
   params,
   resultCount,
 }: {
-  // Dioper dari Server Component, bukan dibaca lewat useSearchParams. Hook itu
-  // memaksa adanya Suspense boundary saat next build dan bisa menggagalkan
-  // build — padahal nilainya sudah ada di server.
   params: Record<string, string | undefined>;
   resultCount: number;
 }) {
@@ -49,9 +27,6 @@ export function FilterFab({
   const sort = params.sort ?? DEFAULT_SORT;
   const inStock = params.stock === "1";
 
-  // Hanya filter yang mengubah hasil yang dihitung sebagai "aktif". Gender dan
-  // kategori punya kontrolnya sendiri di header, jadi tidak ikut dihitung —
-  // kalau ikut, lencananya akan menyala terus dan kehilangan arti.
   const activeCount = (sort !== DEFAULT_SORT ? 1 : 0) + (inStock ? 1 : 0);
 
   const update = (patch: Record<string, string | null>) => {
@@ -80,8 +55,6 @@ export function FilterFab({
                   type="button"
                   onClick={() =>
                     update({
-                      // Nilai bawaan dihapus dari URL, bukan ditulis — URL tetap
-                      // pendek dan bisa dibagikan.
                       sort: s.value === DEFAULT_SORT ? null : s.value,
                     })
                   }

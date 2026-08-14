@@ -6,17 +6,6 @@ import { Sparkles } from "lucide-react";
 import { AuthSheet } from "@/components/auth-sheet";
 import { Button } from "@/components/ui/button";
 
-/**
- * Ajakan mendaftar yang muncul di Style DNA, bukan di feed.
- *
- * Feed sengaja dibiarkan bersih: kartunya memenuhi layar dan banner apa pun di
- * sana akan menutupi foto atau tombol aksi — mengganggu justru pada interaksi
- * inti aplikasi. Style DNA adalah tempat yang lebih tepat karena di sanalah
- * hasil belajarnya terlihat, sehingga "simpan ini" punya arti konkret.
- *
- * Hanya ditampilkan setelah ada cukup swipe. Menawarkan menyimpan sesuatu yang
- * belum terbentuk terasa seperti permintaan mendaftar biasa.
- */
 export function SaveTastePrompt({ swipeCount }: { swipeCount: number }) {
   const [isOpen, setIsOpen] = useState(false);
 

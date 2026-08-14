@@ -14,17 +14,6 @@ export type StoredProfile = {
   building: string | null;
 };
 
-/**
- * Membaca profil langsung dari tabel `user`, bukan dari objek sesi.
- *
- * Dua alasan. Pertama, sesi disalin ke cookie cache selama beberapa menit —
- * setelah mengganti nama atau foto, objek sesi masih memuat nilai lama dan
- * halaman akan terlihat seperti gagal menyimpan. Kedua, `postalCode` dan
- * `address` memang tidak ikut di objek sesi.
- *
- * Ini satu kueri tambahan, jadi hanya dipanggil di halaman yang benar-benar
- * menampilkan profil — bukan di setiap render.
- */
 export async function getUserProfile(
   userId: string,
 ): Promise<StoredProfile | null> {
@@ -47,17 +36,6 @@ export async function getUserProfile(
   return { ...row, image: normalizeImage(row.image) };
 }
 
-/**
- * Membuang URL avatar dari model penyimpanan lama.
- *
- * Sebelum pindah ke Vercel Blob, foto profil disajikan lewat rute
- * `/api/avatar/{id}?v={ts}`. Rute itu sudah tidak ada, tapi barisnya masih
- * menyimpan alamat lamanya — dan next/image menolak jalur lokal bertanda tanya
- * dengan melempar runtime error, bukan sekadar gagal memuat gambar.
- *
- * Dianggap "tidak punya foto" saja: pemiliknya tinggal mengunggah ulang, dan
- * barisnya tertimpa dengan URL Blob yang benar.
- */
 function normalizeImage(image: string | null): string | null {
   if (!image) return null;
   if (image.startsWith("/api/avatar/")) return null;

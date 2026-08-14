@@ -8,43 +8,12 @@ import { Heart, ThumbsUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-/**
- * Panduan gestur, ditampilkan sekali pada kunjungan pertama ke feed.
- *
- * KENAPA INI PERLU. Halaman pemasaran sudah dihapus, jadi orang mendarat
- * langsung di kartu pertama tanpa satu kalimat pun yang menjelaskan apa yang
- * harus dilakukan. Untuk aplikasi yang seluruh interaksinya satu gerakan,
- * salah tebak di kartu pertama itu mahal: geser kanan langsung membuka
- * pemesanan.
- *
- * Dibuat BERTAHAP, bukan satu layar berisi tiga instruksi sekaligus. Tiga
- * penjelasan berdampingan menuntut orang membaca semuanya sebelum boleh
- * menyentuh apa pun — padahal inti aplikasi ini justru reaksi cepat. Satu
- * gerakan per layar, masing-masing diperagakan.
- */
-
-// Penanda "sudah pernah dilihat", disimpan per-peramban di localStorage.
-//
-// Sengaja BUKAN di basis data: panduan ini soal tangan yang belum tahu caranya
-// menggeser, bukan soal akun. Menyimpannya di server berarti panduan tidak
-// pernah muncul lagi saat orang yang sama membuka aplikasi di perangkat baru —
-// padahal di sanalah tangannya kembali perlu diberi tahu. localStorage juga
-// membuat panduan tetap bekerja sebelum seseorang masuk akun sama sekali.
 const SEEN_KEY = "hitome:feed-coach-seen";
 
 type Step = {
   id: string;
-  /**
-   * Arah kartu terbang keluar: 1 kanan, -1 kiri, 0 tidak digeser.
-   *
-   * Kartu asli TIDAK kembali ke tengah setelah melewati ambang — ia melesat
-   * keluar layar (`controls.start({ x: 500 })` di product-card.tsx). Peragaan
-   * sebelumnya memantulkannya kembali, yang mengajarkan gerakan yang tidak
-   * pernah terjadi.
-   */
   dir: -1 | 0 | 1;
   icon: typeof Heart;
-  /** Ikon padat terbaca lebih tegas di lencana kecil. */
   filled?: boolean;
   accent: string;
   glow: string;
@@ -59,24 +28,16 @@ const STEPS: Step[] = [
     dir: 1,
     icon: Heart,
     filled: true,
-    // Koral milik aplikasi (--primary), bukan rose-500 bawaan Tailwind.
-    // rose-500 terlalu pekat dan tidak ada di palet mana pun di sini; koral
-    // ini warna yang sama dengan tombol いいね！, harga, dan lencana 新着 —
-    // jadi hatinya terbaca sebagai bagian aplikasi, bukan ikon tempelan.
     accent: "text-primary",
     glow: "from-primary/40",
     label: "右にスワイプ",
     title: "気になったら、右へ。",
-    // Disebut eksplisit bahwa ini membuka pemesanan. Ini gerakan yang paling
-    // mahal kalau salah tebak, jadi tidak boleh disamarkan jadi "suka".
     body: "サイズとカラーを選ぶ画面がひらきます。そのまま注文まで進めます。",
   },
   {
     id: "left",
     dir: -1,
     icon: X,
-    // Netral, bukan merah. Merah kini milik langkah kanan (hati), dan dua
-    // langkah berwarna sama menghapus petunjuk warna yang membedakan arah.
     accent: "text-slate-600",
     glow: "from-slate-300/40",
     label: "左にスワイプ",
@@ -96,34 +57,21 @@ const STEPS: Step[] = [
 ];
 
 export function FeedCoach({ previewImage }: { previewImage?: string }) {
-  // null = belum diperiksa. Membedakannya dari false mencegah panduan
-  // berkedip sekilas pada orang yang sudah pernah melihatnya.
   const [isOpen, setIsOpen] = useState<boolean | null>(null);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    // Pemeriksaan dilakukan di effect, BUKAN saat state dibuat. Render pertama
-    // terjadi juga di server, tempat localStorage tidak ada — membacanya di
-    // sana akan melempar, dan menebak nilainya akan membuat markup server dan
-    // klien berbeda.
     try {
       setIsOpen(!localStorage.getItem(SEEN_KEY));
     } catch {
-      // Safari mode privat melempar saat localStorage disentuh. Panduan bukan
-      // hal yang layak merusak halaman — anggap saja sudah pernah dilihat.
       setIsOpen(false);
     }
   }, []);
 
   const close = () => {
-    // Penanda ditulis saat panduan DITUTUP — lewat スキップ maupun はじめる —
-    // bukan saat ia muncul. Kalau ditulis saat muncul, orang yang aplikasinya
-    // tertutup atau halamannya termuat ulang di tengah panduan kehilangan
-    // sisanya selamanya, padahal ia belum sempat membacanya.
     try {
       localStorage.setItem(SEEN_KEY, "1");
     } catch {
-      /* abaikan — lihat alasan di atas */
     }
     setIsOpen(false);
     setIndex(0);
@@ -140,7 +88,6 @@ export function FeedCoach({ previewImage }: { previewImage?: string }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      // absolute, bukan fixed: panduan harus tinggal di dalam bingkai ponsel.
       className="absolute inset-0 z-50 flex flex-col items-center justify-center px-8 bg-foreground/55 backdrop-blur-md"
     >
       <button
@@ -151,14 +98,6 @@ export function FeedCoach({ previewImage }: { previewImage?: string }) {
         スキップ
       </button>
 
-      {/* ---- Peragaan ----
-
-          Langkah いいね！ TIDAK memakai kartu produk.
-          Yang diajarkan di sini bukan gerakan pada kartu, melainkan sebuah
-          TOMBOL — jadi yang diperagakan tombolnya sendiri, ditiru semirip
-          mungkin dengan yang ada di feed. Menampilkan kartu di sini justru
-          menyesatkan: orang akan mengira ada gestur yang harus dilakukan
-          padanya. */}
       {step.dir === 0 ? (
         <div className="relative flex items-center justify-center h-[200px] mb-10">
           <div
@@ -178,8 +117,6 @@ export function FeedCoach({ previewImage }: { previewImage?: string }) {
               repeatDelay: 0.5,
               ease: "easeInOut",
             }}
-            // Ditiru dari tombol asli di product-card.tsx: pil penuh, warna
-            // aksen, ikon jempol menempel di kiri.
             className="relative w-[220px] h-12 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center font-bold"
           >
             <span className="absolute left-4 top-1/2 -translate-y-1/2">
@@ -190,8 +127,6 @@ export function FeedCoach({ previewImage }: { previewImage?: string }) {
         </div>
       ) : (
       <div className="relative w-[150px] h-[200px] mb-10">
-        {/* Cahaya arah di belakang kartu. Ia yang membuat arah terbaca bahkan
-            sebelum kartunya bergerak. */}
         <div
           className={cn(
             "absolute -inset-8 rounded-full blur-2xl to-transparent",
@@ -200,17 +135,6 @@ export function FeedCoach({ previewImage }: { previewImage?: string }) {
           )}
         />
 
-        {/* Lencana DI TENGAH, di belakang kartu.
-
-            Dulu ia menempel di sisi kiri/kanan, dan kartu yang melintas
-            menutupinya tepat saat ia paling perlu terlihat. Sekarang ia
-            tersembunyi persis di balik kartu, lalu TERSINGKAP oleh kartu yang
-            menggeser pergi — jadi gerakan kartu dan kemunculan ikonnya jadi
-            satu peristiwa, bukan dua hal yang saling menimpa.
-
-            Waktunya digeser ke 0,55 — sesudah kartu melewati titik 0,45 dan
-            benar-benar mulai menyingkir. Kalau lebih awal, ikonnya menyala di
-            balik kartu yang masih menutupinya. */}
         <motion.span
           key={`${step.id}-badge`}
           initial={{ opacity: 0, scale: 0.7 }}
@@ -233,23 +157,10 @@ export function FeedCoach({ previewImage }: { previewImage?: string }) {
           />
         </motion.span>
 
-        {/* TANPA AnimatePresence.
-
-            Sebelumnya kartu ini dibungkus <AnimatePresence mode="wait">, dan
-            itu membuatnya HILANG sama sekali mulai langkah kedua: mode="wait"
-            menahan pemasangan elemen baru sampai animasi keluar elemen lama
-            selesai — sementara animasi kartu ini `repeat: Infinity` dan tidak
-            pernah selesai. AnimatePresence menunggu selamanya.
-
-            Tidak ada yang hilang dengan membuangnya: `key` sudah memaksa
-            React memasang ulang kartu tiap ganti langkah, dan `initial`
-            menangani kemunculannya. */}
         <motion.div
           key={step.id}
           className="absolute inset-0 z-10 rounded-2xl overflow-hidden bg-card shadow-2xl"
           initial={{ opacity: 0, scale: 0.9 }}
-          // Meniru kartu asli: rotasi mengikuti geseran (±8° pada 200px),
-          // lalu melesat keluar dan memudar. Ia TIDAK kembali ke tengah.
           animate={{
             opacity: [1, 1, 0],
             scale: 1,
@@ -279,7 +190,6 @@ export function FeedCoach({ previewImage }: { previewImage?: string }) {
       </div>
       )}
 
-      {/* ---- Teks ---- */}
       <AnimatePresence mode="wait">
         <motion.div
           key={step.id}
@@ -299,7 +209,6 @@ export function FeedCoach({ previewImage }: { previewImage?: string }) {
         </motion.div>
       </AnimatePresence>
 
-      {/* ---- Titik langkah ---- */}
       <div className="flex items-center gap-2 mt-8 mb-6">
         {STEPS.map((s, i) => (
           <span

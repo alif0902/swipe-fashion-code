@@ -5,30 +5,9 @@ import { Loader2, ZoomIn } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-/**
- * Pemotong foto produk dengan bingkai potret tetap.
- *
- * KENAPA INI ADA. Sebelumnya berkas diunggah apa adanya, hanya dikecilkan ke
- * lebar 1080 dengan rasio asli dipertahankan. Kartu feed lalu merendernya
- * dengan `object-cover` pada bingkai potret — jadi foto lanskap dipotong dari
- * TENGAH secara otomatis, dan kepala model atau sepatunya hilang tanpa ada
- * yang bisa dilakukan admin.
- *
- * Sekarang pemotongannya diputuskan saat unggah, oleh orang yang melihat
- * fotonya. Yang tersimpan sudah berbentuk 3:4, jadi `object-cover` di kartu
- * tidak lagi memotong apa pun.
- *
- * Sengaja tanpa pustaka pihak ketiga. Yang dibutuhkan cuma geser dan zoom di
- * satu bingkai berukuran tetap — beberapa puluh baris canvas, dibanding satu
- * dependensi lagi yang harus ikut diperbarui selamanya.
- */
-
-// 3:4 — rasio yang sama dengan bingkai foto di ProductCard.
 const OUT_W = 1080;
 const OUT_H = 1440;
 
-// Ukuran bingkai pratinjau di layar. Rasionya harus sama dengan keluaran,
-// kalau tidak apa yang dilihat bukan apa yang tersimpan.
 const BOX_W = 270;
 const BOX_H = 360;
 
@@ -49,22 +28,6 @@ export function ImageCropper({
   const dragging = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    // FileReader, BUKAN URL.createObjectURL.
-    //
-    // Versi pertama memakai object URL dan salah di dua tempat sekaligus:
-    //
-    //   1. URL-nya di-revoke di dalam onload, padahal `img.src` yang sama
-    //      dipakai untuk merender pratinjau — jadi <img> menunjuk alamat yang
-    //      sudah mati.
-    //   2. Cleanup effect juga me-revoke-nya. Di mode dev, StrictMode
-    //      menjalankan effect dua kali (mount → unmount → mount), sehingga
-    //      URL-nya batal SEBELUM gambarnya selesai dimuat dan onerror terpicu.
-    //      Gejalanya: setiap foto, sekalipun formatnya benar, ditolak dengan
-    //      "この画像は読み込めませんでした".
-    //
-    // Data URL tidak perlu dibatalkan dan tidak punya siklus hidup, jadi
-    // seluruh kelas bug ini hilang. Fotonya toh sudah dibaca ke memori untuk
-    // digambar ke canvas.
     let cancelled = false;
     const reader = new FileReader();
 
@@ -94,21 +57,16 @@ export function ImageCropper({
 
     reader.readAsDataURL(file);
 
-    // Menandai batal, bukan membatalkan sumbernya — pemuatan yang sudah jalan
-    // dibiarkan selesai tapi hasilnya diabaikan.
     return () => {
       cancelled = true;
     };
   }, [file]);
 
-  // Skala minimum supaya foto SELALU menutupi bingkai — tanpa ini, menggeser
-  // terlalu jauh akan memunculkan pita kosong di tepi hasil potongan.
   const baseScale = img
     ? Math.max(BOX_W / img.naturalWidth, BOX_H / img.naturalHeight)
     : 1;
   const scale = baseScale * zoom;
 
-  // Batas geser: setengah dari kelebihan ukuran di tiap sumbu.
   const clamp = (next: { x: number; y: number }) => {
     if (!img) return next;
     const maxX = Math.max(0, (img.naturalWidth * scale - BOX_W) / 2);
@@ -138,8 +96,6 @@ export function ImageCropper({
     dragging.current = null;
   };
 
-  // Zoom diterapkan ke offset juga, supaya titik tengah bingkai tetap kira-kira
-  // menunjuk bagian foto yang sama saat slider digeser.
   const changeZoom = (next: number) => {
     const ratio = next / zoom;
     setZoom(next);
@@ -155,13 +111,9 @@ export function ImageCropper({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Latar putih: foto PNG transparan akan jadi hitam tanpa ini saat
-    // dikodekan ulang ke JPEG.
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, OUT_W, OUT_H);
 
-    // Pratinjau BOX_W lebar; keluaran OUT_W. Semua ukuran dikalikan rasio itu
-    // supaya hasilnya identik dengan yang dilihat, hanya lebih besar.
     const k = OUT_W / BOX_W;
     const dw = img.naturalWidth * scale * k;
     const dh = img.naturalHeight * scale * k;

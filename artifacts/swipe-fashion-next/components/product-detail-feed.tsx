@@ -18,22 +18,6 @@ import { ToastAction } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
 import type { AppProduct } from "@/lib/format";
 
-/**
- * Satu produk, ditampilkan persis seperti kartu di feed.
- *
- * Komponen ini sengaja memakai ulang ProductCard apa adanya, bukan meniru
- * tampilannya. Kalau tata letak kartu feed berubah, halaman ini ikut berubah
- * sendiri — tidak ada dua salinan yang bisa saling menyimpang.
- *
- * Bedanya hanya pada apa yang terjadi setelah aksi. Di feed, kartu berikutnya
- * menggantikan yang sekarang; di sini tidak ada tumpukan, jadi:
- * - パス       → kembali ke halaman sebelumnya
- * - geser kanan → overlay マッチ, lalu bisa lanjut ke バッグ
- * - tombol いいね！ → simpan ke 一目惚れ
- *
- * Swipe tetap merekam sinyal ke mesin selera, sama seperti di feed. Artinya
- * menelusuri katalog lewat 探す juga ikut melatih profil, bukan cuma feed.
- */
 export function ProductDetailFeed({ product }: { product: AppProduct }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -57,7 +41,6 @@ export function ProductDetailFeed({ product }: { product: AppProduct }) {
     setMatchedProduct(product);
   };
 
-  // Sama seperti di feed: いいね cukup dilaporkan lewat toast, tanpa overlay.
   const handleSuperLike = () => {
     void superLikeAction({ productId: product.id }).catch(() => {});
     record("super");
@@ -65,8 +48,6 @@ export function ProductDetailFeed({ product }: { product: AppProduct }) {
     toast({
       title: "一目惚れに保存しました",
       description: product.name,
-      // Disamakan dengan toast yang sama di swipe-feed.tsx — alasan angkanya
-      // dijelaskan di sana.
       duration: 2500,
       action: (
         <ToastAction
@@ -89,8 +70,6 @@ export function ProductDetailFeed({ product }: { product: AppProduct }) {
 
   return (
     <div className="relative w-full h-full overflow-hidden bg-gradient-to-b from-sky-200 via-purple-200 to-pink-400">
-      {/* Tombol kembali dibutuhkan di sini tapi tidak di feed: halaman ini
-          punya tempat asal, sedangkan feed adalah tujuan itu sendiri. */}
       <Link
         href="/lookbook"
         aria-label="戻る"

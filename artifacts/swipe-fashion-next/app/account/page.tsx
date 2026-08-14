@@ -19,8 +19,6 @@ export const metadata: Metadata = {
 export default async function AccountPage() {
   const [user, ownerId] = await Promise.all([getCurrentUser(), getOwnerId()]);
 
-  // Dijalankan bersamaan, bukan berurutan: tiap kueri berarti satu perjalanan
-  // ke Sydney, dan halaman ini butuh tiga di antaranya.
   const [profile, obsessed, stored, admin] = await Promise.all([
     getTasteProfile(ownerId),
     listObsessed(ownerId),

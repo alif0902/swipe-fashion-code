@@ -8,19 +8,6 @@ import { db, productsTable } from "@workspace/db";
 
 import { products } from "./catalog";
 
-// Menyalin images[] dari catalog.ts ke database, apa adanya.
-//
-// Versi lama skrip ini MENEBAK foto kedua: ia memakai p.imageUrl sebagai
-// images[0] lalu mencari file bersufiks "-flat" di public/. Tebakan itu tidak
-// lagi berlaku. Sejak katalog memakai pasangan "foto model + foto produk",
-// urutan yang benar ditulis eksplisit di catalog.ts (images[0] foto model,
-// foto produk terakhir) — membiarkan logika lama berjalan justru MENIMPA
-// urutan itu dan membuang salah satu foto, karena tidak ada satu pun file
-// bersufiks "-flat".
-//
-// Skrip ini juga memvalidasi setiap path ada di public/, karena next/image
-// pada file yang hilang baru gagal saat render, bukan saat build.
-
 const PUBLIC_DIR = path.resolve(
   process.cwd(),
   "../artifacts/swipe-fashion-next/public",

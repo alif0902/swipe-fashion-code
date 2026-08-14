@@ -17,17 +17,6 @@ import { useToast } from "@/hooks/use-toast";
 import type { AppReview } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
-/**
- * Panel ulasan produk.
- *
- * Dibuka dari baris 評価 di blok 基本情報. Barisnya dulu hanya teks mati —
- * angka「4.6（61件）」tanpa cara apa pun melihat isinya, yang membuat
- * penilaiannya terbaca sebagai hiasan.
- *
- * Memakai Drawer yang sama dengan lembar pemesanan, jadi dua panel utama
- * aplikasi ini muncul dan menutup dengan gerakan yang identik.
- */
-
 function Stars({
   value,
   size = "sm",
@@ -43,8 +32,6 @@ function Stars({
           key={n}
           className={cn(
             px,
-            // Bintang yang belum terisi tetap digambar, bukan dihilangkan —
-            // tanpa itu, "3 dari 5" terlihat seperti "3 dari 3".
             n <= Math.round(value)
               ? "fill-primary text-primary"
               : "fill-muted text-muted",
@@ -73,7 +60,6 @@ export function ReviewSheet({
 }: {
   productId: number;
   productName: string;
-  /** null = belum ada penilaian sama sekali (produk baru dari admin). */
   rating: number | null;
   reviewCount: number;
   isOpen: boolean;
@@ -86,11 +72,6 @@ export function ReviewSheet({
   const [isLoading, setIsLoading] = useState(false);
   const [showAll, setShowAll] = useState(false);
 
-  // Diambil saat panel dibuka, bukan saat kartu dirender.
-  //
-  // `cancelled` menjaga panel yang keburu ditutup tidak menulis hasil yang
-  // datang belakangan — tanpa itu, membuka lalu menutup cepat bisa mengisi
-  // daftar milik produk yang sudah tidak dilihat.
   useEffect(() => {
     if (!isOpen) return;
 
@@ -118,8 +99,6 @@ export function ReviewSheet({
   const [body, setBody] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // Tiga teratas saat tertutup — sisanya di balik tombol, supaya panel tidak
-  // membuka dengan gulungan panjang.
   const visible = showAll ? reviews : reviews.slice(0, 3);
 
   const submit = () => {
@@ -143,9 +122,6 @@ export function ReviewSheet({
       setBody("");
       setStars(5);
 
-      // Daftar diambil ulang supaya ulasan yang baru ditulis langsung terlihat
-      // dengan lencana「あなた」. revalidatePath di server hanya menyegarkan
-      // halaman, bukan state panel yang sedang terbuka.
       setReviews(await listReviewsAction(productId));
     });
   };
@@ -161,11 +137,7 @@ export function ReviewSheet({
         </DrawerHeader>
 
         <div className="px-4 pb-8 overflow-y-auto">
-          {/* ---- Ringkasan ---- */}
           {rating === null ? (
-            // Produk baru belum punya penilaian. Menampilkan「0.0」dan lima
-            // bintang kosong terbaca seperti produk yang dinilai buruk, bukan
-            // produk yang belum dinilai — dua hal yang sangat berbeda.
             <p className="text-sm text-muted-foreground text-center rounded-2xl bg-muted/40 px-5 py-6 mb-5">
               まだ評価がありません。
             </p>
@@ -191,7 +163,6 @@ export function ReviewSheet({
             </div>
           )}
 
-          {/* ---- Daftar ---- */}
           {isLoading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
@@ -208,9 +179,6 @@ export function ReviewSheet({
                   className="border-b border-border/60 last:border-0 pb-4 last:pb-0"
                 >
                   <div className="flex items-center gap-2.5 mb-1.5">
-                    {/* Avatar inisial, bukan foto. Tidak ada foto asli untuk
-                        dipakai, dan gambar palsu di sebelah nama palsu justru
-                        membuat ulasannya terasa dibuat-buat. */}
                     <span className="w-8 h-8 shrink-0 rounded-full bg-primary/12 text-primary flex items-center justify-center text-xs font-bold">
                       {r.authorName.trim().charAt(0).toUpperCase()}
                     </span>
@@ -229,8 +197,6 @@ export function ReviewSheet({
                     </div>
                     <Stars value={r.rating} />
                   </div>
-                  {/* Dirender sebagai teks biasa, bukan HTML — tidak ada jalur
-                      penyisipan skrip lewat kolom ulasan. */}
                   <p className="text-sm leading-relaxed text-foreground/85 whitespace-pre-wrap">
                     {r.body}
                   </p>
@@ -249,7 +215,6 @@ export function ReviewSheet({
             </button>
           )}
 
-          {/* ---- Form ---- */}
           <div className="mt-6 pt-5 border-t border-border">
             {!isWriting ? (
               <Button

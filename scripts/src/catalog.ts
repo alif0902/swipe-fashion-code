@@ -1,22 +1,3 @@
-// Katalog demo — DATA SAJA, tanpa efek samping.
-//
-// Berkas ini dipisahkan dari seed.ts karena seed.ts memanggil seed() di level
-// teratas. Selama datanya masih tinggal di sana, sekadar meng-IMPORT-nya sudah
-// menjalankan seeding: sync-products pernah menyisipkan 12 produk duplikat lalu
-// mati oleh process.exit() milik seed sebelum sempat bekerja.
-//
-// Modul mana pun boleh mengimpor dari sini dengan aman.
-//
-// KONVENSI FOTO: images[0] SELALU foto model (orang yang memakai garmennya),
-// foto produk (flat lay / ghost mannequin) ditaruh TERAKHIR. product-card.tsx
-// menampilkan images[0] lebih dulu lalu membiarkan pengguna menggeser — jadi
-// urutan ini yang membuat kartu feed membuka dengan sosok manusia, bukan
-// dengan garmen yang menggantung.
-//
-// imageUrl sengaja dibuat sama dengan images[0]. Kolom itu dipakai sebagai
-// thumbnail di riwayat pesanan, lookbook, 一目惚れ, match overlay, daftar
-// admin, dan gambar OG — menyamakannya menjaga foto pertama yang dilihat
-// pengguna tetap konsisten di seluruh aplikasi.
 import { productsTable } from "@workspace/db";
 
 export const categories = [
@@ -26,11 +7,6 @@ export const categories = [
   { name: "Bottoms", slug: "bottoms" },
 ];
 
-// price dan originalPrice bertipe numeric di Postgres, jadi Drizzle
-// mengharapkan string. Angka JavaScript akan ditolak.
-// Tipe dipatok eksplisit ke bentuk insert Drizzle. Tanpa ini TypeScript
-// menyimpulkan array sebagai union tipe literal — tiap produk punya kunci
-// dimensions yang berbeda — dan db.insert menolaknya.
 export const products: (typeof productsTable.$inferInsert)[] = [
   {
     name: "ワイドデニムパンツ",
@@ -55,9 +31,6 @@ export const products: (typeof productsTable.$inferInsert)[] = [
       "股上": "30cm",
       "股下": "72cm",
       "わたり幅": "33cm",
-      // Untuk celana yang namanya sendiri "ワイド", 裾幅 adalah angka yang
-      // menentukan siluetnya. Tanpa ini pembeli tidak tahu seberapa lebar
-      // kaki bawahnya, padahal itu justru yang dilihat orang.
       "裾幅": "28cm",
     },
     stock: 21,
@@ -87,8 +60,6 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     dimensions: {
       "ウエスト": "76cm",
       "股上": "32cm",
-      // 70cm untuk celana pria memang pendek — dan itu disengaja: fotonya
-      // memperlihatkan potongan ankle yang berhenti di atas sepatu.
       "股下": "70cm",
       "わたり幅": "35cm",
       "裾幅": "24cm",
@@ -146,8 +117,6 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     ],
     material: "ポリエステル100%",
     feel: "風が通るたび、柄がゆっくり動く。",
-    // Kamisol bertali tipis: tidak ada bahu untuk diukur, jadi 肩幅 dilepas.
-    // Diganti 裾回り, yang justru jadi daya tarik potongan tiered ini.
     dimensions: {
       "着丈": "124cm",
       "身幅": "48cm",
@@ -217,9 +186,6 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     isSale: false,
   },
   {
-    // Dulu bernama "ネイビーテーラードスーツ", tapi yang dijual — dan yang
-    // diukur di dimensions — hanya jaketnya. Foto model memakai celana serasi
-    // sebagai penataan gaya, bukan sebagai bagian dari produk.
     name: "ネイビーテーラードジャケット",
     brand: "CORSO",
     price: "19900.00",
@@ -260,12 +226,7 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     category: "tops",
     gender: "women",
     sizes: ["XS", "S", "M", "L", "XL"],
-    // "Teal", bukan "Blue". Foto flat lay-nya memperlihatkan abu, teal, dan
-    // pink — tidak ada biru di sana. Nama warna yang meleset dari fotonya
-    // membuat swatch di lembar pemesanan menjanjikan barang yang berbeda.
     colors: ["Pink", "Grey", "Teal"],
-    // Tiga foto model lebih dulu, urutannya sama dengan colors di atas, lalu
-    // flat lay tiga warna sebagai penutup.
     images: [
       "/assets/polo-cotton-model-pink.webp",
       "/assets/polo-cotton-model-grey.webp",
@@ -301,10 +262,6 @@ export const products: (typeof productsTable.$inferInsert)[] = [
     images: ["/assets/tee-raglan-red-model.webp", "/assets/tee-raglan-red.webp"],
     material: "コットン90% / ポリエステル10%",
     feel: "腕を上げても、肩が突っぱらない。",
-    // Raglan tidak punya jahitan bahu, jadi 肩幅 tidak bisa diukur — patokan
-    // yang dipakai toko Jepang untuk potongan ini adalah 裄丈, diukur dari
-    // tengah belakang leher sampai ujung manset. Ia menggantikan 肩幅 DAN
-    // 袖丈 sekaligus; mencantumkan ketiganya berarti menghitung ganda.
     dimensions: {
       "着丈": "60cm",
       "身幅": "46cm",

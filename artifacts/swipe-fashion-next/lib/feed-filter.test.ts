@@ -26,8 +26,6 @@ describe("parseFeedFilter", () => {
     });
   });
 
-  // Cookie bisa disunting siapa saja lewat devtools. Nilai yang tidak dikenal
-  // dibuang, bukan diteruskan ke query.
   it("membuang gender yang tidak dikenal", () => {
     expect(parseFeedFilter("gender=alien")).toEqual({});
     expect(parseFeedFilter("gender=MEN")).toEqual({});
@@ -77,9 +75,6 @@ describe("serializeFeedFilter", () => {
     expect(parseFeedFilter(serializeFeedFilter(filter))).toEqual(filter);
   });
 
-  // Titik masuk kedua selain cookie: nilai dari klien lewat Server Action.
-  // Membersihkannya di sini berarti pemanggil cukup melakukan serialize lalu
-  // parse untuk mendapat nilai yang sudah aman.
   it("membuang nilai yang tidak sah, bukan menuliskannya", () => {
     expect(
       serializeFeedFilter({

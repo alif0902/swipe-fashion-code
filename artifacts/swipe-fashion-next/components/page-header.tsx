@@ -1,22 +1,5 @@
 import type { LucideIcon } from "lucide-react";
 
-/**
- * Header halaman bersama untuk 探す / 一目惚れ / バッグ.
- *
- * Sebelumnya tiap halaman hanya punya <h1> serif mengambang di latar polos —
- * terbaca seperti dokumen, bukan aplikasi, dan kontras sekali dengan kartu
- * feed yang sudah rapi. Beberapa keputusan di sini:
- *
- * - Blok bergradasi dengan sudut bawah membulat memberi halaman "atap",
- *   sehingga daftar di bawahnya terasa berlabuh, bukan melayang.
- * - Judul memakai sans tebal, bukan serif. Playfair tidak punya glif Jepang,
- *   jadi 探す jatuh ke Noto Serif dan bercampur dengan angka/Latin di sekitarnya
- *   — campuran itu yang membuatnya terlihat seperti teks mentah.
- * - Ikon dalam bulatan memberi tiap halaman jangkar visual yang langsung
- *   dikenali, sekaligus menyamakan bahasa dengan kartu Style DNA.
- * - Hitungan ditampilkan sebagai pil, bukan kalimat: angka yang bisa dipindai
- *   sekilas lebih berguna daripada "3 件のアイテム" yang harus dibaca.
- */
 export function PageHeader({
   icon: Icon,
   eyebrow,
@@ -32,7 +15,6 @@ export function PageHeader({
   subtitle?: string;
   count?: number;
   countLabel?: string;
-  // Slot untuk kontrol yang menempel pada header, mis. tab kategori di 探す.
   children?: React.ReactNode;
 }) {
   return (

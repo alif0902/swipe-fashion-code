@@ -96,8 +96,6 @@ describe("hasCompleteAddress", () => {
     ).toBe(true);
   });
 
-  // Alamat setengah jadi lebih berbahaya daripada alamat kosong: yang kosong
-  // meminta diisi saat checkout, yang setengah jadi lolos begitu saja.
   it("rejects a postal code on its own", () => {
     expect(hasCompleteAddress({ postalCode: "755-0096" })).toBe(false);
   });

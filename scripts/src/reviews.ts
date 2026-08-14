@@ -1,17 +1,3 @@
-/**
- * Ulasan bawaan — DATA SAJA, tanpa efek samping.
- *
- * Dicocokkan ke produk lewat NAMA, bukan id, karena id di database tidak
- * pernah sama dengan urutan di catalog.ts.
- *
- * Teksnya sengaja menyebut hal yang benar-benar ada pada produknya —
- * bahannya, potongannya, kalimat 着心地 yang sudah ditulis di katalog. Ulasan
- * yang bisa ditukar antar produk tanpa terasa aneh adalah ulasan yang
- * ketahuan dibuat massal.
- *
- * daysAgo dipakai skrip seed untuk menyebar createdAt ke belakang. Tanpa itu
- * semua ulasan bertanggal sama dan urutan「新しい順」jadi tidak berarti.
- */
 export type SeedReview = {
   productName: string;
   authorName: string;
@@ -21,7 +7,6 @@ export type SeedReview = {
 };
 
 export const reviews: SeedReview[] = [
-  // --- ワイドデニムパンツ ---
   {
     productName: "ワイドデニムパンツ",
     authorName: "みなみ",
@@ -58,7 +43,6 @@ export const reviews: SeedReview[] = [
     daysAgo: 96,
   },
 
-  // --- タックワイドチノ ---
   {
     productName: "タックワイドチノ",
     authorName: "R.Okada",
@@ -88,7 +72,6 @@ export const reviews: SeedReview[] = [
     daysAgo: 88,
   },
 
-  // --- ノースリーブミディワンピース ---
   {
     productName: "ノースリーブミディワンピース",
     authorName: "あかり",
@@ -118,7 +101,6 @@ export const reviews: SeedReview[] = [
     daysAgo: 102,
   },
 
-  // --- フラワープリントワンピース ---
   {
     productName: "フラワープリントワンピース",
     authorName: "えみ",
@@ -148,7 +130,6 @@ export const reviews: SeedReview[] = [
     daysAgo: 94,
   },
 
-  // --- コーラルブルゾン ---
   {
     productName: "コーラルブルゾン",
     authorName: "D.Saito",
@@ -171,7 +152,6 @@ export const reviews: SeedReview[] = [
     daysAgo: 58,
   },
 
-  // --- ヘビーウェイトパーカ ---
   {
     productName: "ヘビーウェイトパーカ",
     authorName: "ryo",
@@ -201,7 +181,6 @@ export const reviews: SeedReview[] = [
     daysAgo: 110,
   },
 
-  // --- ネイビーテーラードジャケット ---
   {
     productName: "ネイビーテーラードジャケット",
     authorName: "K.Nishimura",
@@ -224,7 +203,6 @@ export const reviews: SeedReview[] = [
     daysAgo: 47,
   },
 
-  // --- コットンポロシャツ ---
   {
     productName: "コットンポロシャツ",
     authorName: "あやの",
@@ -261,7 +239,6 @@ export const reviews: SeedReview[] = [
     daysAgo: 105,
   },
 
-  // --- ラグランプリントT ---
   {
     productName: "ラグランプリントT",
     authorName: "しゅん",

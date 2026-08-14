@@ -10,19 +10,6 @@ import {
   userTable,
 } from "@workspace/db";
 
-/**
- * Angka untuk dashboard admin.
- *
- * Tidak ada tabel analitik. Semuanya dihitung dari tabel yang sudah ada —
- * `swipes` khususnya, yang selama ini hanya dipakai mesin selera untuk satu
- * orang. Dilihat secara agregat, tabel yang sama menjawab pertanyaan yang
- * berbeda: produk mana yang paling sering DITOLAK.
- *
- * Itu hanya mungkin karena swipe kiri ikut direkam sejak awal. Toko biasa
- * cuma tahu apa yang dibeli; yang ini tahu apa yang dilihat lalu dilewati —
- * dan itu justru sinyal yang lebih berguna untuk memutuskan stok.
- */
-
 export type AdminSummary = {
   products: number;
   users: number;
@@ -41,13 +28,10 @@ export type ProductPerformance = {
   passes: number;
   supers: number;
   orders: number;
-  /** null kalau belum pernah di-swipe — 0% dan "belum ada data" itu berbeda. */
   likeRate: number | null;
 };
 
 export async function getAdminSummary(): Promise<AdminSummary> {
-  // Semua dijalankan bersamaan. Berurutan berarti enam perjalanan ke Sydney
-  // satu per satu, dan dashboard akan terasa menggantung.
   const [products, users, swipes, orders, revenue] = await Promise.all([
     db.select({ n: count() }).from(productsTable),
     db.select({ n: count() }).from(userTable),
@@ -64,15 +48,11 @@ export async function getAdminSummary(): Promise<AdminSummary> {
     users: Number(users[0]?.n ?? 0),
     swipes: Number(swipes[0]?.n ?? 0),
     orders: Number(orders[0]?.n ?? 0),
-    // sum() mengembalikan string lewat node-postgres, dan null kalau tak ada baris.
     revenue: Number(revenue[0]?.total ?? 0),
   };
 }
 
 export async function getProductPerformance(): Promise<ProductPerformance[]> {
-  // SATU kueri dengan GROUP BY, bukan satu kueri per produk. Dengan katalog 12
-  // item, versi per-produk berarti 12 perjalanan lintas benua untuk memuat
-  // satu tabel.
   const [rows, orderRows] = await Promise.all([
     db
       .select({
@@ -86,8 +66,6 @@ export async function getProductPerformance(): Promise<ProductPerformance[]> {
         supers: sql<number>`count(*) filter (where ${swipesTable.direction} = 'super')`,
       })
       .from(productsTable)
-      // leftJoin, bukan innerJoin: produk yang belum pernah di-swipe harus
-      // tetap muncul dengan nol, bukan hilang dari tabel.
       .leftJoin(swipesTable, eq(swipesTable.productId, productsTable.id))
       .groupBy(productsTable.id)
       .orderBy(productsTable.id),
@@ -121,7 +99,6 @@ export async function getProductPerformance(): Promise<ProductPerformance[]> {
       passes,
       supers,
       orders: orderCount.get(row.id) ?? 0,
-      // Super like dihitung sebagai suka — memang begitu artinya.
       likeRate: total === 0 ? null : (likes + supers) / total,
     };
   });

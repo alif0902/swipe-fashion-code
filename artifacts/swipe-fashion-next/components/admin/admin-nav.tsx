@@ -16,8 +16,6 @@ export function AdminNav() {
   return (
     <nav className="flex items-center gap-1">
       {LINKS.map((link) => {
-        // /admin cocok dengan semua rute admin kalau dibandingkan dengan
-        // startsWith, jadi tautan dashboard perlu perbandingan persis.
         const active = link.exact
           ? pathname === link.href
           : pathname.startsWith(link.href);

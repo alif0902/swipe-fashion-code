@@ -18,9 +18,6 @@ export const metadata: Metadata = {
 export default async function EditProfilePage() {
   const user = await getCurrentUser();
 
-  // Satu-satunya rute yang benar-benar tertutup. Tanpa akun tidak ada apa pun
-  // di sini untuk diedit, jadi dialihkan ke マイページ yang memuat ajakan
-  // mendaftar — bukan ke layar kosong.
   if (!user) redirect("/account");
 
   const stored = await getUserProfile(user.id);

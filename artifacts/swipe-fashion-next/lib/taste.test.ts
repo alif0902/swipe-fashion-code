@@ -40,7 +40,6 @@ describe("buildTasteProfile", () => {
     const dresses = profile.categories.find((c) => c.key === "dresses");
     const tops = profile.categories.find((c) => c.key === "tops");
 
-    // Puncaknya 3 (dresses), jadi tops ternormalisasi ke 1/3.
     expect(dresses?.score).toBe(1);
     expect(tops?.score).toBeCloseTo(1 / 3, 5);
   });
@@ -60,7 +59,6 @@ describe("buildTasteProfile", () => {
     const profile = buildTasteProfile([
       signal({ direction: "like", price: 100 }),
       signal({ direction: "like", price: 300 }),
-      // Harga ekstrem ini ditolak, jadi tidak boleh menggeser anggaran.
       signal({ direction: "pass", price: 5000 }),
     ]);
 
@@ -72,15 +70,11 @@ describe("buildTasteProfile", () => {
       signal({ direction: "like", colors: ["Black", "White"] }),
     ]);
 
-    // Keduanya dapat 0.5 mentah, lalu dinormalisasi ke puncak yang sama.
     expect(profile.colors.map((c) => c.key).sort()).toEqual(["Black", "White"]);
     expect(profile.colors[0].score).toBe(1);
   });
 
   it("menaikkan keyakinan seiring jumlah swipe dan berhenti di 1", () => {
-    // 1 dari RECENT_WINDOW (5) = 0,2. Dulu 0,1 saat ambangnya 10 swipe —
-    // angka yang kini mustahil dicapai, karena profil tidak pernah membaca
-    // lebih dari 5 sinyal.
     expect(buildTasteProfile([signal()]).confidence).toBeCloseTo(0.2, 5);
     expect(
       buildTasteProfile(Array.from({ length: 25 }, () => signal())).confidence,
@@ -231,8 +225,6 @@ describe("explainRanking", () => {
     expect(explainRanking(profile, outer)).toBe("CORSOが好みだから");
   });
 
-  // Kejujuran ini yang menjaga fiturnya berguna: produk yang justru melawan
-  // selera tidak boleh dijelaskan seolah-olah disukai.
   it("admits when an item runs against the recorded taste", () => {
     const profile = buildTasteProfile([
       { direction: "pass", category: "outerwear", brand: "CORSO", colors: ["White"], price: 59_200 },
@@ -243,12 +235,8 @@ describe("explainRanking", () => {
   });
 });
 
-// --- Jendela swipe terbaru -------------------------------------------------
-
 describe("RECENT_WINDOW", () => {
   it("hanya membaca RECENT_WINDOW sinyal pertama", () => {
-    // Sinyal datang TERBARU DULU. Lima pertama semuanya アウター; sisanya
-    // トップス dan harus diabaikan sepenuhnya.
     const profile = buildTasteProfile([
       ...Array.from({ length: RECENT_WINDOW }, () =>
         signal({ category: "outerwear" }),
@@ -273,8 +261,6 @@ describe("RECENT_WINDOW", () => {
   });
 
   it("tetap menghitung SELURUH riwayat untuk angka マイページ", () => {
-    // Jendela hanya membatasi SELERA. Kalau hitungannya ikut dipotong, orang
-    // yang sudah menggeser 30 kali akan melihat "5" di 足あと.
     const profile = buildTasteProfile([
       ...Array.from({ length: 20 }, () => signal({ direction: "like" })),
       ...Array.from({ length: 10 }, () => signal({ direction: "pass" })),
@@ -301,13 +287,11 @@ describe("RECENT_WINDOW", () => {
 
   it("rentang harga hanya dari yang disukai DI DALAM jendela", () => {
     const profile = buildTasteProfile([
-      // Di dalam jendela
       signal({ direction: "like", price: 100 }),
       signal({ direction: "like", price: 200 }),
       signal({ direction: "pass", price: 9999 }),
       signal({ direction: "like", price: 300 }),
       signal({ direction: "like", price: 400 }),
-      // Di luar jendela — tidak boleh menggeser rentang
       signal({ direction: "like", price: 100000 }),
     ]);
 

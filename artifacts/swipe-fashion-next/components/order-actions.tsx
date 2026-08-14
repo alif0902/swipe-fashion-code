@@ -13,9 +13,6 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { AppOrder } from "@/lib/format";
 
-// Hanya id, status, dan jumlah yang dibutuhkan. Mengoper seluruh AppOrder akan
-// ikut mengirim sessionId dan data pembeli ke bundel klien tanpa ada yang
-// memakainya.
 export function OrderActions({
   orderId,
   status,
@@ -51,7 +48,6 @@ export function OrderActions({
     });
   };
 
-  // Pesanan yang sudah dibayar hanya menyisakan opsi pembatalan.
   if (status !== "pending") {
     return (
       <Button
@@ -69,13 +65,6 @@ export function OrderActions({
     );
   }
 
-  // Formulir nama/email/alamat yang dulu ada di sini sudah pindah ke dalam
-  // PaymentSheet — meminta alamat sebelum pembeli memilih cara membayar adalah
-  // urutan yang terbalik dari checkout mana pun.
-  // Satu-satunya tempat di aplikasi ini yang benar-benar memerlukan akun.
-  // Pesanan butuh identitas yang bertahan lebih lama dari sebuah cookie:
-  // pembeli harus bisa menemukan pesanannya lagi besok, dari perangkat lain.
-  // Swipe, 一目惚れ, dan Style DNA sengaja tetap terbuka tanpa mendaftar.
   const startCheckout = () => {
     if (!isSignedIn) {
       setIsAuthOpen(true);

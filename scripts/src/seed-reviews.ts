@@ -5,21 +5,6 @@ import { db, productsTable, reviewsTable } from "@workspace/db";
 
 import { reviews } from "./reviews";
 
-/**
- * Mengisi ulasan bawaan.
- *
- *   npm run seed-reviews
- *
- * Aman dijalankan berulang: ulasan bawaan (session_id IS NULL) dihapus lebih
- * dulu, ulasan yang ditulis pengunjung TIDAK disentuh. Tanpa penyaring itu,
- * menjalankan ulang akan menggandakan yang bawaan sekaligus menghapus yang
- * asli.
- *
- * SENGAJA TIDAK menyentuh products.rating dan reviewCount. Kedua kolom itu
- * agregat berjalan dari katalog — 61件 dan seterusnya — sementara tabel ini
- * hanya menyimpan segelintir yang bisa dibaca. Menghitung ulang dari sini
- * akan menjatuhkan 61 jadi 5. Lihat penjelasan lengkapnya di schema/reviews.ts.
- */
 async function main() {
   const products = await db
     .select({ id: productsTable.id, name: productsTable.name })
@@ -27,7 +12,6 @@ async function main() {
 
   const idByName = new Map(products.map((p) => [p.name, p.id]));
 
-  // Hanya baris bawaan yang dibersihkan.
   const deleted = await db
     .delete(reviewsTable)
     .where(isNull(reviewsTable.sessionId))
@@ -53,7 +37,6 @@ async function main() {
       authorName: r.authorName,
       rating: r.rating,
       body: r.body,
-      // Disebar ke belakang supaya urutan「新しい順」punya arti.
       createdAt: new Date(Date.now() - r.daysAgo * 24 * 60 * 60 * 1000),
     });
   }
@@ -72,7 +55,6 @@ async function main() {
     );
   }
 
-  // Ringkasan per produk supaya ketimpangan langsung terlihat.
   const counts = new Map<number, number>();
   for (const row of rows) {
     counts.set(row.productId, (counts.get(row.productId) ?? 0) + 1);

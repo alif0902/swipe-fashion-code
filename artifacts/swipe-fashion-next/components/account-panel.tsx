@@ -39,9 +39,6 @@ export type AccountStats = {
   obsessed: number;
 };
 
-// Satu baris menu. Ikon dalam lingkaran berwarna mengikuti bahasa visual
-// aplikasi rujukan: warna itulah yang membuat daftar panjang bisa dipindai,
-// bukan teksnya.
 function MenuRow({
   href,
   icon: Icon,
@@ -122,9 +119,6 @@ export function AccountPanel({
     router.refresh();
   };
 
-  // Riwayat tetap ditampilkan meski belum login — datanya memang sudah ada,
-  // hanya terikat ke perangkat ini. Menyembunyikannya di balik pendaftaran
-  // akan membuat aplikasi terasa kosong padahal tidak.
   const menu = (
     <div className="divide-y divide-border border-y border-border">
       <MenuRow
@@ -173,8 +167,6 @@ export function AccountPanel({
           icon={MapPin}
           tone="bg-emerald-500/12 text-emerald-500"
           label="お届け先"
-          // Ajakan ini yang membuat orang mengisi alamat SEBELUM checkout,
-          // bukan saat sedang buru-buru membayar.
           hint={
             user.hasAddress
               ? "登録済み・お支払い時に自動で入ります"
@@ -183,9 +175,6 @@ export function AccountPanel({
           highlight={!user.hasAddress}
         />
       )}
-      {/* Hanya tampil untuk admin. Ini kenyamanan, bukan pengaman —
-          menyembunyikan tautan tidak menghalangi siapa pun mengetik /admin
-          langsung. Yang menghalangi adalah requireAdmin() di sisi server. */}
       {user?.isAdmin && (
         <MenuRow
           href="/admin"

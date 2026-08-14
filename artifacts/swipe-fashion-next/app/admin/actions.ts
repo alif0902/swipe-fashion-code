@@ -19,22 +19,12 @@ export type AdminResult<T = undefined> =
   | { ok: true; data?: T }
   | { ok: false; error: string };
 
-/**
- * Setiap aksi di berkas ini memanggil requireAdmin() sebagai baris pertama.
- *
- * Bukan karena berlebihan, tapi karena Server Action bisa dipanggil LANGSUNG
- * lewat request HTTP tanpa pernah membuka halamannya. Menjaga layout admin
- * saja berarti pintunya dikunci sementara jendelanya terbuka lebar.
- */
-
 async function writeAudit(
   actor: { id: string; email: string },
   action: string,
   targetId: number | null,
   summary: string,
 ) {
-  // Kegagalan mencatat audit tidak boleh menggagalkan tindakannya. Dicatat ke
-  // konsol supaya tetap ketahuan kalau tabelnya belum di-push.
   try {
     await db.insert(adminAuditLogTable).values({
       actorId: actor.id,
@@ -65,13 +55,9 @@ function toRow(input: ProductInput) {
   return {
     name: input.name,
     brand: input.brand,
-    // numeric Postgres menerima string; toFixed menjaga dua desimal tetap
-    // konsisten dengan data seed.
     price: input.price.toFixed(2),
     originalPrice: input.originalPrice ? input.originalPrice.toFixed(2) : null,
     description: input.description,
-    // Foto pertama jadi gambar utama; sisanya jadi carousel. Satu sumber
-    // kebenaran, jadi admin tidak perlu memilih dua kali.
     imageUrl: first,
     images: [first, ...rest],
     category: input.category,
@@ -145,16 +131,6 @@ export async function updateProductAction(
   return { ok: true };
 }
 
-/**
- * Arsip, bukan hapus.
- *
- * `swipes`, `super_likes`, dan `orders` semuanya menunjuk ke `products.id`.
- * Menghapus barisnya akan membuat riwayat pesanan orang kehilangan nama
- * barangnya — atau lebih buruk, gagal dengan pelanggaran foreign key yang
- * pesannya tidak bisa dipahami siapa pun.
- *
- * Diarsipkan berarti hilang dari feed dan katalog, tapi seluruh riwayat utuh.
- */
 export async function deleteProductAction(id: number): Promise<AdminResult> {
   const admin = await requireAdmin();
 
@@ -165,15 +141,6 @@ export async function deleteProductAction(id: number): Promise<AdminResult> {
 
   if (!product) return { ok: false, error: "商品が見つかりません。" };
 
-  // Pesanan menahan penghapusan. `orders` menyimpan foreign key ke produk ini,
-  // dan menghapusnya akan membuat riwayat pembelian orang kehilangan nama
-  // barangnya — kalau constraint-nya tidak lebih dulu menolak.
-  //
-  // Dulu keadaan ini ditangani dengan mengarsipkan: barisnya tetap ada tapi
-  // hilang dari feed. Fitur itu sudah dibuang, jadi yang tersisa adalah
-  // menolak dengan jujur. Menghapus pesanannya diam-diam demi meloloskan
-  // penghapusan produk akan menukar sampah katalog dengan kehilangan data
-  // yang jauh lebih mahal.
   const [orders] = await db
     .select({ n: count() })
     .from(ordersTable)
@@ -187,8 +154,6 @@ export async function deleteProductAction(id: number): Promise<AdminResult> {
     };
   }
 
-  // Swipe dan 一目惚れ hanya data sesi — hilangnya tidak berarti apa-apa, dan
-  // membiarkannya akan membuat foreign key menolak penghapusan.
   await db.transaction(async (tx) => {
     await tx.delete(swipesTable).where(eq(swipesTable.productId, id));
     await tx.delete(superLikesTable).where(eq(superLikesTable.productId, id));
@@ -208,7 +173,6 @@ export async function deleteProductAction(id: number): Promise<AdminResult> {
   return { ok: true };
 }
 
-/** Dipakai halaman sunting untuk memperingatkan sebelum mengarsipkan. */
 export async function countOrdersForProductAction(
   id: number,
 ): Promise<AdminResult<number>> {

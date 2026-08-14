@@ -9,40 +9,7 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 
-/**
- * Peran akun.
- *
- * Hanya dua nilai, dan itu disengaja. "Admin" di perusahaan besar sebenarnya
- * puluhan pekerjaan berbeda dengan izin yang rinci — tapi di sini hanya ada
- * satu orang yang mengelola katalog. Matriks izin untuk satu orang adalah
- * kerumitan tanpa manfaat.
- *
- * Nilai bawaannya `user`, dan kolom ini TIDAK PERNAH diisi dari klien. Lihat
- * `user.additionalFields` di lib/auth.ts: `input: false` yang membuat Better
- * Auth membuang field ini kalau ada yang menyisipkannya lewat request buatan
- * sendiri. Satu-satunya cara mengubahnya adalah `npm run make-admin`.
- */
 export const userRoleEnum = pgEnum("user_role", ["user", "admin"]);
-
-/**
- * Tabel milik Better Auth.
- *
- * Bentuk kolomnya ditentukan oleh pustaka, bukan oleh kita — Better Auth
- * membaca dan menulis lewat nama kolom ini, jadi jangan diganti nama. Yang
- * boleh kita atur hanyalah cara mengekspornya, dan itu mengikuti konvensi
- * repo ini (`xxxTable`). Pemetaan ke nama model yang dikenali pustaka
- * dilakukan di `lib/auth.ts`.
- *
- * PENTING soal penamaan: tabel `session` di bawah adalah SESI LOGIN. Itu
- * bukan hal yang sama dengan "session" yang selama ini dipakai di aplikasi —
- * yang itu hanya UUID acak di cookie untuk pengunjung anonim, dan tidak punya
- * tabel sendiri. Dua konsep berbeda dengan nama mirip; di kode aplikasi yang
- * anonim disebut `anonId` supaya tidak tertukar.
- *
- * id bertipe text, bukan serial: Better Auth membuat sendiri id-nya sebagai
- * string acak. Ini juga alasan kolom `session_id` di tabel swipes/orders bisa
- * langsung diisi user.id tanpa perubahan tipe — keduanya text.
- */
 
 export const userTable = pgTable("user", {
   id: text("id").primaryKey(),
@@ -52,24 +19,8 @@ export const userTable = pgTable("user", {
 
   role: userRoleEnum("role").notNull().default("user"),
 
-  // URL foto profil di Vercel Blob. Kolom ini hanya menyimpan alamatnya —
-  // gambarnya sendiri tidak pernah masuk database. Lihat lib/storage.ts.
   image: text("image"),
 
-  // Alamat pengiriman, dipecah mengikuti bentuk alamat Jepang. Disimpan di
-  // sini, bukan di tabel terpisah, karena ukurannya kecil dan selalu dibaca
-  // bersama profilnya.
-  //
-  // Dipecah, bukan satu kolom teks, karena formulir alamat Jepang memang
-  // berkolom — dan itu bukan sekadar tampilan. Kode pos menentukan prefektur
-  // dan kota, kurir memilah berdasarkan prefektur, dan nama gedung berada di
-  // baris terpisah dari nomor banchi. Satu kolom bebas memaksa pembeli
-  // menebak urutannya, dan menghasilkan alamat yang tidak bisa dipilah.
-  //
-  // Catatan: kolom `address` sudah ada sebelumnya dan dulu memuat alamat utuh
-  // dalam satu baris. Sekarang artinya menyempit jadi 丁目・番地・号 saja.
-  // Sengaja tidak diganti nama supaya tidak ada kolom yang perlu dihapus —
-  // data lama tetap masuk ke kolom yang paling mendekati maknanya.
   postalCode: text("postal_code"),
   prefecture: text("prefecture"),
   city: text("city"),
@@ -97,9 +48,6 @@ export const sessionTable = pgTable(
   (t) => [index("session_user_idx").on(t.userId)],
 );
 
-// Menyimpan kredensial. Untuk login email+password, `password` berisi hash
-// Argon2id — bukan passwordnya. Tabel ini juga yang nanti dipakai kalau login
-// Google ditambahkan, tanpa perubahan skema.
 export const accountTable = pgTable(
   "account",
   {
@@ -122,9 +70,6 @@ export const accountTable = pgTable(
   (t) => [index("account_user_idx").on(t.userId)],
 );
 
-// Belum terpakai selama verifikasi email dimatikan, tapi tetap dibuat: Better
-// Auth mengharapkan tabel ini ada, dan menyalakan verifikasi nanti jadi cukup
-// mengubah konfigurasi tanpa migrasi database lagi.
 export const verificationTable = pgTable("verification", {
   id: text("id").primaryKey(),
   identifier: text("identifier").notNull(),
@@ -134,23 +79,12 @@ export const verificationTable = pgTable("verification", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-/**
- * Catatan audit tindakan admin.
- *
- * Ditiru dari praktik perusahaan besar, dan salah satu dari sedikit praktik
- * mereka yang masuk akal di skala ini: murah dibangun, dan menjawab pertanyaan
- * "siapa yang mengubah harga ini?" yang tidak bisa dijawab oleh tabel produk.
- *
- * `actorId` tidak memakai foreign key ke `user` dengan cascade delete —
- * catatan audit harus tetap ada meski akunnya dihapus. Itu inti dari audit.
- */
 export const adminAuditLogTable = pgTable(
   "admin_audit_log",
   {
     id: serial("id").primaryKey(),
     actorId: text("actor_id").notNull(),
     actorEmail: text("actor_email").notNull(),
-    // mis. "product.create", "product.update", "product.archive"
     action: text("action").notNull(),
     targetId: integer("target_id"),
     summary: text("summary"),

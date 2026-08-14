@@ -20,13 +20,6 @@ import {
   type TasteSignal,
 } from "./taste";
 
-// Membaca seluruh keputusan swipe sesi ini beserta atribut produknya.
-//
-// Mengembalikan DUA hal dari SATU query: sinyal untuk mesin selera, dan
-// himpunan id yang sudah diputuskan. Sebelumnya keduanya diambil lewat dua
-// query terpisah, padahal datanya sama persis — dan dengan database di Sydney
-// sementara server bisa di benua lain, tiap query tambahan berarti satu kali
-// lagi menyeberang samudra.
 async function loadSwipeState(sessionId: string): Promise<{
   signals: TasteSignal[];
   decidedIds: Set<number>;
@@ -43,11 +36,6 @@ async function loadSwipeState(sessionId: string): Promise<{
     .from(swipesTable)
     .innerJoin(productsTable, eq(productsTable.id, swipesTable.productId))
     .where(eq(swipesTable.sessionId, sessionId))
-    // TERBARU DULU. Kueri ini dulu tanpa ORDER BY sama sekali, dan Postgres
-    // memang tidak menjanjikan urutan apa pun tanpanya. Itu tidak jadi soal
-    // selama profil membaca seluruh riwayat — tapi sejak ia hanya membaca
-    // beberapa swipe terakhir, urutan inilah yang menentukan mana yang
-    // terbaca. Tanpa ORDER BY, "5 terakhir" berarti 5 baris sembarang.
     .orderBy(desc(swipesTable.createdAt));
 
   return {
@@ -56,15 +44,12 @@ async function loadSwipeState(sessionId: string): Promise<{
       category: row.category,
       brand: row.brand,
       colors: row.colors ?? [],
-      // numeric Postgres kembali sebagai string lewat node-postgres.
       price: parseFloat(row.price),
     })),
     decidedIds: new Set(rows.map((r) => r.productId)),
   };
 }
 
-// Profil selera sesi ini. Dipakai feed untuk mengurutkan dan halaman Style DNA
-// untuk memvisualkan. Mengembalikan profil kosong bila tabel belum ada.
 export async function getTasteProfile(
   sessionId: string,
 ): Promise<TasteProfile> {
@@ -78,14 +63,6 @@ export async function getTasteProfile(
   }
 }
 
-/**
- * Pilihan 並び替え di 探す.
- *
- * "recommended" dihapus. Sebagai pilihan dalam daftar urutan ia menyesatkan:
- * pengurutan menurut selera bukan salah satu cara mengurutkan katalog,
- * melainkan cara kerja FEED — dan feed tidak punya menu urutan sama sekali.
- * Menaruhnya di sini membuat dua hal berbeda tampak setara.
- */
 export type ProductSort = "price-asc" | "price-desc" | "new";
 
 export async function listProducts({
@@ -103,21 +80,8 @@ export async function listProducts({
   inStockOnly?: boolean;
   limit?: number;
   sessionId?: string;
-  /**
-   * Mengurutkan menurut profil selera dan menyembunyikan yang sudah di-swipe.
-   *
-   * HANYA untuk feed. Dipisah jadi bendera tersendiri, bukan disimpulkan dari
-   * adanya `sessionId`, karena keduanya hal berbeda: 探す juga butuh sessionId
-   * di masa depan, tapi tidak boleh ikut menyembunyikan barang yang sudah
-   * di-swipe — halamannya akan mengosong justru bagi pengguna paling aktif.
-   *
-   * Sebelumnya kedua perilaku ini menempel pada `sessionId`, dan akibatnya
-   * pilihan 並び替え diam-diam DIABAIKAN begitu sesi ada.
-   */
   rankByTaste?: boolean;
 } = {}): Promise<AppProduct[]> {
-  // and() mengabaikan undefined, jadi filter yang tidak dipakai tidak perlu
-  // percabangan sendiri.
   const productsQuery = db
     .select()
     .from(productsTable)
@@ -130,9 +94,6 @@ export async function listProducts({
     )
     .orderBy(asc(productsTable.id));
 
-  // Kedua query dijalankan BERSAMAAN. Sebelumnya berurutan, dan dengan
-  // database di Sydney tiap giliran menambah satu perjalanan penuh melintasi
-  // Pasifik — dua query berurutan berarti waktu tunggunya berlipat.
   const [rows, swipeState] = await Promise.all([
     productsQuery,
     sessionId
@@ -140,10 +101,6 @@ export async function listProducts({
       : Promise.resolve(null),
   ]);
 
-  // Pengurutan dilakukan di JS, bukan SQL: kolom price bertipe numeric dan
-  // kembali sebagai STRING lewat node-postgres. ORDER BY di SQL memang benar,
-  // tapi menyortir setelah formatProduct membuat perbandingannya numerik dan
-  // konsisten dengan nilai yang benar-benar dirender.
   const sortProducts = (list: AppProduct[]) => {
     if (sort === "price-asc") return [...list].sort((a, b) => a.price - b.price);
     if (sort === "price-desc") return [...list].sort((a, b) => b.price - a.price);
@@ -153,34 +110,18 @@ export async function listProducts({
     return list;
   };
 
-  // Katalog biasa (探す): pilihan 並び替え yang menentukan, titik.
-  //
-  // Ini juga jalan yang dipakai kalau tabel swipes belum di-push.
   if (!rankByTaste || !swipeState) {
     return sortProducts(rows.map(formatProduct)).slice(0, limit);
   }
 
-  // Mulai dari sini khusus FEED.
-  //
-  // Produk yang sudah diputuskan (suka atau lewat) tidak diulang. Sebelumnya
-  // hanya yang di-super-like yang disembunyikan, sehingga barang yang baru
-  // saja ditolak bisa muncul lagi di sesi yang sama.
   const { signals, decidedIds } = swipeState;
 
   const undecided = rows
     .filter((r) => !decidedIds.has(r.id))
     .map(formatProduct);
 
-  // Kalau SEMUA produk sudah pernah diputuskan, jangan kirim daftar kosong.
-  // Katalog demo hanya 12 item — sekali dihabiskan, feed akan kosong permanen
-  // untuk sesi itu, dan tombol「もう一度見る」di klien tidak punya apa pun
-  // untuk diputar ulang (reset ke awal daftar kosong tetap kosong). Sebagai
-  // gantinya seluruh katalog ditawarkan lagi, tetap diurutkan profil selera;
-  // swipe berikutnya menimpa keputusan lama lewat onConflictDoUpdate.
   const candidates = undecided.length > 0 ? undecided : rows.map(formatProduct);
 
-  // Pengurutan sepenuhnya diserahkan ke mesin selera yang murni dan teruji.
-  // Profil kosong (belum ada swipe) mengembalikan urutan asli apa adanya.
   const profile = buildTasteProfile(signals);
 
   return rankProducts(profile, candidates).slice(0, limit);
@@ -192,16 +133,6 @@ export type SwipeHistoryEntry = {
   decidedAt: Date;
 };
 
-/**
- * Riwayat swipe, terbaru dulu. Menyokong dua halaman sekaligus:
- *
- *   足あと         → semua arah, artinya semua yang pernah dilihat di feed
- *   いいね！履歴   → hanya like dan super like
- *
- * Tidak ada tabel baru untuk ini. Tabel `swipes` sudah merekam setiap
- * keputusan berikut waktunya, jadi "pernah dilihat" dan "pernah disukai"
- * keduanya sudah ada di sana — tinggal disaring.
- */
 export async function listSwipeHistory(
   sessionId: string,
   { likedOnly = false }: { likedOnly?: boolean } = {},
@@ -233,7 +164,6 @@ export async function listSwipeHistory(
       decidedAt: row.decidedAt,
     }));
   } catch {
-    // Tabel swipes mungkin belum di-push — halaman menampilkan keadaan kosong.
     return [];
   }
 }
@@ -274,17 +204,9 @@ export type AppReview = {
   rating: number;
   body: string;
   createdAt: Date;
-  /** Ditulis dari sesi ini — dipakai untuk menandai「あなたの投稿」. */
   isMine: boolean;
 };
 
-/**
- * Ulasan sebuah produk, terbaru dulu.
- *
- * Diurutkan menurut WAKTU, bukan rating. Mengurutkan dari bintang tertinggi
- * akan mendorong semua keluhan ke dasar daftar — tabel ulasan yang tidak
- * pernah menunjukkan keberatan tidak bisa dipercaya siapa pun.
- */
 export async function listReviews(
   productId: number,
   sessionId: string,
@@ -308,8 +230,6 @@ export async function listReviews(
 
     return limit ? mapped.slice(0, limit) : mapped;
   } catch {
-    // Tabel reviews mungkin belum di-push. Kartu produk tetap tampil; yang
-    // hilang hanya daftar ulasannya.
     return [];
   }
 }
@@ -317,7 +237,6 @@ export async function listReviews(
 export async function listCategories(): Promise<
   { id: number; name: string; slug: string; productCount: number }[]
 > {
-  // Satu query dengan group by, menggantikan satu query per kategori.
   const rows = await db
     .select({
       id: categoriesTable.id,
@@ -326,8 +245,6 @@ export async function listCategories(): Promise<
       productCount: count(productsTable.id),
     })
     .from(categoriesTable)
-    // leftJoin, bukan innerJoin: kategori tanpa produk harus tetap tampil
-    // dengan hitungan 0, bukan hilang dari daftar.
     .leftJoin(productsTable, eq(productsTable.category, categoriesTable.slug))
     .groupBy(categoriesTable.id, categoriesTable.name, categoriesTable.slug)
     .orderBy(asc(categoriesTable.name));

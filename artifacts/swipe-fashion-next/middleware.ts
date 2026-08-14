@@ -4,13 +4,6 @@ import type { NextRequest } from "next/server";
 import { SESSION_COOKIE } from "@/lib/session-cookie";
 
 export function middleware(request: NextRequest) {
-  // Ini KENYAMANAN, bukan pengaman.
-  //
-  // Middleware berjalan di edge runtime dan tidak bisa membaca database, jadi
-  // ia tidak mungkin tahu peran seseorang — yang bisa dilihat hanyalah "ada
-  // cookie sesi atau tidak". Pengecekan admin yang sesungguhnya ada di
-  // requireAdmin(), dipanggil di setiap halaman dan setiap Server Action di
-  // bawah /admin. Ini cuma memotong perjalanan tamu lebih awal.
   if (request.nextUrl.pathname.startsWith("/admin")) {
     const hasSession = request.cookies
       .getAll()
@@ -37,6 +30,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Lewati aset statis — tiap request gambar tidak perlu melewati middleware.
   matcher: ["/((?!_next/static|_next/image|assets|favicon.svg|robots.txt).*)"],
 };

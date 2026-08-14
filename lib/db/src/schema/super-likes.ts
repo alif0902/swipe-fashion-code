@@ -1,8 +1,6 @@
 import { pgTable, serial, text, integer, timestamp, unique } from "drizzle-orm/pg-core";
 import { productsTable } from "./products";
 
-// Item yang di-"Super Like" (Obsessed). Dipakai untuk koleksi prioritas
-// sekaligus sinyal kuat untuk mem-boost feed ke arah gaya serupa.
 export const superLikesTable = pgTable(
   "super_likes",
   {
@@ -14,7 +12,6 @@ export const superLikesTable = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [
-    // Satu produk hanya bisa di-super-like sekali per sesi.
     unique("super_likes_session_product_uq").on(t.sessionId, t.productId),
   ],
 );

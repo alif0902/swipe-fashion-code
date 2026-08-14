@@ -1,14 +1,6 @@
 import { defineConfig } from "drizzle-kit";
 import path from "path";
 
-// Kredensial database hanya hidup di satu tempat: .env.local milik aplikasi
-// Next. Tapi drizzle-kit adalah proses terpisah yang dijalankan dari lib/db —
-// ia tidak tahu apa-apa soal file itu dan Next tidak sedang berjalan untuk
-// memuatkannya. Tanpa baris di bawah, `npm run db:push` selalu gagal dari
-// shell biasa meskipun .env.local sudah terisi benar.
-//
-// process.loadEnvFile bawaan Node (>= 20.12) dipakai supaya tidak perlu
-// menambah dependency dotenv hanya untuk ini.
 const ENV_FILE = path.join(
   __dirname,
   "../../artifacts/swipe-fashion-next/.env.local",
@@ -17,13 +9,8 @@ const ENV_FILE = path.join(
 try {
   process.loadEnvFile(ENV_FILE);
 } catch {
-  // Wajar tidak ada di CI atau produksi, yang memakai env var sungguhan.
-  // Variabel yang sudah ada di shell tetap menang karena tidak ditimpa.
 }
 
-// Migrasi/DDL harus lewat koneksi direct (Supabase: port 5432). Transaction
-// pooler (6543) tidak mendukung DDL. Pakai DIRECT_URL bila ada, jatuh ke
-// DATABASE_URL untuk Postgres lokal yang keduanya sama.
 const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 
 if (!url) {

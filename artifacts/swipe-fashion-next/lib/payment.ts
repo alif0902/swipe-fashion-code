@@ -1,13 +1,3 @@
-// Logika pembayaran — MURNI, tanpa DB dan tanpa jaringan.
-//
-// PERINGATAN: ini simulasi untuk demo. Tidak ada uang yang berpindah, tidak ada
-// panggilan ke penyedia pembayaran mana pun, dan nomor kartu TIDAK PERNAH
-// disimpan ke database. Yang tersimpan di kolom orders.paymentMethod hanya
-// label seperti "クレジットカード (Visa •••• 4242)". Empat digit terakhir aman
-// ditampilkan; sisanya dibuang begitu formulir ditutup.
-//
-// Sengaja dipisah jadi modul murni supaya validasi kartu — bagian yang paling
-// mudah salah diam-diam — bisa diuji unit tanpa merender apa pun.
 
 export type PaymentMethodId =
   | "card"
@@ -20,13 +10,9 @@ export type PaymentMethod = {
   id: PaymentMethodId;
   label: string;
   caption: string;
-  // Perlu langkah masukan tambahan setelah metode dipilih?
   needsDetail: boolean;
 };
 
-// Bauran metode mengikuti kebiasaan belanja daring di Jepang: kartu dan PayPay
-// mendominasi, tapi コンビニ払い dan 代金引換 masih dipakai luas — keduanya
-// hampir selalu ada di checkout toko Jepang.
 export const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "card",
@@ -87,12 +73,6 @@ export function digitsOnly(value: string): string {
   return value.replace(/\D/g, "");
 }
 
-/**
- * Menebak penerbit kartu dari awalan nomornya.
- *
- * JCB ikut didukung dan bukan pelengkap: di Jepang ia salah satu penerbit
- * terbesar, dan checkout yang menolaknya akan langsung terasa asing.
- */
 export function detectCardBrand(value: string): CardBrand {
   const n = digitsOnly(value);
   if (!n) return "unknown";
@@ -108,8 +88,6 @@ export function detectCardBrand(value: string): CardBrand {
   return "unknown";
 }
 
-// AMEX dan Diners memakai panjang berbeda dari kartu lain — memaksakan 16 digit
-// untuk semua akan menolak kartu yang sebenarnya sah.
 export function cardNumberLength(brand: CardBrand): number {
   if (brand === "amex") return 15;
   if (brand === "diners") return 14;
@@ -120,7 +98,6 @@ export function cvcLength(brand: CardBrand): number {
   return brand === "amex" ? 4 : 3;
 }
 
-/** Kelompokkan digit sesuai penerbit: AMEX 4-6-5, sisanya per 4. */
 export function formatCardNumber(value: string): string {
   const brand = detectCardBrand(value);
   const n = digitsOnly(value).slice(0, cardNumberLength(brand));
@@ -136,22 +113,15 @@ export function formatCardNumber(value: string): string {
   return out.join(" ");
 }
 
-/** "1230" → "12/30". Bulan di atas 12 dianggap salah ketik dan dinolkan. */
 export function formatExpiry(value: string): string {
   let n = digitsOnly(value).slice(0, 4);
   if (n.length >= 1) {
-    // "5" hampir pasti berarti bulan Mei, bukan awal dari bulan ke-5x.
     if (parseInt(n[0], 10) > 1) n = `0${n}`.slice(0, 4);
   }
   if (n.length <= 2) return n;
   return `${n.slice(0, 2)}/${n.slice(2)}`;
 }
 
-/**
- * Algoritma Luhn — pemeriksaan checksum yang dipakai semua penerbit kartu.
- * Menangkap salah ketik satu digit dan sebagian besar digit tertukar, jadi
- * kesalahan ketik ketahuan sebelum formulir dikirim.
- */
 export function luhnCheck(value: string): boolean {
   const n = digitsOnly(value);
   if (n.length < 12) return false;
@@ -170,7 +140,6 @@ export function luhnCheck(value: string): boolean {
   return sum % 10 === 0;
 }
 
-/** Kedaluwarsa dianggap sah sampai akhir bulan yang tertera. */
 export function isExpiryValid(value: string, now = new Date()): boolean {
   const n = digitsOnly(value);
   if (n.length !== 4) return false;
@@ -218,12 +187,6 @@ export function validateCard(input: CardInput, now = new Date()): CardErrors {
   return errors;
 }
 
-/**
- * Label yang disimpan ke orders.paymentMethod.
- *
- * Hanya empat digit terakhir yang ikut — itu praktik standar dan cukup untuk
- * mengenali kartu di riwayat pesanan tanpa menyimpan nomor lengkapnya.
- */
 export function paymentLabel(
   methodId: PaymentMethodId,
   cardNumber?: string,
@@ -242,8 +205,6 @@ export function paymentLabel(
   return method.label;
 }
 
-// Nomor uji yang dikenal luas dan TIDAK pernah bisa dipakai bertransaksi.
-// Ditampilkan di UI supaya penguji tidak tergoda memasukkan kartu asli.
 export const DEMO_CARDS = [
   { brand: "Visa", number: "4242 4242 4242 4242" },
   { brand: "Mastercard", number: "5555 5555 5555 4444" },
@@ -251,7 +212,6 @@ export const DEMO_CARDS = [
   { brand: "AMEX", number: "3782 822463 10005" },
 ];
 
-/** Nomor pembayaran コンビニ, dibangkitkan dari id pesanan agar tetap sama. */
 export function konbiniNumber(orderId: number): string {
   const base = (orderId * 7919 + 100000) % 1000000;
   return `${String(base).padStart(6, "0")}-${String((orderId * 31) % 10000).padStart(4, "0")}`;

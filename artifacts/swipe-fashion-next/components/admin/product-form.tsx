@@ -33,25 +33,8 @@ const CATEGORIES = [
   { value: "dresses", label: "ワンピース" },
 ];
 
-// Pratinjau memakai gambar pengganti yang sama dengan sisa aplikasi, bukan
-// jalur yang ditulis ulang di sini. Versi sebelumnya menunjuk foto produk
-// katalog, lalu produk itu dihapus dan pratinjaunya jadi kotak kosong.
 const PREVIEW_FALLBACK_IMAGE = PLACEHOLDER_IMAGE;
 
-// Ukuran panggung pratinjau — disalin dari PhoneFrame di components/layout.tsx
-// (max-w-md, tinggi min(900px, 94vh)), yaitu bingkai tempat feed sungguhan
-// berjalan.
-//
-// KENAPA DIRENDER BESAR LALU DIPERKECIL. Sebelumnya kartu dijejalkan ke kotak
-// max-w-[400px] aspect-[9/16] (±345×613). Ukuran huruf dan jarak di dalam
-// ProductCard tidak ikut mengecil — semuanya angka tetap yang dirancang untuk
-// layar ponsel penuh — jadi di kotak yang lebih pendek judul dan harga
-// terbaca membesar, dan panel putihnya terpancung di tengah baris. Yang
-// terlihat bukan feed yang lebih kecil, melainkan feed yang di-zoom.
-//
-// transform: scale memperkecil SEMUANYA dengan faktor yang sama, jadi
-// proporsinya identik dengan perangkat sungguhan: bagian yang terlihat di
-// pratinjau persis bagian yang terlihat di ponsel.
 const PREVIEW_STAGE_W = 448;
 const PREVIEW_STAGE_H = 900;
 const PREVIEW_SCALE = 0.7;
@@ -127,7 +110,6 @@ export function ProductForm({
 
   const [form, setForm] = useState<FormState>(initial ?? EMPTY);
   const [uploading, setUploading] = useState(false);
-  // Berkas yang menunggu dipotong. Diproses satu per satu dari indeks 0.
   const [cropQueue, setCropQueue] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -135,9 +117,6 @@ export function ProductForm({
   const set = (patch: Partial<FormState>) =>
     setForm((prev) => ({ ...prev, ...patch }));
 
-  // Memilih kategori mengisi kunci ukuran dan pilihan size otomatis. Tanpa ini
-  // admin harus mengarang sendiri nama kolom seperti 着丈 setiap kali, dan satu
-  // salah ketik membuat tabel 基本情報 di kartu feed tampil tidak konsisten.
   const chooseCategory = (value: string) => {
     const keys = DIMENSION_PRESETS[value] ?? [];
     const hasFilled = form.dimensions.some((d) => d.value.trim() !== "");
@@ -145,8 +124,6 @@ export function ProductForm({
     setForm((prev) => ({
       ...prev,
       category: value,
-      // Yang sudah diisi tidak ditimpa — admin yang sedang menyunting produk
-      // lama tidak boleh kehilangan angkanya karena mengganti kategori.
       dimensions: hasFilled
         ? prev.dimensions
         : keys.map((key) => ({ key, value: "" })),
@@ -159,22 +136,15 @@ export function ProductForm({
     event.target.value = "";
     if (files.length === 0) return;
 
-    // Berkas TIDAK langsung diunggah. Masing-masing masuk antrean untuk
-    // dipotong dulu — lihat cropQueue di bawah.
     setCropQueue(files.slice(0, 6 - form.images.length));
   };
 
-  // Mengunggah satu foto yang sudah dipotong, lalu melanjutkan ke berkas
-  // berikutnya di antrean.
   const uploadCropped = async (dataUrl: string) => {
     setUploading(true);
     try {
       const result = await uploadProductImageAction(dataUrl);
 
       if (!result.ok) {
-        // Kegagalan unggah menghentikan seluruh antrean: kalau tokennya salah
-        // atau store-nya bermasalah, berkas berikutnya akan gagal dengan cara
-        // yang sama dan hanya menumpuk pesan error yang sama berulang kali.
         toast({ title: result.error, variant: "destructive" });
         setCropQueue([]);
         return;
@@ -217,9 +187,6 @@ export function ProductForm({
     isSale: form.isSale,
   });
 
-  // Pratinjau memakai komponen ProductCard yang SAMA PERSIS dengan feed —
-  // bukan tiruan. Kalau kartu asli berubah, pratinjau ikut berubah, dan tidak
-  // ada kemungkinan keduanya berbeda diam-diam.
   const preview = useMemo<AppProduct>(() => {
     const payload = toPayload();
     return {
@@ -267,8 +234,6 @@ export function ProductForm({
 
   const remove = async () => {
     if (!productId) return;
-    // Penghapusan permanen dan tidak bisa dibatalkan, jadi ditahan satu
-    // konfirmasi. Aksinya sendiri menolak kalau produk ini punya pesanan.
     if (!confirm("この商品を完全に削除します。取り消せません。")) return;
 
     setSaving(true);
@@ -286,14 +251,7 @@ export function ProductForm({
   };
 
   return (
-    // Lebar kolom kanan mengikuti panggung pratinjau (448×0,7 ≈ 314) ditambah
-    // sedikit napas. Dipatok 400 seperti sebelumnya, kolomnya menyisakan pita
-    // kosong selebar 86px di sebelah kartu.
     <div className="grid lg:grid-cols-[1fr_340px] gap-8 items-start">
-      {/* Cropper muncul selama masih ada berkas di antrean. `key` dipatok ke
-          nama + ukuran berkas supaya komponennya benar-benar di-mount ulang
-          saat lanjut ke foto berikutnya — tanpa itu, posisi dan zoom dari
-          foto sebelumnya terbawa. */}
       {cropQueue.length > 0 && (
         <ImageCropper
           key={`${cropQueue[0].name}-${cropQueue[0].size}`}
@@ -304,7 +262,6 @@ export function ProductForm({
       )}
 
       <form onSubmit={submit} className="space-y-8">
-        {/* ---- Foto ---- */}
         <section className="rounded-2xl border border-border bg-background p-5 space-y-4">
           <div>
             <h2 className="font-sans font-bold">写真</h2>
@@ -375,10 +332,6 @@ export function ProductForm({
           <input
             ref={fileRef}
             type="file"
-            // Dibatasi ke format yang PASTI bisa di-decode browser lewat
-            // <img>. "image/*" mengizinkan .heic dari aplikasi Foto macOS
-            // dipilih, lalu gagal saat di-decode — kegagalan yang baru
-            // ketahuan setelah berkasnya terpilih.
             accept="image/jpeg,image/png,image/webp"
             multiple
             onChange={addPhotos}
@@ -386,7 +339,6 @@ export function ProductForm({
           />
         </section>
 
-        {/* ---- Dasar ---- */}
         <section className="rounded-2xl border border-border bg-background p-5 space-y-4">
           <h2 className="font-sans font-bold">基本情報</h2>
 
@@ -488,7 +440,6 @@ export function ProductForm({
           </Field>
         </section>
 
-        {/* ---- Detail ---- */}
         <section className="rounded-2xl border border-border bg-background p-5 space-y-4">
           <h2 className="font-sans font-bold">詳細</h2>
 
@@ -634,8 +585,6 @@ export function ProductForm({
           )}
 
           {productId && orderCount > 0 && (
-            // Kenapa tombol hapusnya tidak ada, dijelaskan di tempat orang
-            // mencarinya — bukan disembunyikan di dokumentasi.
             <p className="text-xs text-muted-foreground">
               この商品には{orderCount}件の注文があります。注文履歴が残るため削除できません。販売を止めるには在庫を0にしてください。
             </p>
@@ -643,16 +592,10 @@ export function ProductForm({
         </div>
       </form>
 
-      {/* ---- Pratinjau ---- */}
       <aside className="lg:sticky lg:top-8 space-y-3">
         <p className="text-xs font-bold text-muted-foreground">
           フィードでの見え方
         </p>
-        {/* Latarnya gradasi feed, bukan putih. Kartu ini sengaja dirancang
-            sebagai blok-blok yang MENGAMBANG — foto, gelembung, panel — dengan
-            celah transparan di antaranya. Di atas latar putih celah itu hilang
-            dan kartunya terbaca seperti satu kotak, jadi pratinjaunya
-            menunjukkan komposisi yang tidak pernah dilihat siapa pun. */}
         <div
           className={cn(
             "relative overflow-hidden rounded-[2rem] border border-border shadow-sm",
@@ -663,10 +606,6 @@ export function ProductForm({
             height: Math.round(PREVIEW_STAGE_H * PREVIEW_SCALE),
           }}
         >
-          {/* Panggung seukuran perangkat, diperkecil dari sudut kiri-atas.
-              origin-top-left WAJIB: dengan titik asal bawaan (tengah), elemen
-              yang mengecil menyisakan pita kosong di semua sisi dan kartunya
-              melayang di tengah bingkai. */}
           <div
             className="absolute left-0 top-0 origin-top-left"
             style={{
@@ -680,9 +619,6 @@ export function ProductForm({
               onSwipeRight={() => {}}
               onSwipeLeft={() => {}}
               onSuperLike={() => {}}
-              // isFront=false mematikan drag. Pratinjau yang bisa digeser akan
-              // melempar kartunya keluar bingkai tanpa ada yang mengembalikan
-              // — tidak ada dek di sini, hanya satu kartu.
               isFront={false}
             />
           </div>

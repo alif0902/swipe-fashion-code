@@ -1,28 +1,7 @@
-/**
- * Padanan ukuran huruf ke ukuran BADAN.
- *
- * Berbeda dengan `product.dimensions`, yang berisi 実寸 — ukuran fisik garmen
- * saat dibentangkan datar. Keduanya sama-sama berguna tapi menjawab pertanyaan
- * yang berbeda:
- *
- *   実寸           "seberapa besar bajunya?"      → blok 基本情報 di kartu
- *   tabel ini      "ukuran mana yang muat aku?"   → lembar pemesanan
- *
- * Lembar pemesanan memakai yang ini karena tugasnya membantu memutuskan dalam
- * hitungan detik. 実寸 menuntut orang mengukur baju lamanya dengan meteran —
- * akurat, tapi bertentangan dengan janji 数タップで注文, dan datanya toh sudah
- * tampil di kartu produk.
- *
- * ANGKANYA rentang ritel Jepang yang lazim, bukan hasil ukur produksi. Kalau
- * nanti ada spesifikasi pabrik yang sebenarnya, ganti dari sini — satu tempat,
- * dipakai seluruh katalog.
- */
 
 export type SizeRow = {
   size: string;
-  /** Tinggi badan, cm. */
   height: string;
-  /** Lingkar dada untuk atasan, atau lingkar pinggang untuk bawahan. */
   chest: string;
   waist: string;
 };
@@ -43,13 +22,6 @@ const MEN: SizeRow[] = [
   { size: "XL", height: "175–185", chest: "104–112", waist: "94–104" },
 ];
 
-/**
- * Baris tabel untuk produk tertentu.
- *
- * Hanya mengembalikan ukuran yang BENAR-BENAR dijual produk itu. Menampilkan
- * baris XL pada produk yang berhenti di L membuat orang mencari ukuran yang
- * tidak bisa dibeli — tabelnya jadi janji, bukan panduan.
- */
 export function sizeChartFor(
   gender: "women" | "men",
   sizes: string[],

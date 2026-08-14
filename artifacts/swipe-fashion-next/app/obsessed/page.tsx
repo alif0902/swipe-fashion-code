@@ -17,9 +17,6 @@ export const metadata: Metadata = {
 
 export default async function ObsessedPage() {
   const sessionId = await getOwnerId();
-  // Profil selera tidak lagi dibaca di sini. Kartu スタイルDNA sudah punya
-  // tempatnya sendiri di マイページ, dan menampilkannya dua kali membuat
-  // halaman ini terasa seperti dasbor alih-alih koleksi.
   const products = await listObsessed(sessionId);
 
   return (

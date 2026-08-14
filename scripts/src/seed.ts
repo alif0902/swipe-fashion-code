@@ -4,27 +4,6 @@ import { db, categoriesTable, productsTable } from "@workspace/db";
 
 import { categories, products } from "./catalog";
 
-/**
- * Mengisi katalog awal. AMAN dijalankan berulang.
- *
- * Versi sebelumnya memakai plain insert tanpa syarat:
- *
- *     await db.insert(productsTable).values(products);
- *
- * Kolom `name` tidak punya unique constraint, jadi tidak ada yang menahan
- * baris kembar — menjalankan seed dua kali menggandakan seluruh katalog, dan
- * feed menampilkan tiap produk dua kali. Itu sudah terjadi lebih dari sekali,
- * dan tiap kali harus dibereskan manual lewat `npm run dedupe-products`.
- *
- * `.onConflictDoNothing()` tidak bisa dipakai di sini: tanpa unique index pada
- * `name`, Postgres tidak punya conflict target untuk disandarkan. Jadi
- * penyaringan dilakukan di sisi aplikasi — baca nama yang sudah ada lebih
- * dulu, lalu sisipkan yang belum ada saja.
- *
- * Catatan: skrip ini sengaja TIDAK meng-update baris yang sudah ada. Untuk
- * menyelaraskan harga, deskripsi, dan foto milik produk yang sudah terdaftar,
- * pakai `npm run sync-products` lalu `npm run set-images`.
- */
 async function seed() {
   console.log("Seeding categories...");
   await db.insert(categoriesTable).values(categories).onConflictDoNothing();

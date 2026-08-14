@@ -9,19 +9,6 @@ import { ObsessedDeleteButton } from "@/components/obsessed-delete-button";
 import { OrderSheet } from "@/components/order-sheet";
 import { formatPrice, type AppProduct } from "@/lib/format";
 
-/**
- * Grid koleksi 一目惚れ, dengan pintasan memasukkan barang ke バッグ.
- *
- * SOAL "muncul saat hover": hover tidak ada di layar sentuh. Di ponsel,
- * sentuhan pertama memicu keadaan hover lalu menempel di sana sampai ada yang
- * disentuh lagi — tombol yang hanya muncul saat hover praktis tidak pernah
- * bisa ditekan. Karena aplikasi ini mobile-only, menyembunyikannya di balik
- * hover berarti menyembunyikannya dari hampir semua penggunanya.
- *
- * Jadi tombolnya SELALU terlihat di layar sentuh, dan baru bersembunyi di
- * balik hover pada layar lebar (md ke atas) tempat kursor memang ada.
- */
-
 export function ObsessedGrid({ products }: { products: AppProduct[] }) {
   const [selected, setSelected] = useState<AppProduct | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -40,9 +27,6 @@ export function ObsessedGrid({ products }: { products: AppProduct[] }) {
             className="group rounded-2xl bg-card border border-border/70 overflow-hidden shadow-sm"
           >
             <div className="relative aspect-[3/4] bg-muted">
-              {/* Link hanya membungkus fotonya. Tombol harus berada DI LUAR
-                  elemen <a> — tombol di dalam tautan tidak sah secara HTML dan
-                  ketukannya bisa ikut membuka halaman produk. */}
               <Link href={`/product/${product.id}`} className="absolute inset-0">
                 <Image
                   src={product.imageUrl}
@@ -60,22 +44,8 @@ export function ObsessedGrid({ products }: { products: AppProduct[] }) {
                 </span>
               </span>
 
-              {/* Sudut kanan-atas, berseberangan dengan lencana 一目惚れ dan
-                  jauh dari tombol バッグ di kanan-bawah. Menghapus dan
-                  memasukkan ke keranjang adalah dua tindakan yang paling tidak
-                  boleh tertukar, jadi keduanya diberi jarak sejauh mungkin di
-                  dalam kartu.
-
-                  SELALU terlihat, tidak disembunyikan di balik hover — alasan
-                  yang sama dengan tombol バッグ di bawah. */}
               <ObsessedDeleteButton productId={product.id} />
 
-              {/* Satu aksi saja: masuk バッグ.
-                  Tombol "beli langsung" dihapus karena keduanya tetap melewati
-                  lembar pilih ukuran yang sama — bedanya cuma ke mana pengguna
-                  dibawa sesudahnya. Dua tombol untuk perbedaan sekecil itu
-                  membuat orang berhenti menimbang, padahal pembayaran sudah
-                  menunggu satu ketukan lagi di halaman バッグ. */}
               <button
                 type="button"
                 onClick={() => start(product)}

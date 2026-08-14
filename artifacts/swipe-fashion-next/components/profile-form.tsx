@@ -20,10 +20,6 @@ export type ProfileFormValues = {
   building: string;
 };
 
-// Kode pos ditampilkan sebagai DUA kolom (3 digit + 4 digit) tapi disimpan
-// sebagai satu teks "755-0096". Dua kolom adalah kebiasaan formulir Jepang dan
-// membuat salah ketik jauh lebih jarang; satu kolom di database membuat
-// pemakaiannya di tempat lain tetap sederhana.
 function splitPostal(value: string): [string, string] {
   const digits = value.replace(/\D/g, "");
   return [digits.slice(0, 3), digits.slice(3, 7)];
@@ -56,8 +52,6 @@ export function ProfileForm({ initial }: { initial: ProfileFormValues }) {
     const [head, tail] = postal;
     const payload = {
       ...form,
-      // Hanya digabung kalau keduanya terisi; setengah kode pos lebih buruk
-      // daripada tidak ada sama sekali.
       postalCode: head && tail ? `${head}-${tail}` : "",
     };
 
@@ -113,8 +107,6 @@ export function ProfileForm({ initial }: { initial: ProfileFormValues }) {
           </p>
         </div>
 
-        {/* 郵便番号 — dua kolom dengan tanda hubung di tengah, seperti formulir
-            alamat Jepang pada umumnya. */}
         <div className="space-y-1.5">
           <Label htmlFor="postal-head" className="text-sm">
             郵便番号
@@ -143,9 +135,6 @@ export function ProfileForm({ initial }: { initial: ProfileFormValues }) {
           </div>
         </div>
 
-        {/* Dropdown, bukan kolom ketik: prefektur adalah daftar tertutup, dan
-            di ponsel ini memunculkan pemilih bawaan yang jauh lebih cepat
-            daripada mengetik. */}
         <div className="space-y-1.5">
           <Label htmlFor="profile-prefecture" className="text-sm">
             都道府県

@@ -13,8 +13,6 @@ export const dynamic = "force-dynamic";
 export default async function AdminProductsPage() {
   await requireAdmin();
 
-  // Terbaru dulu: yang paling mungkin ingin disunting adalah yang baru
-  // ditambahkan, bukan yang paling lama ada.
   const products = await db
     .select()
     .from(productsTable)
@@ -50,8 +48,6 @@ export default async function AdminProductsPage() {
           </thead>
           <tbody>
             {products.length === 0 && (
-              // Tabel tanpa baris hanya menampilkan header, dan itu terbaca
-              // seperti data yang gagal dimuat.
               <tr>
                 <td
                   colSpan={4}

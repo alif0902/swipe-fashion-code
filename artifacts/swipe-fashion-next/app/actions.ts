@@ -38,14 +38,6 @@ import {
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
 
-/**
- * Penanda bahwa stok keburu diambil request lain di tengah transaksi.
- *
- * Dibuat sebagai kelas sendiri, bukan string atau null, supaya `catch` di
- * createOrderAction bisa membedakannya dari kegagalan database sungguhan.
- * Menelan semua error di sana akan menyembunyikan koneksi putus sebagai
- * "stok habis".
- */
 class OutOfStockError extends Error {
   constructor() {
     super("out of stock");
@@ -77,9 +69,6 @@ export async function createOrderAction(
     return { ok: false, error: "商品が見つかりません。" };
   }
 
-  // Ukuran dan warna divalidasi terhadap produknya, bukan sekadar "string tidak
-  // kosong". Tanpa ini pesanan untuk ukuran yang tidak diproduksi bisa masuk ke
-  // database dan baru ketahuan saat barangnya hendak dikirim.
   if (!product.sizes.includes(selectedSize)) {
     return { ok: false, error: "選択されたサイズは取り扱いがありません。" };
   }
@@ -87,21 +76,8 @@ export async function createOrderAction(
     return { ok: false, error: "選択されたカラーは取り扱いがありません。" };
   }
 
-  // Harga diambil dari baris produk, TIDAK PERNAH dari input klien.
   const totalPrice = (parseFloat(product.price) * quantity).toFixed(2);
 
-  // Stok dipotong dan pesanan dibuat dalam SATU transaksi.
-  //
-  // Versi sebelumnya membaca stok, memeriksanya, lalu menulis nilai mutlak
-  // `product.stock - quantity`. Dua request bersamaan sama-sama membaca stock=1,
-  // sama-sama lolos pemeriksaan, lalu sama-sama menulis 0 — satu barang terjual
-  // dua kali. Pembacaan di atas kini hanya untuk harga dan validasi varian;
-  // yang menentukan boleh-tidaknya adalah UPDATE di bawah.
-  //
-  // Syarat `stock >= quantity` sengaja ikut ke dalam WHERE, bukan diperiksa
-  // lebih dulu di JavaScript. Postgres mengunci baris saat UPDATE, jadi request
-  // kedua menunggu, membaca nilai yang sudah diperbarui, tidak cocok lagi, dan
-  // `returning` kembali kosong.
   try {
     await db.transaction(async (tx) => {
       const claimed = await tx
@@ -115,9 +91,6 @@ export async function createOrderAction(
         )
         .returning({ id: productsTable.id });
 
-      // Tidak ada baris yang cocok = stok keburu habis diambil request lain.
-      // Melempar di dalam callback membatalkan seluruh transaksi, jadi pesanan
-      // tidak pernah tercatat.
       if (claimed.length === 0) throw new OutOfStockError();
 
       await tx.insert(ordersTable).values({
@@ -142,14 +115,6 @@ export async function createOrderAction(
   return { ok: true };
 }
 
-/**
- * Ulasan sebuah produk, diambil SAAT panelnya dibuka.
- *
- * Sengaja tidak ikut dimuat bersama produk di feed: sepuluh kartu berarti
- * sepuluh kali membaca tabel ulasan padahal kemungkinan besar tidak ada satu
- * pun yang dibuka. Database ada di Sydney — pembacaan yang tidak terpakai itu
- * mahal.
- */
 export async function listReviewsAction(
   productId: number,
 ): Promise<AppReview[]> {
@@ -157,24 +122,6 @@ export async function listReviewsAction(
   return listReviews(productId, sessionId);
 }
 
-/**
- * Menambahkan ulasan, lalu memperbarui agregat produknya.
- *
- * Terbuka untuk tamu — nama diisi manual. Aplikasi ini memang bisa dipakai
- * tanpa mendaftar, dan menutup ulasan di balik pendaftaran akan membuat
- * bagian ini kosong bagi hampir semua pengunjung.
- *
- * rating dan reviewCount diperbarui dengan RATA-RATA BERJALAN, bukan dihitung
- * ulang dari tabel reviews:
- *
- *   rataBaru = (rataLama × jumlahLama + nilaiBaru) ÷ (jumlahLama + 1)
- *
- * Katalog menyatakan 61件 sementara tabel ini hanya menyimpan segelintir yang
- * bisa dibaca. Menghitung ulang dari tabel akan menjatuhkan angkanya ke 5 dan
- * membuang riwayat penilaian yang sudah ada. Rumus di atas menjaga ulasan baru
- * berbobot wajar — satu bintang 1 di antara 61 hanya menggeser rata-rata
- * sedikit, persis seperti yang seharusnya.
- */
 export async function createReviewAction(
   input: ReviewInput,
 ): Promise<ActionResult> {
@@ -200,8 +147,6 @@ export async function createReviewAction(
 
       await tx.insert(reviewsTable).values({
         productId,
-        // Kosong untuk tamu tanpa cookie sesi; baris tetap tersimpan, hanya
-        // tidak bisa dikenali sebagai miliknya nanti.
         sessionId: sessionId || null,
         authorName,
         rating,
@@ -216,8 +161,6 @@ export async function createReviewAction(
       await tx
         .update(productsTable)
         .set({
-          // numeric Postgres menerima string; dua desimal disamakan dengan
-          // data seed.
           rating: nextRating.toFixed(2),
           reviewCount: nextCount,
         })
@@ -232,9 +175,6 @@ export async function createReviewAction(
   return { ok: true };
 }
 
-// Merekam SATU keputusan swipe, termasuk swipe kiri. Ini bahan bakar mesin
-// selera di lib/taste.ts — tanpa sinyal negatif, profil hanya tahu apa yang
-// disukai dan tidak pernah belajar apa yang harus dihindari.
 export async function recordSwipeAction(
   input: RecordSwipeInput,
 ): Promise<ActionResult> {
@@ -249,8 +189,6 @@ export async function recordSwipeAction(
   }
 
   try {
-    // Undo lalu swipe ulang ke arah lain harus menimpa keputusan lama, bukan
-    // menumpuk dua baris yang saling bertentangan.
     await db
       .insert(swipesTable)
       .values({
@@ -260,29 +198,11 @@ export async function recordSwipeAction(
       })
       .onConflictDoUpdate({
         target: [swipesTable.sessionId, swipesTable.productId],
-        // createdAt ikut diperbarui, bukan hanya arahnya.
-        //
-        // Profil selera kini hanya membaca beberapa swipe TERBARU, dan
-        // urutannya ditentukan kolom ini. Tanpa baris ini, mengubah keputusan
-        // atas produk lama tetap memakai stempel waktu lamanya — keputusan
-        // yang baru saja diambil tidak akan terhitung sebagai yang terbaru.
         set: { direction: parsed.data.direction, createdAt: new Date() },
       });
 
-    // Feed SENGAJA tidak di-revalidate.
-    //
-    // Merevalidasi /feed di sini membuat server mengirim daftar produk baru
-    // ke tengah sesi swipe yang sedang berjalan — barang yang baru diputuskan
-    // hilang dari daftar dan sisanya diurutkan ulang, sementara indeks kartu
-    // di klien tetap. Kartu di layar lalu berganti sendiri.
-    //
-    // Urutan feed memang ditentukan sekali saat halaman dimuat. Itu bukan
-    // keterbatasan: tumpukan kartu yang menyusun ulang dirinya di tengah
-    // permainan justru terasa rusak.
     return { ok: true };
   } catch {
-    // Tabel swipes mungkin belum di-push. Swipe tetap terasa mulus; yang
-    // hilang hanya personalisasinya.
     return { ok: false, error: "スワイプを記録できませんでした。" };
   }
 }
@@ -310,18 +230,14 @@ export async function superLikeAction(
       return { ok: false, error: "商品が見つかりません。" };
     }
 
-    // Sekali per sesi — super like berulang diabaikan diam-diam.
     await db
       .insert(superLikesTable)
       .values({ sessionId, productId: parsed.data.productId })
       .onConflictDoNothing();
 
-    // Sama seperti recordSwipeAction: /feed tidak ikut di-revalidate agar
-    // tumpukan kartu yang sedang berjalan tidak tersusun ulang di tengah sesi.
     revalidatePath("/obsessed");
     return { ok: true };
   } catch {
-    // Tabel super_likes mungkin belum di-push — jangan bikin UX gagal total.
     return { ok: false, error: "いま保存できませんでした。" };
   }
 }
@@ -337,13 +253,6 @@ export async function confirmOrderAction(
 
   const sessionId = await getOwnerId();
 
-  // Kepemilikan DAN status sama-sama diperiksa di dalam WHERE.
-  //
-  // Versi sebelumnya hanya memeriksa kepemilikan, lalu menulis tanpa syarat.
-  // Akibatnya pesanan yang sudah dibatalkan — yang stoknya sudah dikembalikan —
-  // masih bisa dikonfirmasi ulang menjadi confirmed/paid, dan barangnya lolos
-  // tanpa stok terpotong. Menaruh syaratnya di WHERE sekaligus membuat
-  // pemanggilan ganda yang bersamaan hanya berhasil sekali.
   const confirmed = await db
     .update(ordersTable)
     .set({
@@ -365,9 +274,6 @@ export async function confirmOrderAction(
     .returning({ id: ordersTable.id });
 
   if (confirmed.length === 0) {
-    // Pesan yang sama untuk "bukan milikmu" dan "statusnya sudah bukan
-    // pending" — membedakannya akan memberi tahu orang asing bahwa suatu id
-    // pesanan itu ada.
     return { ok: false, error: "注文が見つかりません。" };
   }
 
@@ -389,16 +295,6 @@ export async function cancelOrderAction(
     return { ok: false, error: "注文が見つかりません。" };
   }
 
-  // Pembatalan dan pengembalian stok dijadikan satu transaksi.
-  //
-  // Versi sebelumnya memeriksa `existing.status !== "cancelled"` dari hasil
-  // SELECT di atas, lalu mengembalikan stok. Increment-nya memang sudah atomik,
-  // tapi penjaganya tidak: dua pembatalan bersamaan atas pesanan yang sama
-  // sama-sama lolos pemeriksaan dan stok bertambah dua kali lipat.
-  //
-  // Sekarang syarat "belum dibatalkan" ikut ke dalam WHERE. Hanya pemanggilan
-  // yang benar-benar MENGUBAH barisnya yang berhak mengembalikan stok — yang
-  // kedua mendapat `returning` kosong dan tidak menyentuh apa pun.
   const restored = await db.transaction(async (tx) => {
     const cancelled = await tx
       .update(ordersTable)
@@ -426,15 +322,9 @@ export async function cancelOrderAction(
     return true;
   });
 
-  // Sudah dibatalkan sebelumnya bukan kegagalan — hasil akhirnya sama dengan
-  // yang diminta pengguna, jadi tidak perlu memunculkan pesan error.
   if (restored) revalidatePath("/orders");
   return { ok: true };
 }
-
-// ---------------------------------------------------------------------------
-// Profil akun
-// ---------------------------------------------------------------------------
 
 export async function updateProfileAction(
   input: ProfileInput,
@@ -451,8 +341,6 @@ export async function updateProfileAction(
 
   const { name, postalCode, prefecture, city, address, building } = parsed.data;
 
-  // Kolom dikosongkan jadi NULL, bukan string kosong: pengecekan "sudah punya
-  // alamat?" di checkout jadi cukup satu bentuk, tidak dua.
   const orNull = (value: string | undefined) => value?.trim() || null;
 
   await db
@@ -481,8 +369,6 @@ export async function updateAvatarAction(
     return { ok: false, error: "ログインが必要です。" };
   }
 
-  // Validasi format dan ukuran ada di dalam putDataUrl — satu tempat, dipakai
-  // foto profil maupun foto produk.
   const stored = await putDataUrl(dataUrl, "avatars");
   if (!stored.ok) {
     return { ok: false, error: stored.error };
@@ -497,18 +383,6 @@ export async function updateAvatarAction(
   return { ok: true };
 }
 
-/**
- * Mengembalikan foto profil ke avatar bawaan.
- *
- * Sebelumnya foto hanya bisa DIGANTI — sekali seseorang mengunggah, tidak ada
- * jalan kembali. Menyetel `image` ke null membuat komponen avatar jatuh ke
- * inisial namanya, sama seperti akun yang belum pernah mengunggah apa pun.
- *
- * Berkasnya sendiri sengaja TIDAK dihapus dari Vercel Blob. Menghapusnya butuh
- * pelacakan blob mana milik siapa, dan satu kesalahan di sana akan menghapus
- * foto orang lain. Blob yatim jauh lebih murah daripada risiko itu — foto
- * profil berukuran 256px, dan kuota gratisnya 1 GB.
- */
 export async function removeAvatarAction(): Promise<ActionResult> {
   const user = await getCurrentUser();
   if (!user) {
@@ -524,18 +398,6 @@ export async function removeAvatarAction(): Promise<ActionResult> {
   return { ok: true };
 }
 
-/**
- * Menghapus pesanan yang sudah dibatalkan dari daftar.
- *
- * Hanya berlaku untuk status `cancelled`, dan itu batasan yang disengaja:
- * pesanan aktif harus dibatalkan lebih dulu supaya stoknya dikembalikan.
- * Kalau baris aktif boleh langsung dihapus, stok yang sudah dipotong akan
- * hilang tanpa pernah dikembalikan — dan tidak ada jejak untuk melacaknya.
- *
- * Baris pesanan tidak dirujuk tabel lain, jadi penghapusan di sini aman —
- * berbeda dengan produk, yang justru diarsipkan karena banyak yang menunjuk
- * ke sana.
- */
 export async function deleteOrderAction(
   orderId: number,
 ): Promise<ActionResult> {
@@ -546,8 +408,6 @@ export async function deleteOrderAction(
     .from(ordersTable)
     .where(eq(ordersTable.id, orderId));
 
-  // Cek kepemilikan sama seperti aksi pesanan lain: sesi hanya boleh
-  // menyentuh barisnya sendiri.
   if (!existing || existing.sessionId !== sessionId) {
     return { ok: false, error: "注文が見つかりません。" };
   }
@@ -562,17 +422,6 @@ export async function deleteOrderAction(
   return { ok: true };
 }
 
-/**
- * Membatalkan いいね yang baru saja ditekan.
- *
- * Menghapus DUA hal, bukan satu: baris di `super_likes` dan baris keputusan di
- * `swipes`. Kalau swipe-nya dibiarkan, produk itu tetap dianggap "sudah
- * diputuskan" dan tidak akan pernah muncul lagi di feed — jadi pembatalannya
- * hanya setengah jalan, dan barangnya lenyap tanpa masuk ke mana pun.
- *
- * Mesin selera juga ikut bersih: sinyal +3 dari super like itu hilang, seolah
- * ketukan tadi memang tidak pernah terjadi.
- */
 export async function undoSuperLikeAction(
   productId: number,
 ): Promise<ActionResult> {
@@ -607,16 +456,6 @@ export async function undoSuperLikeAction(
   }
 }
 
-/**
- * Menyimpan filter feed ke cookie.
- *
- * Cookie, bukan query string: feed dicapai lewat bilah navigasi yang menaut ke
- * `/feed` polos, jadi filter di URL akan hilang setiap kali orang pindah tab.
- * Alasan lengkapnya ada di lib/feed-filter.ts.
- *
- * Nilai dari klien tidak dipercaya apa adanya — serialize lalu parse membuang
- * apa pun yang tidak dikenal sebelum menyentuh cookie.
- */
 export async function setFeedFilterAction(
   input: FeedFilter,
 ): Promise<ActionResult> {
@@ -624,19 +463,12 @@ export async function setFeedFilterAction(
   const store = await cookies();
 
   if (value === "") {
-    // Filter kosong berarti cookie DIHAPUS, bukan ditulis sebagai string
-    // kosong. Cookie kosong yang tetap terkirim di tiap permintaan tidak
-    // menyampaikan apa pun.
     store.delete(FEED_FILTER_COOKIE);
   } else {
     store.set(FEED_FILTER_COOKIE, value, {
-      // httpOnly: nilainya hanya dibaca di server. Tidak ada alasan JavaScript
-      // di halaman ikut bisa membacanya.
       httpOnly: true,
       sameSite: "lax",
       path: "/",
-      // Satu tahun. Ini preferensi tampilan, bukan sesi — orang yang menyaring
-      // feed-nya bulan lalu kemungkinan besar masih menginginkannya.
       maxAge: 60 * 60 * 24 * 365,
       secure: process.env.NODE_ENV === "production",
     });

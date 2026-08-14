@@ -57,7 +57,6 @@ describe("formatExpiry", () => {
   });
 
   it("menambah nol di depan untuk bulan satu digit", () => {
-    // "5" hampir pasti berarti Mei, bukan awal bulan ke-5x.
     expect(formatExpiry("530")).toBe("05/30");
   });
 

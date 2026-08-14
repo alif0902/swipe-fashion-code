@@ -9,18 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 
 const SIZE = 256;
 
-/**
- * Mengecilkan foto di BROWSER sebelum dikirim.
- *
- * Foto dari kamera ponsel biasa berukuran 3–8 MB. Mengirimnya apa adanya ke
- * Server Action berarti unggahan lama di jaringan seluler, dan hasilnya tetap
- * dirender sebagai lingkaran 96px. Canvas memotongnya ke persegi di tengah
- * lalu menyimpannya sebagai JPEG 256px — sekitar 15–25 KB.
- *
- * Efek sampingnya menguntungkan privasi: menggambar ulang lewat canvas
- * membuang seluruh metadata EXIF, termasuk koordinat GPS yang menempel pada
- * foto ponsel.
- */
 function shrinkToSquare(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -39,8 +27,6 @@ function shrinkToSquare(file: File): Promise<string> {
         return;
       }
 
-      // Potong persegi dari tengah, bukan diperas jadi persegi — wajah yang
-      // gepeng jauh lebih buruk daripada tepi yang terpotong.
       const side = Math.min(image.width, image.height);
       const sx = (image.width - side) / 2;
       const sy = (image.height - side) / 2;
@@ -60,9 +46,6 @@ function shrinkToSquare(file: File): Promise<string> {
 
 export function AvatarUploader({
   children,
-  // Tombol hapus hanya masuk akal kalau memang ada foto yang bisa dihapus.
-  // Kalau avatarnya masih inisial nama, tombol itu tidak melakukan apa-apa dan
-  // hanya menambah satu hal untuk dipahami.
   hasImage = false,
 }: {
   children: React.ReactNode;
@@ -75,8 +58,6 @@ export function AvatarUploader({
 
   const onPick = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    // Direset lebih dulu supaya memilih berkas yang SAMA dua kali tetap
-    // memicu onChange.
     event.target.value = "";
     if (!file) return;
 
@@ -131,8 +112,6 @@ export function AvatarUploader({
         {children}
       </button>
 
-      {/* Lencana kamera menempel di tepi lingkaran — tanpa ini tidak ada yang
-          tahu fotonya bisa diketuk. */}
       <span className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary border-[3px] border-background flex items-center justify-center pointer-events-none">
         {isBusy ? (
           <Loader2 className="w-3.5 h-3.5 text-primary-foreground animate-spin" />
@@ -141,9 +120,6 @@ export function AvatarUploader({
         )}
       </span>
 
-      {/* Tombol hapus di sudut berseberangan dengan lencana kamera, supaya
-          keduanya tidak pernah bertabrakan dan artinya mudah dibedakan:
-          kanan-bawah mengganti, kiri-bawah menghapus. */}
       {hasImage && (
         <button
           type="button"
@@ -160,8 +136,6 @@ export function AvatarUploader({
       <input
         ref={inputRef}
         type="file"
-        // Dibatasi ke format yang pasti bisa di-decode browser. "image/*"
-        // mengizinkan .heic dari aplikasi Foto macOS terpilih, lalu gagal.
         accept="image/jpeg,image/png,image/webp"
         onChange={onPick}
         className="hidden"
