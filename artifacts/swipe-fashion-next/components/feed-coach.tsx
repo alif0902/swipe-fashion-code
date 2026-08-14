@@ -23,14 +23,14 @@ import { cn } from "@/lib/utils";
  * gerakan per layar, masing-masing diperagakan.
  */
 
-const SEEN_KEY = "hitome:feed-coach-seen";
-
-// SEMENTARA — panduan muncul setiap kali feed dibuka, supaya mudah ditinjau
-// tanpa perlu menghapus localStorage lewat console tiap kali.
+// Penanda "sudah pernah dilihat", disimpan per-peramban di localStorage.
 //
-// SETEL KE false SEBELUM RILIS. Kalau dibiarkan true, pengguna sungguhan akan
-// dihadang panduan ini di SETIAP kunjungan — bukan cuma yang pertama.
-const ALWAYS_SHOW = true;
+// Sengaja BUKAN di basis data: panduan ini soal tangan yang belum tahu caranya
+// menggeser, bukan soal akun. Menyimpannya di server berarti panduan tidak
+// pernah muncul lagi saat orang yang sama membuka aplikasi di perangkat baru —
+// padahal di sanalah tangannya kembali perlu diberi tahu. localStorage juga
+// membuat panduan tetap bekerja sebelum seseorang masuk akun sama sekali.
+const SEEN_KEY = "hitome:feed-coach-seen";
 
 type Step = {
   id: string;
@@ -102,11 +102,10 @@ export function FeedCoach({ previewImage }: { previewImage?: string }) {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    if (ALWAYS_SHOW) {
-      setIsOpen(true);
-      return;
-    }
-
+    // Pemeriksaan dilakukan di effect, BUKAN saat state dibuat. Render pertama
+    // terjadi juga di server, tempat localStorage tidak ada — membacanya di
+    // sana akan melempar, dan menebak nilainya akan membuat markup server dan
+    // klien berbeda.
     try {
       setIsOpen(!localStorage.getItem(SEEN_KEY));
     } catch {
@@ -117,8 +116,10 @@ export function FeedCoach({ previewImage }: { previewImage?: string }) {
   }, []);
 
   const close = () => {
-    // Penanda tetap ditulis meski ALWAYS_SHOW aktif. Jadi begitu bendera itu
-    // dimatikan, perilakunya langsung benar tanpa perlu diuji ulang.
+    // Penanda ditulis saat panduan DITUTUP — lewat スキップ maupun はじめる —
+    // bukan saat ia muncul. Kalau ditulis saat muncul, orang yang aplikasinya
+    // tertutup atau halamannya termuat ulang di tengah panduan kehilangan
+    // sisanya selamanya, padahal ia belum sempat membacanya.
     try {
       localStorage.setItem(SEEN_KEY, "1");
     } catch {

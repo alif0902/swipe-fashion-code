@@ -81,7 +81,12 @@ export default async function LookbookPage({
   ]);
 
   return (
-    <AppLayout>
+    // Tombol filter dioper lewat `overlay`, bukan diletakkan di dalam daftar.
+    // Di dalam daftar ia berpatokan pada tinggi seluruh isi halaman, jadi
+    // posisinya jatuh di dasar daftar dan baru terlihat setelah digulir habis.
+    <AppLayout
+      overlay={<FilterFab params={sp} resultCount={products.length} />}
+    >
       <div className="relative min-h-full bg-background pb-28">
         <PageHeader
           icon={Search}
@@ -188,8 +193,6 @@ export default async function LookbookPage({
             </div>
           )}
         </div>
-
-        <FilterFab params={sp} resultCount={products.length} />
       </div>
     </AppLayout>
   );

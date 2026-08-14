@@ -168,7 +168,31 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+export function AppLayout({
+  children,
+  overlay,
+}: {
+  children: React.ReactNode;
+  /**
+   * Sesuatu yang MENGAMBANG di atas halaman: tombol filter di 探す, dan
+   * apa pun sejenisnya nanti.
+   *
+   * Kenapa ia perlu slot sendiri, bukan sekadar ditaruh di dalam halaman.
+   * `main` di bawah ini adalah wadah gulir sekaligus `relative`, jadi anak
+   * `absolute` di dalamnya berpatokan pada SELURUH TINGGI ISI, bukan pada
+   * bagian yang sedang terlihat. Tombol dengan `bottom-…` di dalam halaman
+   * karena itu mendarat di dasar daftar — bukan di dasar layar — dan baru
+   * muncul setelah orang menggulir sampai habis.
+   *
+   * Di sini ia jadi saudara `main`, bukan anaknya, jadi patokannya bingkai
+   * ponsel: sama seperti bilah navigasi, ia diam di tempat sementara isinya
+   * mengalir di belakangnya.
+   *
+   * `fixed` juga bukan jawaban — lihat alasannya di BottomNav: di layar
+   * besar ia akan lepas dari bingkai dan melayang di sudut layar laptop.
+   */
+  overlay?: React.ReactNode;
+}) {
   return (
     <PhoneFrame>
       {/* min-h-0 wajib: tanpa itu flex item menolak menyusut di bawah tinggi
@@ -188,6 +212,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 min-h-0 w-full relative overflow-y-auto overflow-x-hidden overscroll-none">
         {children}
       </main>
+
+      {/* Sebelum Toaster dan BottomNav, jadi keduanya tetap di atasnya kalau
+          posisinya bertumpang tindih. */}
+      {overlay}
+
       {/* Di dalam bingkai, bukan di luar: ajakan harus menempel pada aplikasi,
           bukan melayang di latar desktop. */}
       {/* Notifikasi muncul di ATAS, bukan di bawah.

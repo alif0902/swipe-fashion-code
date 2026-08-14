@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { and, eq, gte, ne, sql } from "drizzle-orm";
 import {
   db,
@@ -13,6 +14,11 @@ import {
 } from "@workspace/db";
 
 import { listReviews, type AppReview } from "@/lib/data";
+import {
+  FEED_FILTER_COOKIE,
+  serializeFeedFilter,
+  type FeedFilter,
+} from "@/lib/feed-filter";
 import { getCurrentUser, getOwnerId } from "@/lib/session";
 import { putDataUrl } from "@/lib/storage";
 import {
@@ -599,4 +605,42 @@ export async function undoSuperLikeAction(
   } catch {
     return { ok: false, error: "取り消せませんでした。" };
   }
+}
+
+/**
+ * Menyimpan filter feed ke cookie.
+ *
+ * Cookie, bukan query string: feed dicapai lewat bilah navigasi yang menaut ke
+ * `/feed` polos, jadi filter di URL akan hilang setiap kali orang pindah tab.
+ * Alasan lengkapnya ada di lib/feed-filter.ts.
+ *
+ * Nilai dari klien tidak dipercaya apa adanya — serialize lalu parse membuang
+ * apa pun yang tidak dikenal sebelum menyentuh cookie.
+ */
+export async function setFeedFilterAction(
+  input: FeedFilter,
+): Promise<ActionResult> {
+  const value = serializeFeedFilter(input);
+  const store = await cookies();
+
+  if (value === "") {
+    // Filter kosong berarti cookie DIHAPUS, bukan ditulis sebagai string
+    // kosong. Cookie kosong yang tetap terkirim di tiap permintaan tidak
+    // menyampaikan apa pun.
+    store.delete(FEED_FILTER_COOKIE);
+  } else {
+    store.set(FEED_FILTER_COOKIE, value, {
+      // httpOnly: nilainya hanya dibaca di server. Tidak ada alasan JavaScript
+      // di halaman ikut bisa membacanya.
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      // Satu tahun. Ini preferensi tampilan, bukan sesi — orang yang menyaring
+      // feed-nya bulan lalu kemungkinan besar masih menginginkannya.
+      maxAge: 60 * 60 * 24 * 365,
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
+
+  return { ok: true };
 }

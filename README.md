@@ -1,139 +1,138 @@
 # HITOME
 
-**スワイプで出会う、次の一着。** — aplikasi belanja fashion yang mengganti pencarian dengan insting.
+**スワイプで出会う、次の一着。** — 検索を、直感に置きかえたファッションアプリです。
 
-Alih-alih menelusuri grid dan filter, pengguna men-*swipe* satu per satu seperti aplikasi kencan: geser kanan untuk suka, kiri untuk lewat, atas untuk simpan. Setiap keputusan — **termasuk yang ditolak** — melatih profil selera yang menyusun ulang urutan feed.
+グリッドとフィルターをたどる代わりに、マッチングアプリのように一着ずつスワイプします。右へスワイプすれば購入へ、左へスワイプすれば見送る。そして、どの判断も——**見送った一着も含めて**——好みのプロファイルを育て、フィードの並び順を組み替えていきます。
 
-**Demo langsung:** https://swipe-fashion-code-swipe-fashion-ne-coral.vercel.app
+**デモ:** https://swipe-fashion-code-swipe-fashion-ne-coral.vercel.app
 
-> Buka dari ponsel, atau dari laptop dengan jendela browser diperkecil.
-
----
-
-## Ini *mobile-only web app*
-
-Bukan situs responsif yang kebetulan muat di ponsel — dirancang khusus untuk layar ponsel, dan itu keputusan produk, bukan keterbatasan.
-
-Alasannya: interaksi intinya adalah **swipe**, gestur sentuh yang tidak ada di desktop. Membuat versi desktop berarti menyisakan tombol klik saja, dan seluruh premis produk — *"jangan cari, cukup geser"* — kehilangan maknanya.
-
-Di layar besar, aplikasi tetap disajikan rapi di dalam bingkai perangkat, bukan direntangkan jadi tata letak yang tidak pernah dirancang.
+> スマートフォンから、またはノートPCならブラウザの幅を狭めてご覧ください。
 
 ---
 
-## Fitur
+## これは *モバイル専用* のウェブアプリです
 
-### 1. Feed swipe
+たまたまスマホでも見られるレスポンシブサイトではありません。スマートフォンの画面のために設計しています。そしてそれは、技術的な制約ではなくプロダクトとしての判断です。
 
-Kartu produk bergaya profil: carousel foto, deskripsi, dan tabel 基本情報 lengkap dengan ukuran per kategori (着丈・身幅・肩幅 untuk atasan, ウエスト・股上・股下 untuk bawahan). Geser mendatar untuk memutuskan, geser tegak untuk membaca detail.
+理由は単純で、中心にある操作が**スワイプ**——デスクトップには存在しないタッチのジェスチャーだからです。デスクトップ版をつくるということは、クリックできるボタンだけを残すということであり、*「探さない。ただ、スワイプする」* というこのプロダクトの前提そのものが意味を失います。
 
-### 2. Style DNA — mesin selera
+大きな画面では、そもそも設計されたことのないレイアウトへ引き伸ばす代わりに、端末のフレームの中にきれいに収めて表示します。
 
-Inti pembeda aplikasi ini. **Setiap swipe direkam, termasuk swipe kiri.**
+---
 
-Kebanyakan aplikasi serupa hanya belajar dari apa yang disukai. HITOME memberi bobot pada penolakan juga:
+## 機能
 
-| Aksi | Bobot |
+### 1. スワイプフィード
+
+プロフィールのような商品カード。写真のカルーセル、商品説明、そしてカテゴリーごとの採寸まで入った基本情報の表（トップスなら着丈・身幅・肩幅、ボトムスならウエスト・股上・股下）。横に動かせば決める、縦に動かせば読む——ひとつのカードで両方をまかないます。
+
+### 2. スタイルDNA — 好みの学習エンジン
+
+このアプリの中核です。**すべてのスワイプが記録されます。左スワイプも含めて。**
+
+同種のアプリの多くは「好き」からしか学びません。HITOME は、拒否にも重みを与えます。
+
+| 操作 | 重み |
 |---|---|
-| スーパーライク | +3 |
-| いいね | +1 |
-| パス | **−1** |
+| 「いいね！」ボタン（一目惚れに保存） | **+3** |
+| 右スワイプ（購入へ） | +1 |
+| 左スワイプ（見送る） | **−1** |
 
-Dari sinyal itu dibangun profil berbobot atas **kategori, brand, warna, dan rentang harga**, lalu feed diurutkan ulang. Halaman `/style-dna` memperlihatkan apa yang dipelajari — termasuk bagian *「見送るもの」*, yang hanya mungkin ada karena penolakan ikut dicatat.
+この信号から、**カテゴリー・ブランド・カラー・価格帯**の重み付きプロファイルを組み立て、フィードを並べ替えます。候補を評価するときの比重も一様ではありません。カテゴリーが最も強く（人は「種類」で服を買います）、次にブランド、カラーは調整役、価格は最もやわらかいフィルターとして効きます。
 
-Satu keputusan yang perlu digarisbawahi: **rentang harga hanya dibangun dari barang yang disukai.** Barang mahal yang ditolak tidak menggeser anggaran, karena penolakan bisa saja soal modelnya, bukan harganya.
+判断として書き留めておきたい点が、ふたつあります。
 
-### 3. Complete the Look
+**価格帯は、好んだ一着からしか作りません。** 高価な服を見送っても予算は動きません。その拒否は値段ではなく、デザインに向けられたものかもしれないからです。
 
-Koleksi 一目惚れ dirakit otomatis jadi coordinate: atasan + bawahan, atau dress, ditumpuk luaran. Tiap potong dipakai maksimal sekali agar tidak terasa daur ulang.
+**プロファイルを形づくるのは、直近5件のスワイプだけです。** 履歴を全部数えると、最初のスワイプが今のスワイプと同じ重さを持ち続け、好みが固まってしまいます。短い窓は「いま見ているもの」にフィードを追随させます。長期的な傾向を忘れるという代償は承知のうえで、小さなカタログと短いセッションには、記憶よりも軽やかさのほうが価値があると判断しました。
 
-### 4. Terpasang seperti aplikasi (PWA)
+### 3. アプリとしてインストールできます（PWA）
 
-Buka dari ponsel, ketuk **ホーム画面に追加**, dan HITOME muncul sebagai ikon di layar utama — terbuka **layar penuh tanpa address bar**, dengan splash screen dan bilah status berwarna coral.
+スマートフォンで開き、**ホーム画面に追加**をタップすると、HITOME はホーム画面のアイコンとして現れます。**アドレスバーのない全画面**で起動し、スプラッシュ画面とコーラル色のステータスバーを備えています。
 
-Inilah bukti dari klaim *mobile-only* di atas: bukan sekadar pernyataan, tapi sesuatu yang bisa dirasakan juri di ponsel mereka sendiri dalam sepuluh detik.
+これが、冒頭の *モバイル専用* という主張の裏づけです。言葉だけの宣言ではなく、審査員ご自身のスマートフォンで10秒のうちに確かめられるものになっています。
 
-Ajakan pemasangan muncul otomatis di dalam aplikasi, karena Android menyembunyikan opsinya di menu tiga titik dan iOS lebih dalam lagi — fitur yang tidak terlihat sama saja dengan tidak ada.
+インストールの案内はアプリ内から自動的に出します。Android はその選択肢を三点メニューの奥に隠し、iOS はさらに深いところに置いているからです。見えない機能は、無いのと同じです。
 
-### 5. Pembayaran (demo)
+### 4. 決済（デモ）
 
-Alur checkout berlangkah dengan lima metode yang lazim di Jepang:
+日本でなじみのある5つの手段を備えた、段階式のチェックアウトです。
 
 **クレジットカード** · **PayPay** · **コンビニ払い** · **Apple Pay** · **代金引換**
 
-Formulir kartunya sungguhan secara logika, bukan tempelan:
+カードのフォームは、見た目だけのものではありません。ロジックとして本物です。
 
-- Deteksi penerbit dari awalan nomor — Visa, Mastercard, **JCB**, AMEX, Diners, Discover
-- Pengelompokan digit sesuai penerbit (AMEX 4-6-5, sisanya per 4)
-- Validasi checksum **Luhn** — menangkap salah ketik sebelum formulir dikirim
-- Panjang CVC menyesuaikan penerbit (AMEX 4 digit, lainnya 3)
-- Kedaluwarsa sah sampai akhir bulan yang tertera
+- 番号の先頭から発行会社を判定 — Visa、Mastercard、**JCB**、AMEX、Diners、Discover
+- 発行会社に応じた桁の区切り（AMEX は 4-6-5、それ以外は4桁ごと）
+- **Luhn** チェックサムによる検証 — 送信する前に打ち間違いを捕まえます
+- セキュリティコードの桁数も発行会社に追随（AMEX は4桁、他は3桁）
+- 有効期限は記載された月の末日まで有効
 
-> **Ini simulasi.** Tidak ada uang berpindah dan tidak ada penyedia pembayaran yang dihubungi. **Nomor kartu tidak pernah dikirim ke server maupun disimpan** — yang tercatat hanya label seperti `クレジットカード（Visa •••• 4242）`. Nomor uji tersedia langsung di dalam formulir agar tidak ada yang tergoda memakai kartu asli.
+> **これはシミュレーションです。** お金は動かず、決済事業者にも接続していません。**カード番号がサーバーに送られることも、保存されることもありません** — 記録されるのは `クレジットカード（Visa •••• 4242）` のようなラベルだけです。本物のカードを使いたくなる人が出ないよう、テスト番号はフォームの中に直接置いてあります。
 
-### 6. Akun (opsional)
+### 5. アカウント（任意）
 
-Daftar dengan email dan password, atau **jangan sama sekali** — semua fitur tetap jalan tanpa akun.
+メールアドレスとパスワードで登録できます。あるいは、**まったく登録しないという選択も**できます。アカウントがなくても、すべての機能が動きます。
 
-Gerbangnya sengaja dibuat lunak. Premis produk ini adalah *"buka tautan, langsung swipe"*, dan halaman pendaftaran di depan pintu akan membunuhnya. Jadi hanya **checkout** yang benar-benar memerlukan akun, karena pesanan butuh identitas yang bertahan lebih lama dari sebuah cookie.
+入口はあえてゆるくしてあります。このプロダクトの前提は *「リンクを開いたら、すぐスワイプ」* であり、扉の前に置かれた登録画面はそれを殺してしまいます。ですから、本当にアカウントを要求するのは**チェックアウト**だけです。注文には、cookie より長生きする身元が必要だからです。
 
-Bagian yang paling penting justru tidak terlihat: **riwayat swipe ikut berpindah.** Kamu bisa swipe 10 barang sebagai tamu, baru mendaftar — dan Style DNA-mu tetap utuh, sekarang tersimpan di akun dan bisa dibuka dari perangkat lain.
+いちばん大事な部分は、目に見えないところにあります。**スワイプの履歴も一緒に引っ越します。** ゲストのまま10着スワイプしてから登録しても、あなたのスタイルDNAはそのまま残り、今度はアカウントに保存されて別の端末からも開けるようになります。
 
-Dibangun dengan **Better Auth**: tabelnya ada di Postgres yang sama, password di-hash dengan Argon2id, sesi disimpan di database dan dibawa lewat cookie httpOnly. Tidak ada layanan autentikasi pihak ketiga.
+**Better Auth** で構築しています。テーブルは同じ Postgres の中にあり、パスワードは Argon2id でハッシュ化、セッションはデータベースに保存して httpOnly cookie で受け渡します。サードパーティの認証サービスは使っていません。
 
-**マイページ** berisi foto profil yang bisa diganti, **足あと** (semua yang pernah dilihat di feed), **いいね！履歴**, dan **お届け先**. Alamat yang sudah terdaftar mengisi langkah pengiriman secara otomatis — checkout berikutnya tidak perlu mengetik ulang.
+**マイページ**には、差し替えできるプロフィール写真、**足あと**（フィードで見たものすべて）、**いいね！履歴**、**お届け先**があります。登録済みの住所は配送のステップに自動で入るので、次回のチェックアウトで打ち直す必要はありません。
 
-### 7.管理画面 — sisi lain dari mesin selera
+### 6. 管理画面 — 好みの学習エンジンの、もう一つの面
 
-Panel admin untuk desktop: menambah produk beserta fotonya, dan **dashboard yang membaca ulang data swipe secara agregat.**
+デスクトップ向けの管理パネルです。写真つきで商品を追加でき、そして**スワイプのデータを集計として読み直すダッシュボード**があります。
 
-Style DNA memperlihatkan apa yang dipelajari aplikasi tentang **satu orang**. Dashboard memperlihatkan apa yang dipelajari tentang **seluruh katalog** — produk mana yang paling sering dilihat lalu dilewati. Toko biasa hanya tahu apa yang dibeli; yang ini tahu apa yang ditolak, dan itu hanya mungkin karena swipe kiri direkam sejak awal.
+スタイルDNAが見せるのは、アプリが**ひとりの人**について学んだことです。ダッシュボードが見せるのは、**カタログ全体**について学んだこと——どの商品が最もよく見られ、そして見送られたか。ふつうの店舗は「何が買われたか」しか知りません。こちらは「何が拒否されたか」を知っています。左スワイプを最初から記録していたからこそ可能になったことです。
 
-Nol tabel analitik baru: semuanya satu `GROUP BY` di atas tabel `swipes` yang sudah ada.
+新しい分析テーブルはゼロ。すべて、既存の `swipes` テーブルに対する `GROUP BY` ひとつです。
 
-Formulir produknya menampilkan **pratinjau kartu feed hidup** di sebelahnya — memakai komponen yang sama persis dengan feed sungguhan, bukan tiruan. Memilih kategori otomatis mengisi kolom ukuran yang benar (着丈・身幅・肩幅 untuk atasan, ウエスト・股上・股下 untuk bawahan).
+商品フォームの隣には、**フィードカードのライブプレビュー**が並びます。似せて作った模造品ではなく、実際のフィードとまったく同じコンポーネントです。カテゴリーを選べば、正しい採寸の項目が自動で入ります（トップスなら着丈・身幅・肩幅、ボトムスならウエスト・股上・股下）。
 
-Peran admin **tidak bisa dipilih saat mendaftar.** Tidak ada halaman pendaftaran admin dan tidak ada tombol; satu-satunya jalur adalah `npm run make-admin` yang dijalankan dari terminal.
-
----
-
-## Panduan singkat untuk penguji
-
-1. **Buka dari ponsel** dan ketuk ajakan **ホーム画面に追加** — pengalamannya berbeda begitu berjalan layar penuh.
-2. **`/feed`** — swipe 5–6 barang dengan pola jelas. Misalnya: sukai semua アウター, tolak semua ボトムス.
-3. **`/style-dna`** — profil sudah terbentuk. Perhatikan bagian *「見送るもの」* — itu bukti aplikasi belajar dari penolakan, bukan hanya dari kesukaan.
-4. **Kembali ke `/feed`** — urutannya sudah berubah.
-   Di bawah hasil Style DNA ada ajakan **アカウントを作成**. Daftar di situ, lalu buka lagi `/style-dna` — hasilnya tetap sama persis. Itulah buktinya riwayat tamu ikut dipindahkan ke akun, bukan dibuang.
-5. **`/一目惚れ`** — lihat coordinate yang dirakit dari barang yang disimpan.
-6. **`/orders`** → **お支払いへ進む** — coba alur pembayaran. Ketuk salah satu nomor uji di formulir kartu, atau pilih PayPay untuk melihat layar QR.
+管理者の権限は、**登録時に選ぶことができません。** 管理者用の登録画面もボタンも存在せず、唯一の経路はターミナルから実行する `npm run make-admin` だけです。
 
 ---
 
-## Keputusan teknis
+## 審査員のための短いガイド
 
-**Logika inti hidup di modul murni, bukan di query.** `lib/taste.ts`, `lib/outfit.ts`, dan `lib/payment.ts` tidak menyentuh database sama sekali — lapisan data mengambil baris, modul murni yang memutuskan urutan, padanan, dan keabsahan. Konsekuensinya semuanya bisa diuji unit tanpa harness database: **60+ unit test** menutupi bobot selera, aturan penyusunan outfit, dan validasi kartu.
-
-**Tidak ada lapisan HTTP internal.** Server Component meng-query Drizzle langsung; mutasi lewat Server Actions. API server Express beserta client hasil generate sudah dihapus karena tak ada yang memakainya.
-
-**Identitas punya satu titik sambung, bukan tersebar.** Semua data pengguna berkunci pada satu kolom `session_id`. Satu fungsi — `getOwnerId()` — memutuskan isinya: `user.id` kalau sudah login, UUID cookie kalau belum. Karena keputusan itu terpusat, menambahkan akun **tidak mengubah satu baris pun** di lapisan data maupun mesin selera. Saat seseorang mendaftar, baris-baris lamanya dipindahkan ke id akun, jadi tidak ada riwayat yang hilang.
-
-**Perekaman swipe sengaja *fire-and-forget*.** Animasi kartu tidak boleh menunggu jaringan; kalau satu request gagal, yang hilang cuma satu sinyal.
-
----
-
-## Stack
-
-Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · framer-motion · Drizzle ORM · PostgreSQL (Supabase) · Vitest · PWA · Vercel
+1. **スマートフォンで開き**、**ホーム画面に追加**の案内をタップしてください。全画面で動き出した瞬間に、体験が変わります。
+2. **`/feed`** — はっきりした傾向をつけて5〜6着スワイプしてください。たとえば、アウターはすべて右へ、ボトムスはすべて左へ。
+3. **もう一度 `/feed` へ** — 並び順が変わっています。学習の窓は直近5件なので、傾向を変えれば数スワイプで追随します。
+4. **`/account`（マイページ）** — 見た数、いいねの数、一目惚れの数が出ます。ここからアカウントを作ると、ゲストのまま貯めた履歴がそのまま引き継がれます。捨てられるのではありません。
+5. **`/obsessed`（一目惚れ）** — 「いいね！」で保存した一着が並びます。
+6. **`/orders`** → **お支払いへ進む** — 決済の流れを試せます。カードフォームのテスト番号をタップするか、PayPay を選ぶと QR の画面が出ます。
 
 ---
 
-## Menjalankan secara lokal
+## 技術的な判断
+
+**中核のロジックは、クエリではなく純粋なモジュールに置いています。** `lib/taste.ts`、`lib/payment.ts`、`lib/size-chart.ts` はデータベースに一切触れません。データ層が行を取ってきて、純粋なモジュールが並び順・妥当性・採寸を決めます。結果として、データベースのハーネスなしにすべてを単体テストできます。**97件の単体テスト**が、好みの重み付け、カード検証、採寸表、入力バリデーションを覆っています。
+
+**内部向けの HTTP 層はありません。** Server Component が Drizzle を直接クエリし、更新は Server Actions を通ります。Express の API サーバーと生成されたクライアントは、誰も使っていなかったので削除しました。
+
+**identity の接点はひとつだけで、散らばっていません。** ユーザーのデータはすべて `session_id` という単一のカラムを鍵にしています。その中身を決めるのは `getOwnerId()` というひとつの関数だけ。ログイン済みなら `user.id`、そうでなければ cookie の UUID です。この判断が一点に集まっているおかげで、アカウント機能の追加はデータ層にも学習エンジンにも**一行の変更も生みませんでした**。誰かが登録すると、それまでの行がアカウントの id に付け替えられるので、失われる履歴はありません。
+
+**スワイプの記録は、意図的に fire-and-forget です。** カードのアニメーションが通信を待つべきではありません。リクエストがひとつ失敗しても、失われるのは信号ひとつです。
+
+---
+
+## 技術スタック
+
+Next.js 16（App Router）· React 19 · TypeScript · Tailwind CSS 4 · framer-motion · Drizzle ORM · PostgreSQL（Supabase）· Vitest · PWA · Vercel
+
+---
+
+## ローカルでの実行
 
 ```bash
 npm install
 npm run rebuild:native
 ```
 
-Salin `artifacts/swipe-fashion-next/.env.local.example` ke `.env.local`, isi connection string Supabase, lalu:
+`artifacts/swipe-fashion-next/.env.local.example` を `.env.local` にコピーし、Supabase の接続文字列を記入してから:
 
 ```bash
 npm run db:push
@@ -141,26 +140,27 @@ npm run seed
 npm run dev
 ```
 
-Aplikasi berjalan di `http://localhost:20100`.
+`http://localhost:20100` で起動します。
 
 ```bash
-npm test        # unit test
-npm run build   # typecheck + production build
+npm test        # 単体テスト
+npm run build   # 型チェック + 本番ビルド
 ```
 
-Detail arsitektur, jebakan yang sudah diketahui, dan panduan deploy ada di [`PROJECT.md`](./PROJECT.md).
+アーキテクチャの詳細、既知の落とし穴、デプロイの手順は [`PROJECT.md`](./PROJECT.md) にあります。
 
 ---
 
-## Batasan yang diketahui
+## 既知の制約
 
-Disebutkan terbuka, bukan disembunyikan:
+隠さずに書いておきます。
 
-- **Pembayaran adalah simulasi.** Tidak terhubung ke penyedia mana pun.
-- **Katalog berisi 12 produk.** Cukup untuk memperlihatkan mesin seleranya bekerja, tapi feed akan cepat habis.
-- **Foto kedua tiap produk adalah crop dari foto utamanya**, bukan pemotretan terpisah.
-- **Akun belum diverifikasi lewat email.** Pendaftaran langsung aktif; tidak ada email konfirmasi maupun reset password, karena keduanya memerlukan layanan pengiriman email terpisah.
-- **Moderasi belum ada.** Admin bisa menambah dan mengarsipkan produk, tapi tidak ada alur persetujuan.
-- **Satu peran admin saja, tanpa izin rinci.** Cukup untuk satu pengelola; perusahaan yang lebih besar memisahkan izin per pekerjaan.
-- **Tidak ada mode offline.** PWA-nya bisa dipasang, tapi hampir semua halaman butuh database — service worker sengaja tidak dipasang daripada menyajikan konten basi.
-- **Swipe ke atas untuk super like dilepas** ketika area foto dibuat bisa di-scroll — dua gestur itu tidak bisa berbagi sumbu yang sama. Tombol ★ menggantikannya.
+- **決済はシミュレーションです。** どの決済事業者にも接続していません。
+- **シードのカタログは9商品です。** 学習エンジンが働くことを見せるには足りますが、フィードはすぐに尽きます。
+- **各商品の2枚目の写真は、メイン写真をトリミングしたものです。** 別撮りではありません。
+- **アカウントのメール確認はまだありません。** 登録は即時に有効になり、確認メールもパスワード再設定もありません。どちらもメール配信サービスを別途必要とするためです。
+- **モデレーションはまだありません。** 管理者は商品を追加・アーカイブできますが、承認のフローはありません。
+- **管理者の権限はひとつだけで、細かい権限分けはありません。** 運営がひとりなら十分ですが、規模が大きい会社は職務ごとに権限を分けます。
+- **オフラインモードはありません。** PWA としてインストールはできますが、ほとんどのページがデータベースを必要とします。古い内容を出すくらいなら、と service worker はあえて入れていません。
+- **上スワイプでの保存は廃止しました。** 写真の領域をスクロールできるようにしたとき、ふたつのジェスチャーが同じ軸を共有できなくなったためです。代わりに「いいね！」ボタンがその役割を担っています。
+- **学習結果を表示する専用ページはありません。** かつての `/style-dna` は廃止し、いまはマイページの数値とフィードの並び順として現れます。エンジン自体（左スワイプの記録を含む）は変わらず動いています。

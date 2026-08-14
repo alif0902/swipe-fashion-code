@@ -1,16 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Check, SlidersHorizontal } from "lucide-react";
+import { Check } from "lucide-react";
 
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { FilterFabShell } from "@/components/filter-fab-shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -30,15 +23,16 @@ const SORTS = [
 ] as const;
 
 /**
- * Tombol mengambang 絞り込む, khusus halaman 探す.
+ * Isi laci 絞り込む untuk halaman 探す.
  *
- * Ditaruh mengambang di kanan bawah — bukan di dalam header — karena filter
- * dibutuhkan SETELAH pengguna menggulir daftar dan melihat hasilnya. Header
- * sudah lama hilang dari layar pada saat itu.
+ * Mekanika tombolnya — mengambang, bisa digeser, lencana, laci — ada di
+ * FilterFabShell dan dipakai bersama halaman feed.
  *
- * Semua pilihan disimpan di query string, bukan di state React. Konsekuensinya
- * hasil filter bisa di-bookmark dan di-share, tombol back browser bekerja
- * seperti yang diharapkan, dan daftarnya tetap dirender di server.
+ * Semua pilihan di sini disimpan di query string, bukan di state React.
+ * Konsekuensinya hasil filter bisa di-bookmark dan di-share, tombol back
+ * browser bekerja seperti yang diharapkan, dan daftarnya tetap dirender di
+ * server. Feed memilih cara lain (cookie) karena alasan yang dijelaskan di
+ * lib/feed-filter.ts.
  */
 export function FilterFab({
   params,
@@ -51,13 +45,6 @@ export function FilterFab({
   resultCount: number;
 }) {
   const router = useRouter();
-  const [isOpen, setIsOpen] = useState(false);
-
-  const boundsRef = useRef<HTMLDivElement>(null);
-  // useRef, bukan useState: nilainya dibaca di dalam handler click yang
-  // berjalan sesaat setelah drag selesai. State akan memicu render ulang dan
-  // nilai barunya belum tentu terbaca tepat waktu di gilirannya.
-  const wasDragged = useRef(false);
 
   const sort = params.sort ?? DEFAULT_SORT;
   const inStock = params.stock === "1";
@@ -79,133 +66,74 @@ export function FilterFab({
   const clear = () => update({ sort: null, stock: null });
 
   return (
-    <>
-      {/* Wadah pembatas geser.
-          inset-0 pointer-events-none: ia menutupi seluruh area halaman hanya
-          untuk dijadikan patokan batas, tanpa pernah menangkap sentuhan.
-          Tanpa wadah bersukuran nyata, dragConstraints tidak punya acuan dan
-          tombolnya akan bisa diseret keluar layar sampai hilang. */}
-      <div
-        ref={boundsRef}
-        className="absolute inset-0 z-30 pointer-events-none"
-        aria-hidden="true"
-      >
-        <motion.button
-          type="button"
-          drag
-          dragConstraints={boundsRef}
-          // Tanpa momentum: tombol berhenti persis di tempat jari diangkat.
-          // Inersia cocok untuk daftar yang digulir, bukan untuk benda yang
-          // sedang diletakkan seseorang di posisi tertentu.
-          dragMomentum={false}
-          // Sedikit elastis di tepi supaya terasa hidup saat membentur batas,
-          // tapi kecil — kalau terlalu besar ia terasa lepas kendali.
-          dragElastic={0.08}
-          whileDrag={{ scale: 1.06 }}
-          onDragStart={() => {
-            wasDragged.current = true;
-          }}
-          onClick={() => {
-            // Menyeret lalu melepas juga memicu click di sebagian browser.
-            // Tanpa penjaga ini, memindahkan tombol akan sekaligus membuka
-            // panel filter — dan itu terasa seperti salah tekan.
-            if (wasDragged.current) {
-              wasDragged.current = false;
-              return;
-            }
-            setIsOpen(true);
-          }}
-          data-testid="button-filter"
-          aria-label="絞り込む"
-          className="pointer-events-auto absolute bottom-[var(--nav-clearance)] right-5 h-14 pl-4 pr-5 rounded-full bg-foreground text-background shadow-xl flex items-center gap-2 cursor-grab active:cursor-grabbing touch-none"
-        >
-          <span className="relative">
-            <SlidersHorizontal className="w-5 h-5" />
-            {activeCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                {activeCount}
-              </span>
-            )}
-          </span>
-          <span className="text-sm font-bold">絞り込む</span>
-        </motion.button>
-      </div>
-
-      <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerContent>
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="font-sans font-bold text-xl tracking-normal text-left">
-              絞り込む
-            </DrawerTitle>
-          </DrawerHeader>
-
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-8 space-y-6">
-            <section>
-              <h3 className="text-sm font-bold text-foreground/70 mb-3">
-                並び替え
-              </h3>
-              <div className="space-y-1.5">
-                {SORTS.map((s) => (
-                  <button
-                    key={s.value}
-                    type="button"
-                    onClick={() =>
-                      update({
-                        // Nilai bawaan dihapus dari URL, bukan ditulis — URL tetap
-                        // pendek dan bisa dibagikan.
-                        sort: s.value === DEFAULT_SORT ? null : s.value,
-                      })
-                    }
-                    className={cn(
-                      "w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm transition",
-                      sort === s.value
-                        ? "bg-primary/10 text-primary font-medium"
-                        : "bg-card border border-border hover:border-primary/40",
-                    )}
-                  >
-                    {s.label}
-                    {sort === s.value && <Check className="w-4 h-4" />}
-                  </button>
-                ))}
-              </div>
-            </section>
-
-            <section>
-              <h3 className="text-sm font-bold text-foreground/70 mb-3">在庫</h3>
-              <button
-                type="button"
-                onClick={() => update({ stock: inStock ? null : "1" })}
-                className={cn(
-                  "w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm transition",
-                  inStock
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "bg-card border border-border hover:border-primary/40",
-                )}
-              >
-                在庫があるものだけ
-                {inStock && <Check className="w-4 h-4" />}
-              </button>
-            </section>
-
-            <div className="flex gap-3 pt-1">
-              <Button
-                variant="ghost"
-                className="flex-1 h-12 rounded-full text-muted-foreground"
-                onClick={clear}
-                disabled={activeCount === 0}
-              >
-                クリア
-              </Button>
-              <Button
-                className="flex-[2] h-12 rounded-full font-bold"
-                onClick={() => setIsOpen(false)}
-              >
-                {resultCount}点を見る
-              </Button>
+    <FilterFabShell activeCount={activeCount} title="絞り込む">
+      {(close) => (
+        <>
+          <section>
+            <h3 className="text-sm font-bold text-foreground/70 mb-3">
+              並び替え
+            </h3>
+            <div className="space-y-1.5">
+              {SORTS.map((s) => (
+                <button
+                  key={s.value}
+                  type="button"
+                  onClick={() =>
+                    update({
+                      // Nilai bawaan dihapus dari URL, bukan ditulis — URL tetap
+                      // pendek dan bisa dibagikan.
+                      sort: s.value === DEFAULT_SORT ? null : s.value,
+                    })
+                  }
+                  className={cn(
+                    "w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm transition",
+                    sort === s.value
+                      ? "bg-primary/10 text-primary font-medium"
+                      : "bg-card border border-border hover:border-primary/40",
+                  )}
+                >
+                  {s.label}
+                  {sort === s.value && <Check className="w-4 h-4" />}
+                </button>
+              ))}
             </div>
+          </section>
+
+          <section>
+            <h3 className="text-sm font-bold text-foreground/70 mb-3">在庫</h3>
+            <button
+              type="button"
+              onClick={() => update({ stock: inStock ? null : "1" })}
+              className={cn(
+                "w-full flex items-center justify-between rounded-xl px-4 py-3 text-sm transition",
+                inStock
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "bg-card border border-border hover:border-primary/40",
+              )}
+            >
+              在庫があるものだけ
+              {inStock && <Check className="w-4 h-4" />}
+            </button>
+          </section>
+
+          <div className="flex gap-3 pt-1">
+            <Button
+              variant="ghost"
+              className="flex-1 h-12 rounded-full text-muted-foreground"
+              onClick={clear}
+              disabled={activeCount === 0}
+            >
+              クリア
+            </Button>
+            <Button
+              className="flex-[2] h-12 rounded-full font-bold"
+              onClick={close}
+            >
+              {resultCount}点を見る
+            </Button>
           </div>
-        </DrawerContent>
-      </Drawer>
-    </>
+        </>
+      )}
+    </FilterFabShell>
   );
 }
