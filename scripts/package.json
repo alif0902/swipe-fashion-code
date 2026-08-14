@@ -13,11 +13,13 @@
     "sync-products": "tsx ./src/sync-products.ts",
     "dedupe-products": "tsx ./src/dedupe-products.ts",
     "make-admin": "tsx ./src/make-admin.ts",
+    "create-admin": "tsx ./src/create-admin.ts",
     "list-users": "tsx ./src/list-users.ts",
     "purge-archived-products": "tsx ./src/purge-archived-products.ts"
   },
   "dependencies": {
     "@workspace/db": "*",
+    "better-auth": "^1.6.25",
     "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {

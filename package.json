@@ -27,6 +27,7 @@
     "sync-products": "npm run sync-products -w @workspace/scripts",
     "dedupe-products": "npm run dedupe-products -w @workspace/scripts",
     "make-admin": "npm run make-admin -w @workspace/scripts --",
+    "create-admin": "npm run create-admin -w @workspace/scripts --",
     "list-users": "npm run list-users -w @workspace/scripts",
     "purge-archived-products": "npm run purge-archived-products -w @workspace/scripts --"
   },
